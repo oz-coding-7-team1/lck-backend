@@ -14,6 +14,7 @@ jobs:
       DB_USER: postgres
       DB_PASSWORD: '1234'
       DB_DATABASE: oz_main_dev
+      POSTGRES_DB: oz_main_dev
 
     steps:
         # 체크아웃 해야 최신 코드를 가져옴
