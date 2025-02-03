@@ -1,2 +1,0 @@
-drf-spectacular>=0.28.0
-flake8>=7.0.0,<8.0.0
