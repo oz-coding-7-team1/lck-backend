@@ -23,6 +23,7 @@ isort = "^6.0.0"
 black = "^25.1.0"
 mypy = "^1.14.1"
 django-stubs = "^5.1.2"
+coverage = "^7.6.10"
 
 [build-system]
 requires = ["poetry-core"]
@@ -36,7 +37,7 @@ profile = "black"
 
 [tool.mypy]
 plugins = ["mypy_django_plugin.main"]
-python_version = "3.13"
+python_version = "3.12"
 strict = true
 
 [[tool.mypy.overrides]]
@@ -48,4 +49,4 @@ module = "manage"
 ignore_errors = true
 
 [tool.django-stubs]
-django_settings_module = "oz_django.settings"
+django_settings_module = "config.settings.dev"
