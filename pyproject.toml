@@ -45,7 +45,12 @@ python_version = "3.12"
 strict = true
 
 [[tool.mypy.overrides]]
-module = "*.migrations.*"
+[[tool.mypy.overrides]]
+module = [
+    "manage",
+    "*.migrations.*",
+    "config/*"
+]
 ignore_errors = true
 
 [[tool.mypy.overrides]]
