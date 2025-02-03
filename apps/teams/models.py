@@ -11,3 +11,4 @@ class Team(models.Model):
     detail = models.TextField(blank=True, null=True, help_text='팀 설명')
     # 팀이 활성화 상태 여부(True면 활성화 상태 False면 비활성화)
     is_active = models.BooleanField(default=True, help_text='팀 활성화 상태 여부')
+
