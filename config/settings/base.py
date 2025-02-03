@@ -16,7 +16,7 @@ from pathlib import Path
 # django-environ 패키지는 타입 힌트를 제공하지 않는 라이브러리라 mypy 에서 분석하지 못함
 # .mypy 실행 시 environ 을 검사할 수 없다고 경고가 발생하여 type: ignore 추가
 # 주석 ignore 은 mypy 에게 environ 모듈을 무시하라고 지시하는 것
-import environ # type: ignore
+import environ  # type: ignore
 
 # base.py 기준으로 루트 디렉토리의 위치를 지정
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 env = environ.Env()
 
 # 사용할 환경 설정 파일 결정
-ENV_MODE = os.getenv("DJANGO_ENV", "local") # 기본값은 "local"
+ENV_MODE = os.getenv("DJANGO_ENV", "local")  # 기본값은 "local"
 ENV_FILE = BASE_DIR / f"envs/{ENV_MODE}.env"
 # 필요시 export DJANGO_ENV=prod
 # .toml 파일에 config.settings.prod 변경 후 mypy 실행
@@ -41,7 +41,7 @@ SECRET_KEY = "django-insecure-a+!#&&rpjhu&ie4r5w4!*7ne80gaji5wxl*w7y+ym(731!e$l5
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS: list[str] = []
 
 
 # Application definition
