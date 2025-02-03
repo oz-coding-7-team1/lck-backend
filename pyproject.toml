@@ -45,7 +45,6 @@ python_version = "3.12"
 strict = true
 
 [[tool.mypy.overrides]]
-[[tool.mypy.overrides]]
 module = [
     "manage",
     "*.migrations.*",
