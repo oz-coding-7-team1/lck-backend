@@ -2,19 +2,31 @@ name: Django CI
 
 on:
   push:
-# 트리거. 매 번 push할 때마다 액션을 수행하겠다.
-# pull request마다 수행하도록 할 수 있고, 정해진 시각에 수행되도록 (매일 오전 9시 등) 하는 것도 가능
 
 jobs:
   ci:
     runs-on: ubuntu-22.04
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: ${{ secrets.DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.DB_DATABASE }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ${{ secrets.DB_USER }}"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     env:
       DB_HOST: 127.0.0.1
       DB_PORT: 5432
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       DB_DATABASE: ${{ secrets.DB_DATABASE }}
-      POSTGRES_DB: ${{ secrets.DB_DATABASE }}
 
     steps:
         # 체크아웃 해야 최신 코드를 가져옴
