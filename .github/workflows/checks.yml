@@ -25,7 +25,7 @@ jobs:
         id: setup-python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.12'
+          python-version: '3.12.6'
 
         # 타임존 KST로 설정
       - name: Set timezone to KST

@@ -1,5 +1,5 @@
 FROM nginxinc/nginx-unprivileged:1-alpine
-LABEL maintainer="seopftware"
+LABEL maintainer="LCK"
 
 COPY ../../proxy/default.conf.tpl /etc/nginx/default.conf.tpl
 COPY ../../proxy/uwsgi_params /etc/nginx/uwsgi_params
