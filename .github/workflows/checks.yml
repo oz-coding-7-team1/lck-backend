@@ -11,7 +11,7 @@ jobs:
     env:
       DB_HOST: 127.0.0.1
       DB_PORT: 5432
-      DB_USER: oz_main_dev
+      DB_USER: root
       DB_PASSWORD: '1234'
       DB_DATABASE: oz_main_dev
 
