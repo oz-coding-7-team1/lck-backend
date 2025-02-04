@@ -56,8 +56,8 @@ class PlayerSchedule(BaseModel):
     ) # 스케줄 분류 항목
     start_date = models.DateTimeField() # 이벤트 시작 일시
     end_date = models.DateTimeField() # 이벤트 종료 일시
-    place = models.CharField(max_length=30, null=True)
-    title = models.CharField(max_length=50, null=False, blank=False, default=None)
+    place = models.CharField(max_length=30, null=True) # 이벤트 장소
+    title = models.CharField(max_length=50, null=False, blank=False, default=None) # 이벤트 제목
     detail = models.CharField(max_length=255, blank=True) # 이벤트 상세 내용
     is_active = models.BooleanField(default=True) # 스케줄 활성화 여부
 
@@ -72,5 +72,5 @@ class PlayerImage(BaseModel):
             ("background", "배경 이미지"),
             ("gallery", "갤러리 이미지")
         ]
-    )
+    ) # 이미지 분류 항목
     url = models.CharField(max_length=255) # 이미지 URL
