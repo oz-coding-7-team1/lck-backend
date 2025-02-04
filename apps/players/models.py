@@ -40,7 +40,6 @@ class Player(BaseModel):
 class PlayerSub(BaseModel):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)  # 특정 선수
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # 특정 선수를 구독 한 유저
-    is_active = models.BooleanField(default=True)  # 구독 활성화 여부
 
 
 # 선수 스케줄 관리 모델
@@ -54,7 +53,6 @@ class PlayerSchedule(BaseModel):
     place = models.CharField(max_length=30, null=True)  # 이벤트 장소
     title = models.CharField(max_length=50, null=False, blank=False, default=None)  # 이벤트 제목
     detail = models.CharField(max_length=255, blank=True)  # 이벤트 상세 내용
-    is_active = models.BooleanField(default=True)  # 스케줄 활성화 여부
 
 
 # 선수 이미지 관리 모델
@@ -70,11 +68,9 @@ class PlayerImage(BaseModel):
 # 선수 관련 태그 관리 모델
 class PlayerTag(BaseModel):
     name = models.CharField(max_length=30, null=False, blank=False, default=None)  # 태그명
-    is_active = models.BooleanField(default=True)
 
 
 # 선수와 태그의 연결 관리 모델
 class PlayerTagged(BaseModel):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)  # 연결된 선수 id
     tag = models.ForeignKey(PlayerTag, on_delete=models.CASCADE)  # 연결된 태그 id
-    is_active = models.BooleanField(default=True)  # 태그 지정 여부
