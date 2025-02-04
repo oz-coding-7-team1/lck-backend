@@ -2,18 +2,26 @@ name: Django CI
 
 on:
   push:
-# 트리거. 매 번 push할 때마다 액션을 수행하겠다.
-# pull request마다 수행하도록 할 수 있고, 정해진 시각에 수행되도록 (매일 오전 9시 등) 하는 것도 가능
 
 jobs:
   ci:
-    runs-on: ubuntu-22.04 # mysql이 설치돼있음
+    runs-on: ubuntu-22.04
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: ${{ secrets.DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.DB_DATABASE }}
+        ports:
+          - 5432:5432
+
     env:
       DB_HOST: 127.0.0.1
-      DB_PORT: 3306
-      DB_USER: root
-      DB_PASSWORD: '1234'
-      DB_DATABASE: lck
+      DB_PORT: 5432
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_DATABASE: ${{ secrets.DB_DATABASE }}
 
     steps:
         # 체크아웃 해야 최신 코드를 가져옴
@@ -32,14 +40,6 @@ jobs:
         run: |
           sudo rm /etc/localtime
           sudo ln -s /usr/share/zoneinfo/Asia/Seoul /etc/localtime
-
-      # Start Mysql
-      # https://ovirium.com/blog/how-to-make-mysql-work-in-your-github-actions/
-      - name: Start Mysql
-        run: |
-          sudo systemctl start mysql
-          mysql -e "use mysql; FLUSH PRIVILEGES; ALTER USER '${{ env.DB_USER }}'@'localhost' IDENTIFIED BY '${{ env.DB_PASSWORD }}';" -uroot -proot
-          mysql -e 'CREATE DATABASE ${{ env.DB_DATABASE }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
 
       - name: Install Poetry
         run: |
@@ -62,6 +62,8 @@ jobs:
         # -diff: 달라진 점을 보여줌
 
       - name: Run Mypy
+        env:
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}  # 환경 변수 설정
         run: |
           poetry run mypy .
 
