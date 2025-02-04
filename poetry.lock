@@ -266,6 +266,20 @@ docs = ["furo (>=2024.8.6)", "sphinx (>=5.0)", "sphinx-notfound-page"]
 testing = ["coverage[toml] (>=5.0a4)", "pytest (>=4.6.11)", "setuptools (>=71.0.0)"]
 
 [[package]]
+name = "django-soft-delete"
+version = "1.0.18"
+description = "Soft delete models, managers, queryset for Django"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "django_soft_delete-1.0.18-py3-none-any.whl", hash = "sha256:603a29e82bbb7a5bada69f2754fad225ccd8cd7f485320ec06d0fc4e9dfddcf0"},
+    {file = "django_soft_delete-1.0.18.tar.gz", hash = "sha256:d2f9db449a4f008e9786f82fa4bafbe4075f7a0b3284844735007e988b2a4df6"},
+]
+
+[package.dependencies]
+django = "*"
+
+[[package]]
 name = "django-stubs"
 version = "5.1.2"
 description = "Mypy stubs for Django"
@@ -1111,4 +1125,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "3.12.6"
-content-hash = "53d3639a118b5f3b02346ba6b2363d43a3b713f93737b3145106c1e838c54885"
+content-hash = "ee23e0f42210249f02eecf21d9538004dd0b88bcd48f08405227ef32142ed9e4"
