@@ -62,6 +62,8 @@ jobs:
         # -diff: 달라진 점을 보여줌
 
       - name: Run Mypy
+        env:
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}  # 환경 변수 설정
         run: |
           poetry run mypy .
 
