@@ -28,7 +28,6 @@ env = environ.Env()
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 

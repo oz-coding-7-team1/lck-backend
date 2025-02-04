@@ -1,10 +1,10 @@
 from .base import *
 
-environment = 'dev'
+environment = "dev"
 
-if environment == 'prod':
+if environment == "prod":
     from .prod import *
-elif environment == 'dev':
+elif environment == "dev":
     from .dev import *
 else:
     raise ValueError(f"Invalid environment: {environment}")
