@@ -31,6 +31,7 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin, SoftDeleteModel):  # t
             return True
         return False
 
+
 # 유저 이미지 정보를 저장하는 모멜
 class UserImage(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="images")
