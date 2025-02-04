@@ -19,14 +19,14 @@ class User(BaseModel, AbstractBaseUser):
 
 # 유저 이미지 정보를 저장하는 모멜
 class UserImage(BaseModel):
-    user_id = models.OneToOneField(User, on_delete=models.CASCADE, related_name="images")
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="images")
     url = models.CharField(max_length=255)
 
 
 # 사용자의 약관 동의 정보를 저장하는 모델
 class TermsAgreements(BaseModel):
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    terms_id = models.ForeignKey("Terms", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    terms = models.ForeignKey("Terms", on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
 
 
