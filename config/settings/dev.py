@@ -23,7 +23,6 @@ INSTALLED_APPS += [
     "rest_framework_simplejwt.token_blacklist",
     "apps.users.apps.UsersConfig",
     "apps.players.apps.PlayersConfig",
-    "apps.users.apps.UsersConfig"
 ]
 
 DATABASES = {
