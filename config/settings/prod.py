@@ -3,7 +3,17 @@ import os
 from .base import *
 
 DEBUG = False
+
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",")  # 허용할 host
+
+ENV_FILE = BASE_DIR / f"envs/prod.env"
+
+env.read_env(str(ENV_FILE))
+# environ.Env.read_env()  # .envs 파일을 읽어옴
+
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+if SECRET_KEY is None:
+    raise ValueError("DJANGO_SECRET_KEY environment variable is not set.")
 
 INSTALLED_APPS += [
     "rest_framework",
