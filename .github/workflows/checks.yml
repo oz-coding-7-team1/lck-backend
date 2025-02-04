@@ -22,6 +22,7 @@ jobs:
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       DB_DATABASE: ${{ secrets.DB_DATABASE }}
+      DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
 
     steps:
         # 체크아웃 해야 최신 코드를 가져옴
@@ -62,8 +63,6 @@ jobs:
         # -diff: 달라진 점을 보여줌
 
       - name: Run Mypy
-        env:
-          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}  # 환경 변수 설정
         run: |
           poetry run mypy .
 
