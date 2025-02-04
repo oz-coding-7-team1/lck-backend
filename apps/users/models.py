@@ -1,3 +1,15 @@
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 
-# Create your models here.
+from apps.common.models import BaseModel
+
+class User(BaseModel, AbstractBaseUser):
+	email = models.EmailField(unique=True)
+	password = models.CharField(max_length=130)
+	nickname = models.CharField(max_length=20)
+	is_active = models.BooleanField(default=True)
+	is_staff = models.BooleanField(default=False)
+	is_superuser = models.BooleanField(default=False)
+
+	# 로그인 시 username이 아니라 email로 로그인하게 됨(식별자가 email)
+	USERNAME_FIELD = "email"
