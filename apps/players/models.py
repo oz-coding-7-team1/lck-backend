@@ -67,7 +67,7 @@ class PlayerImage(BaseModel):
 
 # 선수 관련 태그 관리 모델
 class PlayerTag(BaseModel):
-    name = models.CharField(max_length=30, null=False, blank=False, default=None)  # 태그명
+    name = models.CharField(max_length=50, unique=True, null=False, blank=False, default=None)  # 태그명
 
 
 # 선수와 태그의 연결 관리 모델
