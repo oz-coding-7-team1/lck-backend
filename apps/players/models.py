@@ -32,7 +32,7 @@ class Player(BaseModel):
     date_of_birth = models.DateField()  # 생년월일
     debut_date = models.DateField()  # 데뷔일
     social = models.JSONField(default=dict, null=True, blank=True)  # 소셜 URL (insta, facebook, youtube, X)
-    agency = models.ForeignKey(User, on_delete=models.CASCADE)  # 소속사
+    agency = models.CharField(max_length=50)  # 소속사
     is_active = models.BooleanField(default=True)  # 선수 활성화 여부 (soft delete를 위해 활성화 여부 저장)
 
 
