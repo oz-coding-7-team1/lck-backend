@@ -60,3 +60,17 @@ class PlayerSchedule(BaseModel):
     title = models.CharField(max_length=50, null=False, blank=False, default=None)
     detail = models.CharField(max_length=255, blank=True) # 이벤트 상세 내용
     is_active = models.BooleanField(default=True) # 스케줄 활성화 여부
+
+
+# 선수 이미지 관리 모델
+class PlayerImage(BaseModel):
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    type = models.CharField(
+        max_length=15,
+        choices=[
+            ("profile", "프로필 이미지"),
+            ("background", "배경 이미지"),
+            ("gallery", "갤러리 이미지")
+        ]
+    )
+    url = models.CharField(max_length=255) # 이미지 URL
