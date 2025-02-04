@@ -25,6 +25,7 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin, SoftDeleteModel):  # t
             return True
         return False
 
+
     def has_module_perms(self, app_label: str) -> bool:
         # 사용자가 superuser인 경우 모든 앱의 권한을 부여
         if self.is_superuser:
