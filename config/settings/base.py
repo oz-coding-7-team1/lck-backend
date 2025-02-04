@@ -23,22 +23,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 env = environ.Env()
 
-# 사용할 환경 설정 파일 결정
-ENV_MODE = os.getenv("DJANGO_ENV", "local")  # 기본값은 "local"
-ENV_FILE = BASE_DIR / f"envs/{ENV_MODE}.env"
-# 필요시 export DJANGO_ENV=prod
-# .toml 파일에 config.settings.prod 변경 후 mypy 실행
-
-env.read_env(str(ENV_FILE))
-# environ.Env.read_env()  # .envs 파일을 읽어옴
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
-if SECRET_KEY is None:
-    raise ValueError("DJANGO_SECRET_KEY environment variable is not set.")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
