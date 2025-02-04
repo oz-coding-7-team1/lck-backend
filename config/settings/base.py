@@ -23,28 +23,49 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 env = environ.Env()
 
+# 사용할 환경 설정 파일 결정
+ENV_MODE = os.getenv("DJANGO_ENV", "dev")
+ENV_FILE = BASE_DIR / f"envs/{ENV_MODE}.env"
+# 환경변수 명령어 export DJANGO_SETTINGS_MODULE=config.settings.dev(prod)
+# .toml 파일에 config.settings.prod 변경 후 mypy 실행
+
+environ.Env.read_env(str(ENV_FILE))
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+if SECRET_KEY is None:
+    raise ValueError("DJANGO_SECRET_KEY environment variable is not set.")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS: list[str] = []
 
 
 # Application definition
 
-INSTALLED_APPS = [
+DJANGO_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # 'apps'
 ]
+
+PACKAGE = [
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
+    "apps.users.apps.UsersConfig",
+    "apps.players.apps.PlayersConfig",
+    "apps.teams.apps.TeamsConfig",
+]
+
+INSTALLED_APPS = DJANGO_APPS + PACKAGE
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -83,14 +104,13 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "oz_main_dev",  # 로컬 개발용 DB 이름
-        "USER": "oz_main_dev",  # PostgreSQL 사용자명
-        "PASSWORD": "1234",  # 비밀번호
-        "HOST": "localhost",
-        "PORT": "5432",
+        "NAME": os.getenv("POSTGRES_DB"),
+        "USER": os.getenv("POSTGRES_USER"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
+        "HOST": os.getenv("POSTGRES_HOST", "localhost"),
+        "PORT": os.getenv("POSTGRES_PORT", "5432"),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
