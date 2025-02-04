@@ -12,6 +12,9 @@ class Team(models.Model):
     # 팀이 활성화 상태 여부(True면 활성화 상태 False면 비활성화)
     is_active = models.BooleanField(default=True, help_text="팀 활성화 상태 여부")
 
+    def __str__(self) -> str:
+        return self.name
+
 
 # 팀 일정을 저장하는 모델
 class TeamSchedule(models.Model):
@@ -31,3 +34,36 @@ class TeamSchedule(models.Model):
     detail = models.CharField(max_length=255, blank=True, null=True, help_text="내용")
     # 일정 활성화 상태 여부 (True면 활성화, False면 비활성화)
     is_active = models.BooleanField(default=True, help_text="일정 활성화 여부")
+
+    def __str__(self) -> str:
+        return f"{self.team_id.name} - {self.title}"
+
+
+# 팀 구독 정보를 저장하는 모델
+class TeamSub(models.Model):
+    # 구독한 유저 식별자(한명의 유저는 하나의 팀만 구독이 가능함)
+    user_id = models.OneToOneField("User", on_delete=models.CASCADE, help_text="구독한 유저 식별자")
+    # 구독한 팀 식별자(하나의 팀은 여러명의 구독자를 가질 수 있음)
+    team_id = models.ForeignKey("Team", on_delete=models.CASCADE, help_text="구독한 팀 식별자")
+    # 구독 활성화 상태 여부 (True면 활성화, False면 비활성화)
+    is_active = models.BooleanField(default=True, help_text="구독 활성화 상태 여부")
+
+    class Meta:
+        # 동일한 user_id와 team의 조합은 중복되지 않도록 함
+        unique_together = ("user_id", "team_id")
+
+    def __str__(self) -> str:
+        return f"User {self.user_id} - {self.team_id.name}"
+
+
+# 팀 이미지 정보를 저장하는 모멜
+class TeamImage(models.Model):
+    # 팀에 해당하는 이미지
+    team_id = models.ForeignKey(Team, on_delete=models.CASCADE)
+    # 이미지 카테고리(프로필, 배경, 갤러리)
+    type = models.CharField(max_length=15, help_text="이미지 카테고리(프로필, 배경, 갤러리)")
+    # 이미지 파일 경로
+    url = models.CharField(max_length=255, help_text="이미지 URL (uuid 기반 경로)")
+
+    def __str__(self) -> str:
+        return f"{self.team_id.name} - {self.type}"
