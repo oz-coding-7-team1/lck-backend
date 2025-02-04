@@ -1,8 +1,11 @@
 from django.db import models
 from enum import Enum
-from users.models import User
-from teams.models import Team
+from apps.common.models import BaseModel
+from apps.users.models import User
+from apps.teams.models import Team
 
+
+# 선수 포지션 선택지
 class Position(Enum):
     TOP = "top"
     JGL = "jungle"
@@ -11,7 +14,8 @@ class Position(Enum):
     SPT = "support"
 
 
-class Player(models.Model):
+# 선수 상세 정보 관리 모델
+class Player(BaseModel):
     team = models.ForeignKey(Team, on_delete=models.CASCADE) # 소속 된 팀
     realname = models.CharField(max_length=30) # 본명
     nickname = models.CharField(max_length=30, unique=True) # 선수명 (중복불가)
@@ -28,3 +32,10 @@ class Player(models.Model):
     social = models.JSONField(default=dict, null=True, blank=True) # 소셜 URL (insta, facebook, youtube, X)
     agency = models.ForeignKey(User, on_delete=models.CASCADE) # 소속사
     is_active = models.BooleanField(default=True) # 선수 활성화 여부 (soft delete를 위해 활성화 여부 저장)
+
+
+# 선수 구독 관리 모델
+class PlayerSub(BaseModel):
+    player = models.ForeignKey(Player, on_delete=models.CASCADE) # 특정 선수
+    user = models.ForeignKey(User, on_delete=models.CASCADE) # 특정 선수를 구독 한 유저
+    is_active = models.BooleanField(default=True) # 구독 활성화 여부
