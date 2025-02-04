@@ -52,9 +52,5 @@ module = [
 ]
 ignore_errors = true
 
-[[tool.mypy.overrides]]
-module = "manage"
-ignore_errors = true
-
 [tool.django-stubs]
 django_settings_module = "config.settings.dev"
