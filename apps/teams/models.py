@@ -31,3 +31,13 @@ class TeamSchedule(models.Model):
     detail = models.CharField(max_length=255, blank=True, null=True, help_text="내용")
     # 일정 활성화 상태 여부 (True면 활성화, False면 비활성화)
     is_active = models.BooleanField(default=True, help_text="일정 활성화 여부")
+
+
+# 팀 구독 정보를 저장하는 모델
+class TeamSub(models.Model):
+    # 구독한 유저 식별자(한명의 유저는 하나의 팀만 구독이 가능함)
+    user_id = models.OneToOneField("User", on_delete=models.CASCADE, help_text="구독한 유저 식별자")
+    # 구독한 팀 식별자(하나의 팀은 여러명의 구독자를 가질 수 있음)
+    team_id = models.ForeignKey("Team", on_delete=models.CASCADE, help_text="구독한 팀 식별자")
+    # 구독 활성화 상태 여부 (True면 활성화, False면 비활성화)
+    is_active = models.BooleanField(default=True, help_text="구독 활성화 상태 여부")
