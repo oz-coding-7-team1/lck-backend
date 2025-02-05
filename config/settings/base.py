@@ -64,6 +64,8 @@ PACKAGE = [
     "apps.players.apps.PlayersConfig",
     "apps.teams.apps.TeamsConfig",
     "apps.subscription.apps.SubscriptionConfig",
+    "taggit",
+    "taggit_templatetags2",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + PACKAGE

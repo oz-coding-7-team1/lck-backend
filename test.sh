@@ -12,7 +12,7 @@ poetry run isort .
 echo "OK"
 
 echo "Starting mypy"
-poetry run mypy .
+poetry run mypy --cache-dir=/dev/null .
 echo "OK"
 
 echo "Starting test with coverage"

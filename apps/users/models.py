@@ -1,11 +1,48 @@
 from typing import Optional, Union
 
-from django.contrib.auth.models import AbstractBaseUser, AnonymousUser, PermissionsMixin
+from django.contrib.auth.base_user import BaseUserManager
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    AnonymousUser,
+    PermissionsMixin,
+)
 from django.db import models
 from django.db.models.base import Model
-from django_softdelete.models import SoftDeleteModel  # type: ignore
+from django_softdelete.models import SoftDeleteModel
 
 from apps.common.models import BaseModel
+
+
+class UserManager(BaseUserManager):
+    def active_user(self):
+        return self.filter(is_active=True)
+
+    def active_staff(self):
+        return self.filter(is_staff=True, is_active=True)
+
+    def withdraw_user(self):
+        return self.filter(is_active=False, is_staff=False)
+
+    def withdraw_staff(self):
+        return self.filter(is_staff=True, is_active=False)
+
+    # 함수 앞 _는 이 파일에서만 사용하겠다는 의미
+    def _create_user(self, email: str, password: Optional[str], **extra_fields):
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_user(self, email: str, password: Optional[str] = None, **extra_fields):
+        extra_fields.setdefault("is_staff", False)
+        extra_fields.setdefault("is_superuser", False)
+        return self._create_user(email, password, **extra_fields)
+
+    def create_superuser(self, email: str, password: Optional[str], **extra_fields):
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        return self._create_user(email, password, **extra_fields)
 
 
 class User(BaseModel, AbstractBaseUser, PermissionsMixin, SoftDeleteModel):  # type: ignore
@@ -18,6 +55,8 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin, SoftDeleteModel):  # t
 
     # 로그인 시 username이 아니라 email로 로그인하게 됨(식별자가 email)
     USERNAME_FIELD = "email"
+
+    objects = UserManager()
 
     def has_perm(self, perm: str, obj: Optional[Union[Model, AnonymousUser]] = None) -> bool:
         # 사용자가 superuser인 경우 Django의 모든 권한 부여

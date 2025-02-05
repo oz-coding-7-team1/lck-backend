@@ -1,6 +1,7 @@
 from enum import Enum
 
 from django.db import models
+from taggit.managers import TaggableManager
 
 from apps.common.models import BaseModel
 from apps.teams.models import Team
@@ -34,6 +35,7 @@ class Player(BaseModel):
     social = models.JSONField(default=dict, null=True, blank=True)  # 소셜 URL (insta, facebook, youtube, X)
     agency = models.CharField(max_length=50)  # 소속사
     is_active = models.BooleanField(default=True)  # 선수 활성화 여부 (soft delete를 위해 활성화 여부 저장)
+    tags = TaggableManager(blank=True)
 
 
 # 선수 구독 관리 모델
@@ -65,12 +67,12 @@ class PlayerImage(BaseModel):
     url = models.CharField(max_length=255)  # 이미지 URL
 
 
-# 선수 관련 태그 관리 모델
-class PlayerTag(BaseModel):
-    name = models.CharField(max_length=50, unique=True, null=False, blank=False, default=None)  # 태그명
-
-
-# 선수와 태그의 연결 관리 모델
-class PlayerTagged(BaseModel):
-    player = models.ForeignKey(Player, on_delete=models.CASCADE)  # 연결된 선수 id
-    tag = models.ForeignKey(PlayerTag, on_delete=models.CASCADE)  # 연결된 태그 id
+# # 선수 관련 태그 관리 모델
+# class PlayerTag(BaseModel):
+#     name = models.CharField(max_length=50, unique=True, null=False, blank=False, default=None)  # 태그명
+#
+#
+# # 선수와 태그의 연결 관리 모델
+# class PlayerTagged(BaseModel):
+#     player = models.ForeignKey(Player, on_delete=models.CASCADE)  # 연결된 선수 id
+#     tag = models.ForeignKey(PlayerTag, on_delete=models.CASCADE)  # 연결된 태그 id
