@@ -13,6 +13,7 @@ class Team(BaseModel, SoftDeleteModel):
     social = models.JSONField(
         default=dict, blank=True, null=True, help_text="소셜 미디어 URL (insta, facebook, youtube, twitter)"
     )
+    tags = TaggableManager(blank=True)
 
     def __str__(self) -> str:
         return self.name
@@ -37,7 +38,6 @@ class TeamSchedule(BaseModel, SoftDeleteModel):
     title = models.CharField(max_length=50, help_text="제목")
     # 일정에 대한 상세 내용
     detail = models.CharField(max_length=255, blank=True, null=True, help_text="내용")
-    tags = TaggableManager(blank=True)
 
     def __str__(self) -> str:
         return f"{self.team.name} - {self.title}"
