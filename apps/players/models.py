@@ -1,8 +1,8 @@
 from enum import Enum
 
 from django.db import models
-from taggit.managers import TaggableManager
 from django_softdelete.models import SoftDeleteModel
+from taggit.managers import TaggableManager
 
 from apps.common.models import BaseModel
 from apps.teams.models import Team
@@ -59,14 +59,3 @@ class PlayerImage(BaseModel, SoftDeleteModel):
         choices=[("profile", "프로필 이미지"), ("background", "배경 이미지"), ("gallery", "갤러리 이미지")],
     )  # 이미지 분류 항목
     url = models.CharField(max_length=255)  # 이미지 URL
-
-
-# # 선수 관련 태그 관리 모델
-# class PlayerTag(BaseModel):
-#     name = models.CharField(max_length=50, unique=True, null=False, blank=False, default=None)  # 태그명
-#
-#
-# # 선수와 태그의 연결 관리 모델
-# class PlayerTagged(BaseModel):
-#     player = models.ForeignKey(Player, on_delete=models.CASCADE)  # 연결된 선수 id
-#     tag = models.ForeignKey(PlayerTag, on_delete=models.CASCADE)  # 연결된 태그 id
