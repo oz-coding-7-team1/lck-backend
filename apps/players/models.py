@@ -2,6 +2,7 @@ from enum import Enum
 
 from django.db import models
 from taggit.managers import TaggableManager
+from django_softdelete.models import SoftDeleteModel
 
 from apps.common.models import BaseModel
 from apps.teams.models import Team
@@ -17,7 +18,7 @@ class Position(Enum):
 
 
 # 선수 상세 정보 관리 모델
-class Player(BaseModel):
+class Player(BaseModel, SoftDeleteModel):
     team = models.ForeignKey(Team, on_delete=models.CASCADE)  # 소속 된 팀
     realname = models.CharField(max_length=30)  # 본명
     nickname = models.CharField(max_length=30, unique=True)  # 선수명 (중복불가)
@@ -38,7 +39,7 @@ class Player(BaseModel):
 
 
 # 선수 스케줄 관리 모델
-class PlayerSchedule(BaseModel):
+class PlayerSchedule(BaseModel, SoftDeleteModel):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     category = models.CharField(
         max_length=10, choices=[("생일", "생일"), ("경기", "경기일정"), ("개인방송", "개인방송")]
@@ -51,7 +52,7 @@ class PlayerSchedule(BaseModel):
 
 
 # 선수 이미지 관리 모델
-class PlayerImage(BaseModel):
+class PlayerImage(BaseModel, SoftDeleteModel):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     type = models.CharField(
         max_length=15,
