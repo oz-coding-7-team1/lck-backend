@@ -70,18 +70,27 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin, SoftDeleteModel):  # t
             return True
         return False
 
+    class Meta:
+        db_table = "user"
+
 
 # 유저 이미지 정보를 저장하는 모멜
 class UserImage(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="images")
     url = models.CharField(max_length=255)
 
+    class Meta:
+        db_table = "user_image"
+
 
 # 사용자의 약관 동의 정보를 저장하는 모델
-class TermsAgreements(BaseModel):
+class TermsAgreement(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     terms = models.ForeignKey("Terms", on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "terms_agreement"
 
 
 # 약관 정보를 저장하는 모델
@@ -90,3 +99,6 @@ class Terms(BaseModel):
     detail = models.TextField()
     is_active = models.BooleanField(default=True)
     is_required = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "terms"
