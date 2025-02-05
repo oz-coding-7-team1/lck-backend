@@ -17,6 +17,9 @@ class Team(BaseModel, SoftDeleteModel):
     def __str__(self) -> str:
         return self.name
 
+    class Meta:
+        db_table = "team"
+
 
 # 팀 일정을 저장하는 모델
 class TeamSchedule(BaseModel, SoftDeleteModel):
@@ -39,6 +42,9 @@ class TeamSchedule(BaseModel, SoftDeleteModel):
     def __str__(self) -> str:
         return f"{self.team.name} - {self.title}"
 
+    class Meta:
+        db_table = "team_schedule"
+
 
 # 팀 이미지 정보를 저장하는 모멜
 class TeamImage(BaseModel, SoftDeleteModel):
@@ -52,16 +58,5 @@ class TeamImage(BaseModel, SoftDeleteModel):
     def __str__(self) -> str:
         return f"{self.team.name} - {self.type}"
 
-
-# # 팀 관련 태그 정보를 저장하는 모델
-# class TeamTags(BaseModel, SoftDeleteModel):
-#     # 태그명
-#     name = models.CharField(max_length=50, unique=True, help_text="관련 검색어")
-#
-#
-# # 팀과 태그 간의 N:M 관계를 저장하는 모델 (팀에게 태그 등록)
-# class TeamTagged(BaseModel, SoftDeleteModel):  # type: ignore
-#     # 태그가 등록된 팀 (Team 모델과의 외래키 관계)
-#     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="tagged_tags", help_text="팀 식별자")
-#     # 등록된 태그 (TeamTags 모델과의 외래키 관계)
-#     tag = models.ForeignKey(TeamTags, on_delete=models.CASCADE, related_name="team_tags", help_text="태그 식별자")
+    class Meta:
+        db_table = "team_image"
