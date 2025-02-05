@@ -5,7 +5,6 @@ from taggit.managers import TaggableManager
 
 from apps.common.models import BaseModel
 from apps.teams.models import Team
-from apps.users.models import User
 
 
 # 선수 포지션 선택지
@@ -36,12 +35,6 @@ class Player(BaseModel):
     agency = models.CharField(max_length=50)  # 소속사
     is_active = models.BooleanField(default=True)  # 선수 활성화 여부 (soft delete를 위해 활성화 여부 저장)
     tags = TaggableManager(blank=True)
-
-
-# 선수 구독 관리 모델
-class PlayerSub(BaseModel):
-    player = models.ForeignKey(Player, on_delete=models.CASCADE)  # 특정 선수
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # 특정 선수를 구독 한 유저
 
 
 # 선수 스케줄 관리 모델
