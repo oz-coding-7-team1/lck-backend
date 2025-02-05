@@ -235,6 +235,20 @@ argon2 = ["argon2-cffi (>=19.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
+name = "django-classy-tags"
+version = "4.1.0"
+description = "Class based template tags for Django"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "django-classy-tags-4.1.0.tar.gz", hash = "sha256:c8d9d1aa2fa6e71c4d866df4dd11d23a69b8d25bbb750b2490a17b161774ee59"},
+    {file = "django_classy_tags-4.1.0-py3-none-any.whl", hash = "sha256:1c784cf1bac49c20a77b8f7d1541867c64076642a160a847ff449588d4e01e55"},
+]
+
+[package.dependencies]
+django = ">=3.2"
+
+[[package]]
 name = "django-cors-headers"
 version = "4.6.0"
 description = "django-cors-headers is a Django application for handling the server headers required for Cross-Origin Resource Sharing (CORS)."
@@ -316,6 +330,38 @@ files = [
 [package.dependencies]
 django = "*"
 typing-extensions = "*"
+
+[[package]]
+name = "django-taggit"
+version = "6.1.0"
+description = "django-taggit is a reusable Django application for simple tagging."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "django_taggit-6.1.0-py3-none-any.whl", hash = "sha256:ab776264bbc76cb3d7e49e1bf9054962457831bd21c3a42db9138b41956e4cf0"},
+    {file = "django_taggit-6.1.0.tar.gz", hash = "sha256:c4d1199e6df34125dd36db5eb0efe545b254dec3980ce5dd80e6bab3e78757c3"},
+]
+
+[package.dependencies]
+Django = ">=4.1"
+
+[[package]]
+name = "django-taggit-templatetags2"
+version = "1.6.1"
+description = "Templatetags for django-taggit."
+optional = false
+python-versions = "*"
+files = [
+    {file = "django_taggit_templatetags2-1.6.1-py2.py3-none-any.whl", hash = "sha256:eb41d76bdcc4f4e2979dfa93e34f98380a92296c4658646c522b514b70040322"},
+]
+
+[package.dependencies]
+django = ">=1.5"
+django-classy-tags = ">=0.5.1"
+django-taggit = ">=0.12"
+
+[package.extras]
+test = ["tox (>=1.7)"]
 
 [[package]]
 name = "djangorestframework"
@@ -1125,4 +1171,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "3.12.6"
-content-hash = "ee23e0f42210249f02eecf21d9538004dd0b88bcd48f08405227ef32142ed9e4"
+content-hash = "c6a118bb87a7286253183bfe2e10377a2c895770f02c869dd28dff8cb8fd83e9"

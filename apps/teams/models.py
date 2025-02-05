@@ -1,5 +1,6 @@
 from django.db import models
 from django_softdelete.models import SoftDeleteModel  # type: ignore
+from taggit.managers import TaggableManager
 
 from apps.common.models import BaseModel
 from apps.users.models import User
@@ -34,6 +35,7 @@ class TeamSchedule(BaseModel, SoftDeleteModel):  # type: ignore
     title = models.CharField(max_length=50, help_text="제목")
     # 일정에 대한 상세 내용
     detail = models.CharField(max_length=255, blank=True, null=True, help_text="내용")
+    tags = TaggableManager(blank=True)
 
     def __str__(self) -> str:
         return f"{self.team.name} - {self.title}"
@@ -67,15 +69,15 @@ class TeamImage(BaseModel, SoftDeleteModel):  # type: ignore
         return f"{self.team.name} - {self.type}"
 
 
-# 팀 관련 태그 정보를 저장하는 모델
-class TeamTags(BaseModel, SoftDeleteModel):  # type: ignore
-    # 태그명
-    name = models.CharField(max_length=50, unique=True, help_text="관련 검색어")
-
-
-# 팀과 태그 간의 N:M 관계를 저장하는 모델 (팀에게 태그 등록)
-class TeamTagged(BaseModel, SoftDeleteModel):  # type: ignore
-    # 태그가 등록된 팀 (Team 모델과의 외래키 관계)
-    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="tagged_tags", help_text="팀 식별자")
-    # 등록된 태그 (TeamTags 모델과의 외래키 관계)
-    tag = models.ForeignKey(TeamTags, on_delete=models.CASCADE, related_name="team_tags", help_text="태그 식별자")
+# # 팀 관련 태그 정보를 저장하는 모델
+# class TeamTags(BaseModel, SoftDeleteModel):  # type: ignore
+#     # 태그명
+#     name = models.CharField(max_length=50, unique=True, help_text="관련 검색어")
+#
+#
+# # 팀과 태그 간의 N:M 관계를 저장하는 모델 (팀에게 태그 등록)
+# class TeamTagged(BaseModel, SoftDeleteModel):  # type: ignore
+#     # 태그가 등록된 팀 (Team 모델과의 외래키 관계)
+#     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="tagged_tags", help_text="팀 식별자")
+#     # 등록된 태그 (TeamTags 모델과의 외래키 관계)
+#     tag = models.ForeignKey(TeamTags, on_delete=models.CASCADE, related_name="team_tags", help_text="태그 식별자")

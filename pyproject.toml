@@ -21,6 +21,8 @@ postgres = ">=4.0"
 uwsgi = ">=2.0.24,<2.1.0"
 boto3 = ">=1.36.1"
 django-soft-delete = "^1.0.18"
+django-taggit = "^6.1.0"
+django-taggit-templatetags2 = "^1.6.1"
 
 
 [tool.poetry.group.dev.dependencies]
