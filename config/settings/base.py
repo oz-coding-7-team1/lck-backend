@@ -63,7 +63,7 @@ PACKAGE = [
     "apps.users.apps.UsersConfig",
     "apps.players.apps.PlayersConfig",
     "apps.teams.apps.TeamsConfig",
-    "apps.subscriptions.apps.SubscriptionConfig",
+    "apps.subscriptions.apps.SubscriptionsConfig",
     "taggit",
     "taggit_templatetags2",
 ]
