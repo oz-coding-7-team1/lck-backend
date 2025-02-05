@@ -34,8 +34,11 @@ class Player(BaseModel, SoftDeleteModel):
     debut_date = models.DateField()  # 데뷔일
     social = models.JSONField(default=dict, null=True, blank=True)  # 소셜 URL (insta, facebook, youtube, X)
     agency = models.CharField(max_length=50)  # 소속사
-    is_active = models.BooleanField(default=True)  # 선수 활성화 여부 (soft delete를 위해 활성화 여부 저장)
+    is_active = models.BooleanField(default=True)  # 선수 활성화 여부
     tags = TaggableManager(blank=True)
+
+    class Meta:
+        db_table = "player"
 
 
 # 선수 스케줄 관리 모델
@@ -50,6 +53,9 @@ class PlayerSchedule(BaseModel, SoftDeleteModel):
     title = models.CharField(max_length=50, null=False, blank=False, default=None)  # 이벤트 제목
     detail = models.CharField(max_length=255, blank=True)  # 이벤트 상세 내용
 
+    class Meta:
+        db_table = "player_schedule"
+
 
 # 선수 이미지 관리 모델
 class PlayerImage(BaseModel, SoftDeleteModel):
@@ -59,3 +65,6 @@ class PlayerImage(BaseModel, SoftDeleteModel):
         choices=[("profile", "프로필 이미지"), ("background", "배경 이미지"), ("gallery", "갤러리 이미지")],
     )  # 이미지 분류 항목
     url = models.CharField(max_length=255)  # 이미지 URL
+
+    class Meta:
+        db_table = "player_image"
