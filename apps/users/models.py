@@ -1,12 +1,17 @@
 from typing import Optional, Union
 
 from django.contrib.auth.base_user import BaseUserManager
-from django.contrib.auth.models import AbstractBaseUser, AnonymousUser, PermissionsMixin
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    AnonymousUser,
+    PermissionsMixin,
+)
 from django.db import models
 from django.db.models.base import Model
-from django_softdelete.models import SoftDeleteModel  # type: ignore
+from django_softdelete.models import SoftDeleteModel
 
 from apps.common.models import BaseModel
+
 
 class UserManager(BaseUserManager):
     def active_user(self):
@@ -22,21 +27,21 @@ class UserManager(BaseUserManager):
         return self.filter(is_staff=True, is_active=False)
 
     # 함수 앞 _는 이 파일에서만 사용하겠다는 의미
-    def _create_user(self, email, password, **extra_fields):
+    def _create_user(self, email: str, password: Optional[str], **extra_fields):
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_user(self, email, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', False)
-        extra_fields.setdefault('is_superuser', False)
+    def create_user(self, email: str, password: Optional[str] = None, **extra_fields):
+        extra_fields.setdefault("is_staff", False)
+        extra_fields.setdefault("is_superuser", False)
         return self._create_user(email, password, **extra_fields)
 
-    def create_superuser(self, email, password, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
+    def create_superuser(self, email: str, password: Optional[str], **extra_fields):
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
         return self._create_user(email, password, **extra_fields)
 
 

@@ -1,7 +1,6 @@
 from enum import Enum
 
 from django.db import models
-
 from taggit.managers import TaggableManager
 
 from apps.common.models import BaseModel

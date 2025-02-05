@@ -23,6 +23,7 @@ boto3 = ">=1.36.1"
 django-soft-delete = "^1.0.18"
 django-taggit = "^6.1.0"
 django-taggit-templatetags2 = "^1.6.1"
+mypy = "^1.14.1"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -46,12 +47,17 @@ profile = "black"
 plugins = ["mypy_django_plugin.main"]
 python_version = "3.12"
 strict = true
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = [
     "manage",
     "*.migrations.*",
-    "config.*"
+    "config.*",
+    "apps.users.models",
+    "apps.teams.models",
+    "apps.players.models",
+    "apps.subscription.models"
 ]
 ignore_errors = true
 

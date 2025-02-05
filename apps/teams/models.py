@@ -1,5 +1,5 @@
 from django.db import models
-from django_softdelete.models import SoftDeleteModel  # type: ignore
+from django_softdelete.models import SoftDeleteModel
 from taggit.managers import TaggableManager
 
 from apps.common.models import BaseModel
