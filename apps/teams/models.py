@@ -17,6 +17,9 @@ class Team(BaseModel, SoftDeleteModel):
     def __str__(self) -> str:
         return self.name
 
+    class Meta:
+        db_table = "team"
+
 
 # 팀 일정을 저장하는 모델
 class TeamSchedule(BaseModel, SoftDeleteModel):
@@ -39,6 +42,9 @@ class TeamSchedule(BaseModel, SoftDeleteModel):
     def __str__(self) -> str:
         return f"{self.team.name} - {self.title}"
 
+    class Meta:
+        db_table = "team_schedule"
+
 
 # 팀 이미지 정보를 저장하는 모멜
 class TeamImage(BaseModel, SoftDeleteModel):
@@ -51,6 +57,9 @@ class TeamImage(BaseModel, SoftDeleteModel):
 
     def __str__(self) -> str:
         return f"{self.team.name} - {self.type}"
+
+    class Meta:
+        db_table = "team_image"
 
 
 # # 팀 관련 태그 정보를 저장하는 모델
