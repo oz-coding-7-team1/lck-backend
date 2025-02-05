@@ -1,6 +1,7 @@
 from enum import Enum
 
 from django.db import models
+from django_softdelete.models import SoftDeleteModel
 from taggit.managers import TaggableManager
 
 from apps.common.models import BaseModel
@@ -17,8 +18,8 @@ class Position(Enum):
 
 
 # 선수 상세 정보 관리 모델
-class Player(BaseModel):
-    team = models.ForeignKey(Team, on_delete=models.CASCADE)  # 소속 된 팀
+class Player(BaseModel, SoftDeleteModel):
+    team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True)  # 팀 삭제 시 선수가 무소속이 됨
     realname = models.CharField(max_length=30)  # 본명
     nickname = models.CharField(max_length=30, unique=True)  # 선수명 (중복불가)
     gamename = models.CharField(max_length=50)  # 게임 닉네임
@@ -33,12 +34,15 @@ class Player(BaseModel):
     debut_date = models.DateField()  # 데뷔일
     social = models.JSONField(default=dict, null=True, blank=True)  # 소셜 URL (insta, facebook, youtube, X)
     agency = models.CharField(max_length=50)  # 소속사
-    is_active = models.BooleanField(default=True)  # 선수 활성화 여부 (soft delete를 위해 활성화 여부 저장)
+    is_active = models.BooleanField(default=True)  # 선수 활성화 여부
     tags = TaggableManager(blank=True)
+
+    class Meta:
+        db_table = "player"
 
 
 # 선수 스케줄 관리 모델
-class PlayerSchedule(BaseModel):
+class PlayerSchedule(BaseModel, SoftDeleteModel):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     category = models.CharField(
         max_length=10, choices=[("생일", "생일"), ("경기", "경기일정"), ("개인방송", "개인방송")]
@@ -49,9 +53,12 @@ class PlayerSchedule(BaseModel):
     title = models.CharField(max_length=50, null=False, blank=False, default=None)  # 이벤트 제목
     detail = models.CharField(max_length=255, blank=True)  # 이벤트 상세 내용
 
+    class Meta:
+        db_table = "player_schedule"
+
 
 # 선수 이미지 관리 모델
-class PlayerImage(BaseModel):
+class PlayerImage(BaseModel, SoftDeleteModel):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     type = models.CharField(
         max_length=15,
@@ -59,13 +66,5 @@ class PlayerImage(BaseModel):
     )  # 이미지 분류 항목
     url = models.CharField(max_length=255)  # 이미지 URL
 
-
-# # 선수 관련 태그 관리 모델
-# class PlayerTag(BaseModel):
-#     name = models.CharField(max_length=50, unique=True, null=False, blank=False, default=None)  # 태그명
-#
-#
-# # 선수와 태그의 연결 관리 모델
-# class PlayerTagged(BaseModel):
-#     player = models.ForeignKey(Player, on_delete=models.CASCADE)  # 연결된 선수 id
-#     tag = models.ForeignKey(PlayerTag, on_delete=models.CASCADE)  # 연결된 태그 id
+    class Meta:
+        db_table = "player_image"
