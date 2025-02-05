@@ -19,7 +19,7 @@ class Position(Enum):
 
 # 선수 상세 정보 관리 모델
 class Player(BaseModel, SoftDeleteModel):
-    team = models.ForeignKey(Team, on_delete=models.CASCADE)  # 소속 된 팀
+    team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True)  # 팀 삭제 시 선수가 무소속이 됨
     realname = models.CharField(max_length=30)  # 본명
     nickname = models.CharField(max_length=30, unique=True)  # 선수명 (중복불가)
     gamename = models.CharField(max_length=50)  # 게임 닉네임
