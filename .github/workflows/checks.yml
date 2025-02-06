@@ -48,9 +48,13 @@ jobs:
           echo "${HOME}/.local/bin" >> $GITHUB_PATH
 
       - name: Install dependencies
-        run: |
+        run: | # poetry 자기 자신을 설치하지 않음
           poetry install --no-root
-        # poetry 자기 자신을 설치하지 않음
+
+        # db 마이그레이션, noinput으로 사용자 입력 요구사항 무시
+      - name: Run migrations
+        run: |
+          poetry run python manage.py migrate --noinput
 
       - name: Run black
         run: |
