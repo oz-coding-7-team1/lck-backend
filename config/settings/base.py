@@ -66,7 +66,12 @@ PACKAGE = [
     "apps.subscriptions.apps.SubscriptionsConfig",
     "taggit",
     "taggit_templatetags2",
+    "django_filters",
 ]
+
+REST_FRAMEWORK = {
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+}
 
 INSTALLED_APPS = DJANGO_APPS + PACKAGE
 
