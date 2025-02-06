@@ -17,6 +17,7 @@ from .serializers import (
     PlayerTopSerializer,
 )
 
+
 # 전체 Player 조회 모델의 목록을 처리하는 API 뷰
 class PlayerList(APIView):
     # 검색 기능을 사용하도록 설정 SearchFilter를 사용하면 URL 쿼리 파라미터를 통해 검색할 수 있다
@@ -32,6 +33,7 @@ class PlayerList(APIView):
         # 직렬화된 데이터를 Response 객체로 반환
         return Response(serializer.data)
 
+
 # Player 프로필 모델의 개별 객체를 처리하는 API 뷰
 class PlayerDetail(APIView):
     def get_object(self, pk: int) -> Player:
@@ -44,8 +46,9 @@ class PlayerDetail(APIView):
     def get(self, request: Any, pk: int, format: Optional[str] = None) -> Response:
         # 특정 Player 객체를 가져와서 직렬화 후 반환
         player = self.get_object(pk)
-        serializer = PlayerProfileSerializer(player)  # PlayerProfileSerializer 사용
+        serializer = PlayerProfileSerializer(player)
         return Response(serializer.data)
+
 
 # 구독 수가 많은 상위 10명의 선수 정보를 반환하는 API 뷰
 @api_view(["GET"])
@@ -60,6 +63,7 @@ def top_players(request: Any) -> Response:
     except Exception as e:
         # 에러가 발생하면 에러 메시지를 반환
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 # 특정 포지션의 구독 수가 많은 상위 5명의 선수 정보를 반환하는 API 뷰
 @api_view(["GET"])
@@ -79,6 +83,7 @@ def position_top(request: Any) -> Response:
         # 에러가 발생하면 에러 메시지를 반환
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 # 특정 선수의 이미지를 처리하는 API 뷰
 class PlayerImageList(APIView):
     def get(self, request: Any, pk: int, format: Optional[str] = None) -> Response:
@@ -95,6 +100,7 @@ class PlayerImageList(APIView):
         except Exception as e:
             # 에러가 발생하면 에러 메시지를 반환
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 # 특정 선수의 스케줄을 처리하는 API 뷰
 class PlayerScheduleList(APIView):
