@@ -52,6 +52,10 @@ jobs:
         run: | # poetry 자기 자신을 설치하지 않음
           poetry install --no-root
 
+      - name: Debug Environment Variables
+        run: |
+          echo "DB_USER: $DB_USER"
+
       # noinput: 사용자 입력 요구 무시
       - name: Run migrations
         env:
