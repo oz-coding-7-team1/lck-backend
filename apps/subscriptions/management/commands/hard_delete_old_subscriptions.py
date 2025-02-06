@@ -1,6 +1,8 @@
+from datetime import timedelta
+from typing import Any
+
 from django.core.management.base import BaseCommand
 from django.utils.timezone import now
-from datetime import timedelta
 
 from apps.subscriptions.models import PlayerSubscription, TeamSubscription
 
@@ -11,7 +13,7 @@ class Command(BaseCommand):
 			매일 자정 진행: 0 0 * * * /path/to/venv/bin/python /path/to/project/manage.py hard_delete_old_subscriptions
 			"""
 
-    def handle(self, *args, **kwargs):
+    def handle(self, *args: Any, **options: Any) -> None:
         threshold = now() - timedelta(days=3)
 
         # 3일 이상 지난 soft delete된 row 삭제
