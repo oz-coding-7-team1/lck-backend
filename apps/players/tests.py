@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from django.contrib.auth import get_user_model
@@ -7,7 +7,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from apps.players.models import Player
+from apps.players.models import Player, PlayerSchedule
 from apps.subscriptions.models import PlayerSubscription
 
 # 커스텀 User 모델을 가져
@@ -151,3 +151,45 @@ class PositionTopAPITest(APITestCase):
         self.assertEqual(data[1]["nickname"], "M3")
         # 세 번째 항목은 구독 수가 1인 player_mid_1이어야함
         self.assertEqual(data[2]["nickname"], "M1")
+
+
+class DummyScheduleAPITest(APITestCase):
+    # 각 테스트 전에 더미 스케줄 생성을 위한 초기 설정을 수행합니다.
+    def setUp(self) -> None:
+        # 테스트용 사용자(User) 생성 (스케줄 생성에는 직접 필요하지 않을 수 있음)
+        self.user = User.objects.create_user(email="test@example.com", password="pass", nickname="testuser")
+        # 테스트용 플레이어 생성
+        self.player = create_player("TestP", "Test Player", "mid")
+        # 만약 이전에 생성된 스케줄이 있다면 삭제 (소프트 딜리트가 적용되어 있다면 활성 데이터만 고려)
+        PlayerSchedule.objects.filter(player=self.player).delete()
+
+    # 선수 스케줄 더미 데이터를 직접 ORM을 통해 생성하고,
+    # 기존 PlayerScheduleList 뷰를 호출하여 조회되는지를 테스트합니다.
+    def test_dummy_schedule_creation_and_retrieval(self) -> None:
+        # 더미 스케줄 데이터 생성
+        # 예시로, 각 플레이어당 3개의 스케줄 데이터를 생성합니다.
+        start_period = datetime.now()
+        for j in range(3):
+            # 각 스케줄의 시작 일시는 start_period부터 j일 후로 설정
+            random_start = start_period + timedelta(days=j)
+            # 종료 일시는 시작일시로부터 2시간 후로 설정
+            random_end = random_start + timedelta(hours=2)
+            # PlayerSchedule 모델을 직접 이용해 스케줄 데이터를 생성합니다.
+            PlayerSchedule.objects.create(
+                player=self.player,
+                category="경기",  # 유효한 값: "생일", "경기", "개인방송"
+                start_date=random_start,
+                end_date=random_end,
+                place=f"Place {self.player.nickname} {j+1}",
+                title=f"Dummy Schedule {j+1} for {self.player.nickname}",
+                detail="This is a dummy schedule generated for testing purposes.",
+            )
+
+        # 기존 스케줄 조회 API (PlayerScheduleList 뷰)를 호출하여 생성된 스케줄 데이터를 확인합니다.
+        schedule_url = reverse("player-schedule", kwargs={"pk": self.player.id})
+        response = self.client.get(schedule_url)
+        # 응답 상태 코드가 200(성공)인지 확인합니다.
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        # 생성된 스케줄 데이터가 3개인지 확인합니다.
+        self.assertEqual(len(data), 3)
