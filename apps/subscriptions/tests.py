@@ -11,7 +11,7 @@ from apps.teams.models import Team
 User = get_user_model()
 
 
-class PlayerSubscriptionTests(APITestCase):  # type: ignore
+class PlayerSubscriptionTests(APITestCase):
     def setUp(self) -> None:
         self.user = User.objects.create_user(email="testuser@example.com", password="testpass")
         self.player = Player.objects.create(
@@ -57,7 +57,7 @@ class PlayerSubscriptionTests(APITestCase):  # type: ignore
         self.assertEqual(response.data["count"], 1)
 
 
-class TeamSubscriptionTests(APITestCase):  # type: ignore
+class TeamSubscriptionTests(APITestCase):
     def setUp(self) -> None:
         self.user = User.objects.create_user(email="testuser@example.com", password="testpass")
         self.team = Team.objects.create(name="Test Team")
