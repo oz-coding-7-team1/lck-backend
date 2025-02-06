@@ -60,6 +60,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client-17
 
+      # db연결까지 대기
+      - name: Wait for PostgreSQL to start
+        run: |
+          until pg_isready -h $DB_HOST -p $DB_PORT -U $DB_USER; do
+            echo "Waiting for PostgreSQL to start..."
+            sleep 5
+          done
+
+      # db연결 잘 되는 지 환경변수 테스트
       - name: Test DB Connection
         run: |
           PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_DATABASE -c "SELECT 1"
