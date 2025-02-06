@@ -71,7 +71,7 @@ jobs:
       # db연결 잘 되는 지 환경변수 테스트
       - name: Test DB Connection
         run: |
-          PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_DATABASE -c "SELECT 1"
+          PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_NAME -c "SELECT 1"
 
 
       - name: Run makemigrations
@@ -80,11 +80,8 @@ jobs:
 
       - name: Run migrate
         run: |
-          poetry run python manage.py migrate --noinput --verbosity 3 || (
-            echo "Migration failed, dumping database schema:" &&
-            PGPASSWORD=$DB_PASSWORD pg_dump -h $DB_HOST -U $DB_USER $DB_DATABASE &&
-            exit 1
-          )
+          poetry run python manage.py migrate --noinput
+
       - name: Run black
         run: |
           poetry run black . --check
