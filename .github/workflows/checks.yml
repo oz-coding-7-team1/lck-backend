@@ -51,6 +51,12 @@ jobs:
         run: | # poetry 자기 자신을 설치하지 않음
           poetry install --no-root
 
+      # noinput: 사용자 입력 요구 무시
+      - name: Run migrations
+        run: |
+          python manage.py makemigrations --noinput
+          python manage.py migrate --noinput
+
       - name: Run black
         run: |
           poetry run black . --check
