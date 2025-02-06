@@ -52,9 +52,15 @@ jobs:
         run: | # poetry 자기 자신을 설치하지 않음
           poetry install --no-root
 
+      - name: Set up PostgreSQL client
+        run: |
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
+
       - name: Test DB Connection
         run: |
-          sudo apt-get install -y postgresql-client-17
           PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_DATABASE -c "SELECT 1"
 
 
