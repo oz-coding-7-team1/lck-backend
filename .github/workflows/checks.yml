@@ -54,6 +54,8 @@ jobs:
 
       # noinput: 사용자 입력 요구 무시
       - name: Run migrations
+        env:
+          DATABASE_URL: postgres://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@127.0.0.1:5432/${{ secrets.DB_DATABASE }}
         run: |
           poetry run python manage.py makemigrations --noinput
           poetry run python manage.py migrate --noinput
