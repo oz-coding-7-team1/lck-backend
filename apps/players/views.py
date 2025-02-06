@@ -1,97 +1,121 @@
-from typing import Any, Union
+from typing import Any, Optional
 
-from django.db.models import Count
-from django.db.models.query import QuerySet
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, viewsets
-from rest_framework.decorators import action
+from django.http import Http404
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import Player, PlayerImage, PlayerSchedule
 from .serializers import (
     PlayerImageSerializer,
+    PlayerPositionSerializer,
     PlayerProfileSerializer,
     PlayerScheduleSerializer,
     PlayerSerializer,
+    PlayerTopSerializer,
 )
 
 
-# 선수(Player) 관련 API ViewSet
-class PlayerViewSet(viewsets.ReadOnlyModelViewSet[Player]):
-    queryset = Player.objects.all()  # 모든 선수 데이터를 가져옴
-    serializer_class = PlayerSerializer  # 데이터를 직렬화할 때 사용할 시리얼라이저 클래스 지정
-    filter_backends = [
-        DjangoFilterBackend,
-        filters.OrderingFilter,
-        filters.SearchFilter,
-    ]  # 필터링, 정렬, 검색 기능을 위한 백엔드 설정
-    filterset_fields = ["position", "team__name"]  # 포지션 및 팀명으로 필터링 가능 (쿼리 파라미터로 필터링)
-    search_fields = ["nickname", "gamename"]  # 선수명 또는 게임 닉네임을 검색할 수 있음
-    ordering_fields = ["nickname"]  # 닉네임을 기준으로 정렬 가능
+# 전체 Player 조회 모델의 목록을 처리하는 API 뷰
+class PlayerList(APIView):
+    # 검색 기능을 사용하도록 설정 SearchFilter를 사용하면 URL 쿼리 파라미터를 통해 검색할 수 있다
+    filter_backends = [SearchFilter]
+    # 검색할 수 있는 필드를 지정
+    search_fields = ["nickname", "realname", "position", "team_id"]
 
-    # 상위 10명의 선수를 조회하는 커스텀 액션
-    @action(detail=False, methods=["get"])
-    def top10(self, request: Any) -> Response:
-        """
-        각 선수의 구독자 수를 기준으로 상위 10명의 선수를 조회하는 메서드.
-        :param request: 요청 객체
-        :return: 상위 10명의 선수 데이터를 포함한 응답
-        """
-        top_players = Player.objects.annotate(subscriber_count=Count("tags")).order_by("-subscriber_count")[:10]
-        serializer = self.get_serializer(top_players, many=True)  # 조회된 선수 데이터를 직렬화
-        return Response(serializer.data)  # 직렬화된 데이터를 응답으로 반환
-
-    # 특정 포지션의 상위 5명을 조회하는 커스텀 액션
-    @action(detail=False, methods=["get"])
-    def position_top5(self, request: Any) -> Response:
-        """
-        특정 포지션의 선수들 중 구독자 수 기준 상위 5명의 선수를 조회하는 메서드.
-        :param request: 요청 객체
-        :return: 해당 포지션 상위 5명의 선수 데이터를 포함한 응답
-        """
-        position = request.query_params.get("position")  # 쿼리 파라미터에서 포지션 정보를 가져옴
-        if not position:  # 포지션 파라미터가 없는 경우 오류 응답 반환
-            return Response({"error": "Position parameter is required."}, status=400)
-
-        # 해당 포지션의 선수들 중 구독자 수 기준 상위 5명을 조회
-        top_players = (
-            Player.objects.filter(position=position)
-            .annotate(subscriber_count=Count("tags"))
-            .order_by("-subscriber_count")[:5]
-        )
-        serializer = self.get_serializer(top_players, many=True)  # 조회된 선수 데이터를 직렬화
-        return Response(serializer.data)  # 직렬화된 데이터를 응답으로 반환
+    def get(self, request: Any, format: Optional[str] = None) -> Response:
+        # 모든 Player 객체를 데이터베이스에서 조회
+        players = Player.objects.all()
+        # 조회한 Player 객체들을 PlayerSerializer를 사용하여 직렬화 many=True는 여러 개의 객체를 직렬화할 때 사용
+        serializer = PlayerSerializer(players, many=True)
+        # 직렬화된 데이터를 Response 객체로 반환
+        return Response(serializer.data)
 
 
-# 선수 프로필 정보를 제공하는 ViewSet
-class PlayerProfileViewSet(viewsets.ReadOnlyModelViewSet[Player]):
-    queryset = Player.objects.all()  # 모든 선수 데이터를 가져옴
-    serializer_class = PlayerProfileSerializer  # 프로필 정보를 직렬화할 때 사용할 시리얼라이저 클래스 지정
+# Player 프로필 모델의 개별 객체를 처리하는 API 뷰
+class PlayerDetail(APIView):
+    class PlayerDetail(APIView):
+        def get_object(self, pk: int) -> Player:
+            # 주어진 pk에 해당하는 Player 객체를 반환, 없으면 404 에러 발생
+            try:
+                return Player.objects.get(pk=pk)
+            except Player.DoesNotExist:
+                raise Http404
+
+        def get(self, request: Any, pk: int, format: Optional[str] = None) -> Response:
+            # 특정 Player 객체를 가져와서 직렬화 후 반환
+            player = self.get_object(pk)
+            serializer = PlayerProfileSerializer(player)  # PlayerProfileSerializer 사용
+            return Response(serializer.data)
 
 
-# 선수 이미지 정보를 제공하는 ViewSet
-class PlayerImageViewSet(viewsets.ReadOnlyModelViewSet[PlayerImage]):
-    serializer_class = PlayerImageSerializer  # 이미지를 직렬화할 때 사용할 시리얼라이저 클래스 지정
+# 구독 수가 많은 상위 10명의 선수 정보를 반환하는 API 뷰
+@api_view(["GET"])
+def top_players(request: Any) -> Response:
+    try:
+        # subscribers 기준으로 내림차순으로 정렬하고 상위 10개의 객체를 가져옴
+        top_players = Player.objects.order_by("-subscribers")[:10]
+        # 가져온 top_players 객체들을 PlayerTopSerializer를 사용하여 직렬화 many=True는 여러 개의 객체를 직렬화할 때 사용
+        serializer = PlayerTopSerializer(top_players, many=True)
+        # 직렬화된 데이터를 객체로 반환
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Exception as e:
+        # 에러가 발생하면 에러 메시지를 반환
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def get_queryset(self) -> QuerySet[PlayerImage]:
-        """
-        특정 선수의 이미지를 필터링하여 반환하는 메서드.
-        :return: 특정 선수의 이미지 쿼리셋
-        """
-        player_id: Union[int, str] = self.kwargs.get("pk", "")  # URL 파라미터에서 선수 ID를 가져옴
-        return PlayerImage.objects.filter(player_id=player_id)  # 해당 선수의 이미지를 필터링하여 반환
+
+# 특정 포지션의 구독 수가 많은 상위 5명의 선수 정보를 반환하는 API 뷰
+@api_view(["GET"])
+def position_top(request: Any) -> Response:
+    # 쿼리 파라미터로 포지션을 가져옴
+    position = request.query_params.get("position")
+    if not position:
+        return Response({"error": "Position parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        # subscribers 기준으로 내림차순으로 정렬하고 포지션 별 상위 5개의 객체를 가져옴
+        top_players = Player.objects.filter(position=position).order_by("-subscribers")[:5]
+        # 가져온 top_players 객체들을 PlayerPositionSerializer를 사용하여 직렬화 many=True는 여러 개의 객체를 직렬화할 때 사용
+        serializer = PlayerPositionSerializer(top_players, many=True)
+        # 직렬화된 데이터를 객체로 반환
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Exception as e:
+        # 에러가 발생하면 에러 메시지를 반환
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-# 선수 스케줄 정보를 제공하는 ViewSet (소프트 딜리트된 데이터 제외)
-class PlayerScheduleViewSet(viewsets.ReadOnlyModelViewSet[PlayerSchedule]):
-    serializer_class = PlayerScheduleSerializer  # 스케줄 정보를 직렬화할 때 사용할 시리얼라이저 클래스 지정
+# 특정 선수의 이미지를 처리하는 API 뷰
+class PlayerImageList(APIView):
+    def get(self, request: Any, pk: int, format: Optional[str] = None) -> Response:
+        # Player ID가 없으면 에러 메시지 반환
+        if pk is None:
+            return Response({"error": "Player ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            # 주어진 pk에 해당하는 Player의 이미지 객체들을 데이터베이스에서 조회
+            images = PlayerImage.objects.filter(player_id=pk)
+            # 가져온 images 객체들을 PlayerImageSerializer 사용하여 직렬화 many=True는 여러 개의 객체를 직렬화할 때 사용
+            serializer = PlayerImageSerializer(images, many=True)
+            # 직렬화된 데이터를 객체로 반환
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            # 에러가 발생하면 에러 메시지를 반환
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def get_queryset(self) -> QuerySet[PlayerSchedule]:
-        """
-        특정 선수의 스케줄을 필터링하여 반환하는 메서드 (소프트 딜리트되지 않은 데이터만).
-        :return: 특정 선수의 스케줄 쿼리셋
-        """
-        player_id: Union[int, str] = self.kwargs.get("pk", "")  # URL 파라미터에서 선수 ID를 가져옴
-        return PlayerSchedule.objects.filter(
-            player_id=player_id, deleted_at__isnull=True
-        )  # 소프트 딜리트되지 않은 스케줄을 필터링하여 반환
+
+# 특정 선수의 스케줄을 처리하는 API 뷰
+class PlayerScheduleList(APIView):
+    def get(self, request: Any, pk: int, format: Optional[str] = None) -> Response:
+        # Player ID가 없으면 에러 메시지 반환
+        if pk is None:
+            return Response({"error": "Player ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            # 주어진 pk에 해당하는 Player의 스케줄 객체들을 데이터베이스에서 조회
+            schedules = PlayerSchedule.objects.filter(player_id=pk)
+            # 가져온 schedules 객체들을 PlayerScheduleSerializer를 사용하여 직렬화 many=True는 여러 개의 객체를 직렬화할 때 사용
+            serializer = PlayerScheduleSerializer(schedules, many=True)
+            # 직렬화된 데이터를 객체로 반환
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            # 에러가 발생하면 에러 메시지를 반환
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

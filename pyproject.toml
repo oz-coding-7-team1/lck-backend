@@ -48,8 +48,8 @@ plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
 python_version = "3.12"
 strict = true
 ignore_missing_imports = true
-check_untyped_defs = true          # 타입이 없는 함수도 검사
-show_error_codes = true            # 에러 코드 표시
+check_untyped_defs = true
+show_error_codes = true
 
 [[tool.mypy.overrides]]
 module = [
