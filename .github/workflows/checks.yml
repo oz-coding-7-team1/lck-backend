@@ -17,7 +17,7 @@ jobs:
           - 5432:5432
 
     env:
-      DB_HOST: 127.0.0.1
+      DB_HOST: localhost
       DB_PORT: 5432
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
@@ -52,6 +52,7 @@ jobs:
         run: | # poetry 자기 자신을 설치하지 않음
           poetry install --no-root
 
+      # PostgreSQL 서버와 pg_dump의 버전을 맞추기 위해 같은 버전으로 설치
       - name: Set up PostgreSQL client
         run: |
           sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
