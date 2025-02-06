@@ -21,6 +21,7 @@ sqlite_db_settings = {
     "NAME": ":memory:",  # 인메모리 데이터베이스로 더 빠른 테스트
 }
 
+
 @override_settings(DATABASES={"default": sqlite_db_settings})
 class PlayerSubscriptionTests(APITestCase):
     def setUp(self) -> None:
@@ -133,7 +134,9 @@ class DeleteOldSubscriptionsTest(APITestCase):
         call_command("hard_delete_old_subscriptions")
 
         # 4일 전에 생성된 삭제된 구독은 삭제되어야 합니다.
-        self.assertEqual(PlayerSubscription.deleted_objects.filter(deleted_at__lte=now() - timedelta(days=3)).count(), 0)
+        self.assertEqual(
+            PlayerSubscription.deleted_objects.filter(deleted_at__lte=now() - timedelta(days=3)).count(), 0
+        )
         self.assertEqual(TeamSubscription.deleted_objects.filter(deleted_at__lte=now() - timedelta(days=3)).count(), 0)
 
         # 2일 전에 생성된 삭제된 구독은 남아 있어야 합니다.
