@@ -57,12 +57,13 @@ jobs:
           sudo apt-get install -y postgresql-client
           PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_DATABASE -c "SELECT 1"
 
-      # noinput: 사용자 입력 요구 무시
-      - name: Run migrations
-        env:
-          DATABASE_URL: postgres://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@127.0.0.1:5432/${{ secrets.DB_DATABASE }}
-        run: |
+
+      - name: Run makemigrations
+        run: | # noinput: 사용자 입력 요구 무시
           poetry run python manage.py makemigrations --noinput
+
+      - name: Run migrate
+        run: |
           poetry run python manage.py migrate --noinput
 
       - name: Run black
