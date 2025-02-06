@@ -52,9 +52,10 @@ jobs:
         run: | # poetry 자기 자신을 설치하지 않음
           poetry install --no-root
 
-      - name: Debug Environment Variables
+      - name: Test DB Connection
         run: |
-          echo "DB_USER: $DB_USER"
+          sudo apt-get install -y postgresql-client
+          PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_DATABASE -c "SELECT 1"
 
       # noinput: 사용자 입력 요구 무시
       - name: Run migrations
