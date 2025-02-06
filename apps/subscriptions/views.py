@@ -15,7 +15,7 @@ from .models import PlayerSubscription, TeamSubscription
 from .serializers import PlayerSubscriptionSerializer, TeamSubscriptionSerializer
 
 
-class PlayerSubscriptionView(APIView):  # type: ignore
+class PlayerSubscriptionView(APIView):
     # authentication_classes = (JWTAuthentication,)  # JWT 토큰 검증
     # permission_classes = (IsAuthenticated,)  # 인증된 사용자만 접근 가능
 
@@ -51,7 +51,7 @@ class PlayerSubscriptionView(APIView):  # type: ignore
         return Response({"count": count})
 
 
-class TeamSubscriptionView(APIView):  # type: ignore
+class TeamSubscriptionView(APIView):
     # authentication_classes = (JWTAuthentication,)  # JWT 토큰 검증
     # permission_classes = (IsAuthenticated,)  # 인증된 사용자만 접근 가능
 
