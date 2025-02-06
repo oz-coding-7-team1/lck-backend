@@ -70,7 +70,7 @@ jobs:
 
       - name: Run migrate
         run: |
-          poetry run python manage.py migrate --noinput || (
+          poetry run python manage.py migrate --noinput --verbosity 3 || (
             echo "Migration failed, dumping database schema:" &&
             PGPASSWORD=$DB_PASSWORD pg_dump -h $DB_HOST -U $DB_USER $DB_DATABASE &&
             exit 1
