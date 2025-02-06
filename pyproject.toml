@@ -24,6 +24,7 @@ django-soft-delete = "^1.0.18"
 django-taggit = "^6.1.0"
 django-taggit-templatetags2 = "^1.6.1"
 mypy = "^1.14.1"
+djangorestframework-stubs = "^3.15.2"
 
 
 [tool.poetry.group.dev.dependencies]
