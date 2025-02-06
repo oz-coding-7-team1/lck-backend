@@ -1,4 +1,7 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db import connections
+from django.test.utils import override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.response import Response
@@ -10,7 +13,14 @@ from apps.teams.models import Team
 
 User = get_user_model()
 
+# SQLite3 데이터베이스 설정
+sqlite_db_settings = {
+    "ENGINE": "django.db.backends.sqlite3",
+    "NAME": ":memory:",  # In-memory database for faster tests
+}
 
+
+@override_settings(DATABASES={"default": sqlite_db_settings})
 class PlayerSubscriptionTests(APITestCase):
     def setUp(self) -> None:
         self.user = User.objects.create_user(email="testuser@example.com", password="testpass")
@@ -26,30 +36,21 @@ class PlayerSubscriptionTests(APITestCase):
         self.client.login(email="testuser@example.com", password="testpass")
 
     def test_subscribe_to_player(self) -> None:
-        # reverse로 API 경로 불러오기
         url: str = reverse("player_subscription", args=[self.player.id])
-        # post 보내서 응답 받기
         response: Response = self.client.post(url)
-        # 구독 생성 status code 확인
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        # 객체 존재 여부 확인
         self.assertTrue(PlayerSubscription.objects.filter(user=self.user, player=self.player).exists())
 
     def test_unsubscribe_from_player(self) -> None:
-        # 구독 객체 가져오기
         PlayerSubscription.objects.create(user=self.user, player=self.player)
         url: str = reverse("player_subscription", args=[self.player.id])
-        # delete 요청 보내기
         response: Response = self.client.delete(url)
-        # status code 확인
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        # soft_delete 확인
         self.assertFalse(
             PlayerSubscription.objects.filter(user=self.user, player=self.player, deleted_at__isnull=True).exists()
         )
 
     def test_get_player_subscription_count(self) -> None:
-        # test 구독 객체 생성
         PlayerSubscription.objects.create(user=self.user, player=self.player)
         url: str = reverse("player_subscription", args=[self.player.id])
         response: Response = self.client.get(url)
@@ -57,6 +58,7 @@ class PlayerSubscriptionTests(APITestCase):
         self.assertEqual(response.data["count"], 1)
 
 
+@override_settings(DATABASES={"default": sqlite_db_settings})
 class TeamSubscriptionTests(APITestCase):
     def setUp(self) -> None:
         self.user = User.objects.create_user(email="testuser@example.com", password="testpass")
