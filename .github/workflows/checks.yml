@@ -70,4 +70,4 @@ jobs:
 
       - name: Test python project
         run: |
-          poetry run python manage.py test --settings=config.settings.test
+          poetry run python manage.py test
