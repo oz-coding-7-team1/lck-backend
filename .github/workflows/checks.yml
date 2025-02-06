@@ -64,8 +64,11 @@ jobs:
 
       - name: Run migrate
         run: |
-          poetry run python manage.py migrate --noinput
-
+          poetry run python manage.py migrate --noinput || (
+            echo "Migration failed, dumping database schema:" &&
+            PGPASSWORD=$DB_PASSWORD pg_dump -h $DB_HOST -U $DB_USER $DB_DATABASE &&
+            exit 1
+          )
       - name: Run black
         run: |
           poetry run black . --check
