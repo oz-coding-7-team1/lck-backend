@@ -36,15 +36,20 @@ class PlayerSubscriptionTests(APITestCase):  # type: ignore
         self.assertTrue(PlayerSubscription.objects.filter(user=self.user, player=self.player).exists())
 
     def test_unsubscribe_from_player(self) -> None:
+        # 구독 객체 가져오기
         PlayerSubscription.objects.create(user=self.user, player=self.player)
         url: str = reverse("player_subscription", args=[self.player.id])
+        # delete 요청 보내기
         response: Response = self.client.delete(url)
+        # status code 확인
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        # soft_delete 확인
         self.assertFalse(
             PlayerSubscription.objects.filter(user=self.user, player=self.player, deleted_at__isnull=True).exists()
         )
 
     def test_get_player_subscription_count(self) -> None:
+        # test 구독 객체 생성
         PlayerSubscription.objects.create(user=self.user, player=self.player)
         url: str = reverse("player_subscription", args=[self.player.id])
         response: Response = self.client.get(url)
