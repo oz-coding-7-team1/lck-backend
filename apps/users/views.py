@@ -30,6 +30,7 @@ class UserRegisterView(APIView):
 
         # 활성화되어 있고 필수인 약관 모두를 가져옴
         required_terms = Terms.objects.filter(is_active=True, is_required=True)
+        # 데이터를 집합 자료형으로 변환 / 중복을 제거하고 수학적 집합 연산을 효율적으로 수행할 수 있어서 존재 여부를 빠르게 확인 가능
         required_terms_ids = set(required_terms.values_list("id", flat=True))
         agreed_terms_ids = set(agreed_terms)
 
