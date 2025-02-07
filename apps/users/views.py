@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.shortcuts import get_object_or_404
@@ -19,7 +21,7 @@ class UserRegisterView(APIView):
         AllowAny,
     ]
 
-    def post(self, request):
+    def post(self, request: Any) -> Response:
         agreed_terms = request.data.get("agreed_terms")
         # isinstance(instance, type): 변수의 타입이 특정 클래스인지 확인
         # 여러개의 약관 id를 담은 리스트 형태로 전달
@@ -70,7 +72,7 @@ class UserLoginView(APIView):
         AllowAny,
     ]
 
-    def post(self, request):
+    def post(self, request: Any) -> Response:
         email = request.data.get("email")
         password = request.data.get("password")
         user = authenticate(email=email, password=password)
@@ -92,7 +94,7 @@ class UserLogoutView(APIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    def post(self, request):
+    def post(self, request: Any) -> Response:
         try:
             refresh_token = request.data.get("refresh")
             token = RefreshToken(refresh_token)
@@ -107,7 +109,7 @@ class ChangePasswordView(APIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    def post(self, request):
+    def post(self, request: Any) -> Response:
         user = request.user
         old_password = request.data.get("old_password")
         new_password = request.data.get("new_password")
@@ -132,7 +134,7 @@ class TermsListView(APIView):
         AllowAny,
     ]
 
-    def get(self, request):
+    def get(self, request: Any) -> Response:
         terms = Terms.objects.filter(is_active=True)
         terms_data = []
         for term in terms:
@@ -153,13 +155,13 @@ class MyPageView(APIView):
     permission_classes = (IsAuthenticated,)
 
     # 조회
-    def get(self, request):
+    def get(self, request: Any) -> Response:
         user = request.user
         serializer = UserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 수정
-    def put(self, request):
+    def put(self, request: Any) -> Response:
         user = get_object_or_404(User, id=request.data["id"])
         serializer = UserSerializer(user, data=request.data, partial=True)
 
