@@ -154,7 +154,7 @@ class PositionTopAPITest(APITestCase):
 
 
 class DummyScheduleAPITest(APITestCase):
-    # 각 테스트 전에 더미 스케줄 생성을 위한 초기 설정을 수행합니다.
+    # 각 테스트 전에 더미 스케줄 생성을 위한 초기 설정을 수행
     def setUp(self) -> None:
         # 테스트용 사용자(User) 생성 (스케줄 생성에는 직접 필요하지 않을 수 있음)
         self.user = User.objects.create_user(email="test@example.com", password="pass", nickname="testuser")
@@ -164,32 +164,33 @@ class DummyScheduleAPITest(APITestCase):
         PlayerSchedule.objects.filter(player=self.player).delete()
 
     # 선수 스케줄 더미 데이터를 직접 ORM을 통해 생성하고,
-    # 기존 PlayerScheduleList 뷰를 호출하여 조회되는지를 테스트합니다.
+    # 기존 PlayerScheduleList 뷰를 호출하여 조회되는지를 테스트
     def test_dummy_schedule_creation_and_retrieval(self) -> None:
         # 더미 스케줄 데이터 생성
-        # 예시로, 각 플레이어당 3개의 스케줄 데이터를 생성합니다.
+        # 예시로, 각 플레이어당 3개의 스케줄 데이터를 생성
         start_period = datetime.now()
-        for j in range(3):
-            # 각 스케줄의 시작 일시는 start_period부터 j일 후로 설정
-            random_start = start_period + timedelta(days=j)
+        for i in range(3):
+            # 각 스케줄의 시작 일시는 start_period부터 i일 후로 설정
+            # i=0이면 현재 시간, i=1이면 내일, i=2이면 모레
+            random_start = start_period + timedelta(days=i)
             # 종료 일시는 시작일시로부터 2시간 후로 설정
             random_end = random_start + timedelta(hours=2)
-            # PlayerSchedule 모델을 직접 이용해 스케줄 데이터를 생성합니다.
+            # PlayerSchedule 모델을 직접 이용해 스케줄 데이터를 생성
             PlayerSchedule.objects.create(
                 player=self.player,
                 category="경기",  # 유효한 값: "생일", "경기", "개인방송"
                 start_date=random_start,
                 end_date=random_end,
-                place=f"Place {self.player.nickname} {j+1}",
-                title=f"Dummy Schedule {j+1} for {self.player.nickname}",
+                place=f"Place {self.player.nickname} {i+1}",
+                title=f"Dummy Schedule {i+1} for {self.player.nickname}",
                 detail="This is a dummy schedule generated for testing purposes.",
             )
 
-        # 기존 스케줄 조회 API (PlayerScheduleList 뷰)를 호출하여 생성된 스케줄 데이터를 확인합니다.
+        # 기존 스케줄 조회 API (PlayerScheduleList 뷰)를 호출하여 생성된 스케줄 데이터를 확인.
         schedule_url = reverse("player-schedule", kwargs={"pk": self.player.id})
         response = self.client.get(schedule_url)
-        # 응답 상태 코드가 200(성공)인지 확인합니다.
+        # 응답 상태 코드가 200(성공)인지 확인
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        # 생성된 스케줄 데이터가 3개인지 확인합니다.
+        # 생성된 스케줄 데이터가 3개인지 확인
         self.assertEqual(len(data), 3)
