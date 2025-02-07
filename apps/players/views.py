@@ -1,15 +1,14 @@
 from typing import Any, Optional
 
 from django.db.models import Count
-from django.http import Http404
 from rest_framework import status
+from rest_framework.exceptions import NotFound
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Player, PlayerImage, PlayerSchedule
+from .models import Player, PlayerSchedule
 from .serializers import (
-    PlayerImageSerializer,
     PlayerPositionSerializer,
     PlayerProfileSerializer,
     PlayerScheduleSerializer,
@@ -44,13 +43,13 @@ class PlayerDetail(APIView):
         # DoesNotExist는 "해당 객체가 존재하지 않음"을 나타내는 Django의 기본 예외이며
         # 이를 통해 조회 실패 시 적절한 에러 처리를 할 수 있음
         except Player.DoesNotExist:
-            # 객체가 존재하지 않으면 404 에러 발생
-            raise Http404
+            # 객체가 존재하지 않으면 NotFound 예외를 발생시켜 404 에러 응답을 보냄
+            raise NotFound(detail="해당 플레이어를 찾을 수 없습니다.")
 
         # 조회된 Player 객체를 PlayerProfileSerializer를 사용하여 직렬화
         serializer = PlayerProfileSerializer(player)
         # 직렬화된 데이터를 Response 객체에 담아 클라이언트에게 반환
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # 구독 수가 많은 상위 10명의 선수 조회
@@ -102,27 +101,6 @@ class PositionTop(APIView):
             serializer = PlayerPositionSerializer(top_players, many=True)
 
             # 직렬화된 데이터를 HTTP 200상태 코드와 함께 Response 객체로 반환
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Exception as e:
-            # 예외 발생 시, 에러 메시지와 함께 HTTP 500상태 코드를 반환
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-# 특정 선수의 이미지를 조회
-class PlayerImageList(APIView):
-    """
-    특정 선수의 이미지들을 반환
-    선수 프로필과 별도로 이미지 목록만 조회
-    """
-
-    def get(self, request: Request, pk: int, format: Optional[str] = None) -> Response:
-        try:
-            # URL에 전달된 pk를 이용하여 해당 선수의 이미지들을 조회
-            images = PlayerImage.objects.filter(player_id=pk)
-            # 조회된 이미지들을 PlayerImageSerializer를 사용해 직렬화
-            # many=True는 여러 개의 객체를 직렬화할 때 사용
-            serializer = PlayerImageSerializer(images, many=True)
-            # 직렬화된 데이터를 HTTP 200 상태와 함께 반환
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             # 예외 발생 시, 에러 메시지와 함께 HTTP 500상태 코드를 반환
