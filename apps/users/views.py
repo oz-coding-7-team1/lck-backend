@@ -17,9 +17,9 @@ from .serializers import UserSerializer
 
 # 회원가입 (약관 동의 포함)
 class UserRegisterView(APIView):
-    permission_classes = [
+    permission_classes = (
         AllowAny,
-    ]
+    )
 
     def post(self, request: Any) -> Response:
         agreed_terms = request.data.get("agreed_terms")
@@ -69,14 +69,14 @@ class UserRegisterView(APIView):
 
 # 로그인
 class UserLoginView(APIView):
-    permission_classes = [
+    permission_classes = (
         AllowAny,
-    ]
+)
 
     def post(self, request: Any) -> Response:
         email = request.data.get("email")
         password = request.data.get("password")
-        user = authenticate(email=email, password=password)
+        user = authenticate(request, email=email, password=password)
         if user is not None: # 유저가 존재하면 True
             refresh = RefreshToken.for_user(user)
             return Response(
@@ -116,6 +116,7 @@ class ChangePasswordView(APIView):
         new_password = request.data.get("new_password")
 
         # 현재 비밀번호가 맞는지 확인
+        # check_password method: 사용자가 입력된 비밀번호와 db에 저장된 해시화 비밀번호를 비교하여 일치하는지 확인
         if not user.check_password(old_password):
             raise PermissionDenied("현재 비밀번호가 일치하지 않습니다.")
 
@@ -127,15 +128,24 @@ class ChangePasswordView(APIView):
         user.set_password(new_password)
         user.save()
         return Response({"detail": "비밀번호가 성공적으로 변경되었습니다."}, status=status.HTTP_200_OK)
+    """
+    - 역직렬화는 클라이언트에게 객체의 상세 정보를 전달할 때 사용되므로 비밀번호 변경 후 사용자 정보를 재전달할 필요 없이 성공 메세지만 전달
+    - set_password 와 save 메서드 만으로 변경된 비밀번호가 DB에 자동 저장됨
+    - 비밀번호 저장 방식
+        1. user.set_password(new_password)를 호출하면, 입력한 새로운 비밀번호를 내부적으로 안전하게 해싱한 후 사용자 객체에 저장
+        2. user.save() 호출: 변경된 사용자 객체 상태가 데이터베이스에 반영
+    """
 
 
 # 약관 리스트 조회 (약관 내용을 확인할 수 있도록)
 class TermsListView(APIView):
-    permission_classes = [
+    permission_classes = (
         AllowAny,
-    ]
+    )
 
     def get(self, request: Any) -> Response:
+        # filter(): 조건에 맞는 쿼리셋을 반환
+        # .all() 을 붙여도 동일한 결과를 내지만 중복된 호출이므로 filter(is_active=True) 만 사용
         terms = Terms.objects.filter(is_active=True) # 활성화 된 약관을 조회
         terms_data = [] # TermsList 를 만들기 위한 list
         for term in terms:
