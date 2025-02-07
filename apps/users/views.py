@@ -119,3 +119,20 @@ class ChangePasswordView(APIView):
         user.set_password(new_password)
         user.save()
         return Response({"detail": "비밀번호가 성공적으로 변경되었습니다."}, status=status.HTTP_200_OK)
+
+
+# 약관 리스트 조회 (약관 내용을 확인할 수 있도록)
+class TermsListView(APIView):
+    permission_classes = [AllowAny,]
+
+    def get(self, request):
+        terms = Terms.objects.filter(is_active=True)
+        terms_data = []
+        for term in terms:
+            terms_data.append({
+                "id": term.id,
+                "name": term.name,
+                "detail": term.detail,
+                "is_required": term.is_required,
+            })
+        return Response(terms_data, status=status.HTTP_200_OK)
