@@ -8,6 +8,7 @@ from rest_framework_simplejwt.views import (
 from apps.users.views import (
     ChangePasswordView,
     MyPageView,
+    TermsListView,
     UserLoginView,
     UserLogoutView,
     UserRegisterView,
@@ -26,4 +27,5 @@ urlpatterns = [
     # path("user/image/",),
     # path("user/image/<int:pk>",),
     # path("user/<int:pk>",),
+    path("terms/", TermsListView.as_view(), name="terms"),
 ]
