@@ -1,23 +1,23 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.shortcuts import get_object_or_404
-
 from rest_framework import status
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-
+from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import User, Terms, TermsAgreement
+from .models import Terms, TermsAgreement, User
 from .serializers import UserSerializer
 
 
 # 회원가입 (약관 동의 포함)
 class UserRegisterView(APIView):
-    permission_classes = [AllowAny,]
+    permission_classes = [
+        AllowAny,
+    ]
 
     def post(self, request):
         agreed_terms = request.data.get("agreed_terms")
@@ -66,7 +66,9 @@ class UserRegisterView(APIView):
 
 # 로그인
 class UserLoginView(APIView):
-    permission_classes = [AllowAny,]
+    permission_classes = [
+        AllowAny,
+    ]
 
     def post(self, request):
         email = request.data.get("email")
@@ -74,10 +76,13 @@ class UserLoginView(APIView):
         user = authenticate(email=email, password=password)
         if user is not None:
             refresh = RefreshToken.for_user(user)
-            return Response({
-                "refresh": str(refresh),
-                "access": str(refresh.access_token),
-            }, status=status.HTTP_200_OK)
+            return Response(
+                {
+                    "refresh": str(refresh),
+                    "access": str(refresh.access_token),
+                },
+                status=status.HTTP_200_OK,
+            )
         else:
             return Response({"detail": "잘못된 인증 정보입니다."}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -123,16 +128,44 @@ class ChangePasswordView(APIView):
 
 # 약관 리스트 조회 (약관 내용을 확인할 수 있도록)
 class TermsListView(APIView):
-    permission_classes = [AllowAny,]
+    permission_classes = [
+        AllowAny,
+    ]
 
     def get(self, request):
         terms = Terms.objects.filter(is_active=True)
         terms_data = []
         for term in terms:
-            terms_data.append({
-                "id": term.id,
-                "name": term.name,
-                "detail": term.detail,
-                "is_required": term.is_required,
-            })
+            terms_data.append(
+                {
+                    "id": term.id,
+                    "name": term.name,
+                    "detail": term.detail,
+                    "is_required": term.is_required,
+                }
+            )
         return Response(terms_data, status=status.HTTP_200_OK)
+
+
+# 회원정보 조회, 수정 (MyPage)
+class MyPageView(APIView):
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    # 조회
+    def get(self, request):
+        user = request.user
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # 수정
+    def put(self, request):
+        user = get_object_or_404(User, id=request.data["id"])
+        serializer = UserSerializer(user, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            user = serializer.save()
+            serializer = UserSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
