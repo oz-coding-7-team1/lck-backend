@@ -42,14 +42,18 @@ class PlayerDetail(APIView):
     def get_object(self, pk: int) -> Player:
         # 주어진 pk에 해당하는 Player 객체를 반환, 없으면 404 에러 발생
         try:
+            # Player 모델에서 기본 키가 pk와 일치하는 객체를 조회
             return Player.objects.get(pk=pk)
+        # 해당 객체가 존재하지 않으면 Player.DoesNotExist 예외가 발생
         except Player.DoesNotExist:
             raise Http404
 
     def get(self, request: Any, pk: int, format: Optional[str] = None) -> Response:
-        # 특정 Player 객체를 가져와서 직렬화 후 반환
+        # 메서드를 호출하여 pk에 해당하는 Player 객체를 조회
         player = self.get_object(pk)
+        # 조회된 Player 객체를 PlayerProfileSerializer를 사용하여 직렬화
         serializer = PlayerProfileSerializer(player)
+        # 직렬화된 데이터를 Response 객체에 담아 클라이언트에게 반환
         return Response(serializer.data)
 
 
@@ -83,7 +87,9 @@ def position_top(request: Any) -> Response:
         # 해당 포지션의 Player 객체에 대해 연결된 subscriptions의 개수를 어노테이션하여
         # subscriber_count 필드에 저장한 후, 이를 기준으로 내림차순 정렬하고 상위 5개를 조회
         top_players = (
+            # 데이터베이스에서 position 값이 쿼리 파라미터로 전달된 값과 일치하는 Player 객체들만 선택
             Player.objects.filter(position=position)
+            # subscriber_count 필드에 저장한 후, 이를 기준으로 내림차순 정렬하고 상위 5개를 조회
             .annotate(subscriber_count=Count("subscriptions"))
             .order_by("-subscriber_count")[:5]
         )
