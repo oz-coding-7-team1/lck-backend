@@ -15,14 +15,7 @@ from apps.teams.models import Team
 
 User = get_user_model()
 
-# SQLite3 데이터베이스 설정
-# sqlite_db_settings = {
-#     "ENGINE": "django.db.backends.sqlite3",
-#     "NAME": ":memory:",  # 인메모리 데이터베이스로 더 빠른 테스트
-# }
 
-
-# @override_settings(DATABASES={"default": sqlite_db_settings})
 class PlayerSubscriptionTests(APITestCase):
     def setUp(self) -> None:
         # APIClient는 장고의 기본 Client보다 restAPI에 최적화 돼있음(응답 기본값이 JSON)
@@ -62,7 +55,6 @@ class PlayerSubscriptionTests(APITestCase):
         self.assertEqual(response.data["count"], 1)
 
 
-# @override_settings(DATABASES={"default": sqlite_db_settings})
 class TeamSubscriptionTests(APITestCase):
     def setUp(self) -> None:
         self.client = APIClient()
@@ -93,7 +85,6 @@ class TeamSubscriptionTests(APITestCase):
         self.assertEqual(response.data["count"], 1)
 
 
-# @override_settings(DATABASES={"default": sqlite_db_settings})
 class DeleteOldSubscriptionsTest(APITestCase):
     def setUp(self) -> None:
         # 현재 시간 기준으로 4일 전의 날짜를 계산합니다.
