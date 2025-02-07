@@ -2,11 +2,9 @@ from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
-from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now
 from rest_framework import status
-from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
 from apps.players.models import Player
@@ -54,6 +52,22 @@ class PlayerSubscriptionTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["count"], 1)
 
+    def test_player_resubscribe_within_24_hours(self) -> None:
+        subscription = PlayerSubscription.objects.create(user=self.user, player=self.player)
+        subscription.delete()
+        url = reverse("player_subscription", args=[self.player.id])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_player_resubscribe_after_24_hours(self) -> None:
+        PlayerSubscription.objects.create(deleted_at=now() - timedelta(days=1), user=self.user, player=self.player)
+        url = reverse("player_subscription", args=[self.player.id])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(
+            PlayerSubscription.objects.filter(user=self.user, player=self.player, deleted_at__isnull=True).exists()
+        )
+
 
 class TeamSubscriptionTests(APITestCase):
     def setUp(self) -> None:
@@ -84,11 +98,26 @@ class TeamSubscriptionTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["count"], 1)
 
+    def test_team_resubscribe_within_24_hours(self) -> None:
+        subscription = TeamSubscription.objects.create(user=self.user, team=self.team)
+        subscription.delete()
+        url = reverse("team_subscription", args=[self.team.id])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_team_resubscribe_after_24_hours(self) -> None:
+        TeamSubscription.objects.create(deleted_at=now() - timedelta(days=1), user=self.user, team=self.team)
+        url = reverse("team_subscription", args=[self.team.id])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(
+            TeamSubscription.objects.filter(user=self.user, team=self.team, deleted_at__isnull=True).exists()
+        )
+
 
 class DeleteOldSubscriptionsTest(APITestCase):
     def setUp(self) -> None:
         # 현재 시간 기준으로 4일 전의 날짜를 계산합니다.
-        past_date = now() - timedelta(days=4)
         self.user1 = User.objects.create(email="testuser@example.com", password="testpass", nickname="test1")
         self.user2 = User.objects.create(email="testuser2@example.com", password="testpass2", nickname="test2")
         self.player1 = Player.objects.create(
@@ -113,8 +142,8 @@ class DeleteOldSubscriptionsTest(APITestCase):
         self.team2 = Team.objects.create(name="Test Team2")
 
         # 4일 전의 삭제된 PlayerSubscription과 TeamSubscription을 생성합니다.
-        PlayerSubscription.objects.create(deleted_at=past_date, user=self.user1, player=self.player1)
-        TeamSubscription.objects.create(deleted_at=past_date, user=self.user1, team=self.team1)
+        PlayerSubscription.objects.create(deleted_at=now() - timedelta(days=4), user=self.user1, player=self.player1)
+        TeamSubscription.objects.create(deleted_at=now() - timedelta(days=4), user=self.user1, team=self.team1)
 
         # 2일 전의 삭제된 PlayerSubscription과 TeamSubscription을 생성합니다.
         PlayerSubscription.objects.create(deleted_at=now() - timedelta(days=2), user=self.user2, player=self.player2)
