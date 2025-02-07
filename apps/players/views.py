@@ -90,8 +90,7 @@ def position_top(request: Any) -> Response:
             # 데이터베이스에서 position 값이 쿼리 파라미터로 전달된 값과 일치하는 Player 객체들만 선택
             Player.objects.filter(position=position)
             # subscriber_count 필드에 저장한 후, 이를 기준으로 내림차순 정렬하고 상위 5개를 조회
-            .annotate(subscriber_count=Count("subscriptions"))
-            .order_by("-subscriber_count")[:5]
+            .annotate(subscriber_count=Count("subscriptions")).order_by("-subscriber_count")[:5]
         )
         # 조회된 top_players 객체들을 PlayerPositionSerializer를 사용하여 직렬화
         serializer = PlayerPositionSerializer(top_players, many=True)
