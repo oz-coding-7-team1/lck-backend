@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.shortcuts import get_object_or_404
 from rest_framework import status
-from rest_framework.exceptions import NotFound, ParseError, PermissionDenied
+from rest_framework.exceptions import ParseError, PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -44,20 +44,20 @@ class UserRegisterView(APIView):
         serializer = UserSerializer(data=request.data)
 
         try:
-            validate_password(password)
+            validate_password(password) # 비밀번호 유효성 검사
         except Exception as e:
             raise ParseError("비밀번호가 유효하지 않습니다. " + str(e))
 
-        if serializer.is_valid():
-            user = serializer.save()
-            user.set_password(password)
+        if serializer.is_valid(): # 데이터 유효성 검사
+            user = serializer.save() # 새로운 유저 생성
+            user.set_password(password) # 비밀번호 해시화
             user.save()
 
             # 사용자가 동의한 약관 기록 생성 (유효한 약관만 처리)
             for term_id in agreed_terms:
                 try:
                     term = Terms.objects.get(id=term_id, is_active=True)
-                    TermsAgreement.objects.create(user=user, terms=term, is_active=True)
+                    TermsAgreement.objects.create(user=user, terms=term, is_active=True) # 약관 동의 정보 저장
                 except Terms.DoesNotExist:
                     raise ParseError(f"존재하지 않거나 활성화된 약관이 아닙니다: {term_id}")
 
@@ -77,7 +77,7 @@ class UserLoginView(APIView):
         email = request.data.get("email")
         password = request.data.get("password")
         user = authenticate(email=email, password=password)
-        if user is not None:
+        if user is not None: # 유저가 존재하면 True
             refresh = RefreshToken.for_user(user)
             return Response(
                 {
@@ -99,7 +99,7 @@ class UserLogoutView(APIView):
         try:
             refresh_token = request.data.get("refresh")
             token = RefreshToken(refresh_token)
-            token.blacklist()
+            token.blacklist() # 로그아웃 시 refresh token을 블랙리스트에 등록
             return Response({"detail": "로그아웃에 성공하였습니다."}, status=status.HTTP_204_NO_CONTENT)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -115,12 +115,12 @@ class ChangePasswordView(APIView):
         old_password = request.data.get("old_password")
         new_password = request.data.get("new_password")
 
-        # 현재 비밀번호 확인
+        # 현재 비밀번호가 맞는지 확인
         if not user.check_password(old_password):
             raise PermissionDenied("현재 비밀번호가 일치하지 않습니다.")
 
         try:
-            validate_password(new_password)
+            validate_password(new_password) # 비밀번호 유효성 검사
         except Exception as e:
             raise ParseError("새 비밀번호가 유효하지 않습니다. " + str(e))
 
@@ -136,8 +136,8 @@ class TermsListView(APIView):
     ]
 
     def get(self, request: Any) -> Response:
-        terms = Terms.objects.filter(is_active=True)
-        terms_data = []
+        terms = Terms.objects.filter(is_active=True) # 활성화 된 약관을 조회
+        terms_data = [] # TermsList 를 만들기 위한 list
         for term in terms:
             terms_data.append(
                 {
