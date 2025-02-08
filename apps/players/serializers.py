@@ -1,3 +1,5 @@
+from typing import Any, Dict
+
 from rest_framework import serializers
 
 from .models import Player, PlayerImage, PlayerSchedule
@@ -65,3 +67,36 @@ class PlayerScheduleSerializer(serializers.ModelSerializer[PlayerSchedule]):
     class Meta:
         model = PlayerSchedule
         fields = "__all__"  # 모델의 모든 필드를 포함
+
+
+# 선수 생성(등록)용 Serializer
+class PlayerCreateSerializer(serializers.ModelSerializer[Player]):
+    # 클라이언트는 팀 정보를 team_id로 전달
+    team_id = serializers.IntegerField(required=False, allow_null=True)
+    # 소셜 미디어 정보는 PlayerSocialSerializer로 처리
+    social = PlayerSocialSerializer(required=False, help_text="Social media information")
+
+    class Meta:
+        model = Player
+        fields = [
+            "team_id",
+            "realname",
+            "nickname",
+            "position",
+            "date_of_birth",
+            "debut_date",
+            "social",
+            "agency",
+        ]
+
+    def create(self, validated_data: Dict[str, Any]) -> Player:
+        # team_id 값이 있다면, 실제 Team 객체로 매핑
+        team_id = validated_data.pop("team_id", None)
+        if team_id is not None:
+            from apps.teams.models import Team
+
+            validated_data["team"] = Team.objects.get(id=team_id)
+        # gamename 필드가 없으면 nickname으로 기본값을 설정
+        if not validated_data.get("gamename"):
+            validated_data["gamename"] = validated_data.get("nickname")
+        return Player.objects.create(**validated_data)
