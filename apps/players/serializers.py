@@ -82,6 +82,7 @@ class PlayerCreateSerializer(serializers.ModelSerializer[Player]):
             "team_id",
             "realname",
             "nickname",
+            "gamename",
             "position",
             "date_of_birth",
             "debut_date",
