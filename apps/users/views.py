@@ -13,6 +13,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Terms, TermsAgreement, User
 from .serializers import UserSerializer
+from django.conf import settings
 
 
 # 회원가입 (약관 동의 포함)
@@ -85,7 +86,7 @@ class UserLoginView(APIView):
                 key="refresh_token",
                 value=refresh_token,
                 httponly=True,  # 자바스크립트에서 접근 불가능하게 설정
-                secure=True,  # HTTPS 환경에서만 쿠키가 전송되도록 함
+                secure=settings.REFRESH_TOKEN_COOKIE_SECURE,  # True: HTTPS 환경에서만 쿠키가 전송되도록 함
                 samesite="Strict",  # 같은 사이트에서만 쿠키 전송
             )
             return response
