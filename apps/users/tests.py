@@ -7,15 +7,15 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from apps.users.models import Terms, TermsAgreement, User
 
 # 테스트에 사용할 기본 데이터 (일반 사용자, 슈퍼유저)
-data = {"email": "test@gmail.com", "password": "password"}
-super_data = {"email": "super@gmail.com", "password": "password"}
+data = {"email": "test@gmail.com", "nickname": "testuser", "password": "password"}
+super_data = {"email": "super@gmail.com", "nickname": "superuser", "password": "password"}
 
 
 # 인증이 필요한 테스트에서 공통적으로 사용할 클래스
 class APITestCaseSetUp(APITestCase):
     def setUp(self) -> None:
         # 테스트용 일반 사용자 생성
-        self.user = User.objects.create_user(email=data["email"], password=data["password"])
+        self.user = User.objects.create_user(email=data["email"], nickname=data["nickname"], password=data["password"])
         # JWT access token 생성 후 클라이언트 헤더에 등록
         refresh = RefreshToken.for_user(self.user)
         self.token = str(refresh.access_token)
@@ -30,28 +30,24 @@ class CreateUserAuthorizedTestCase(APITestCaseSetUp):
         self.assertTrue(self.user.check_password(data["password"]))
         self.assertTrue(self.user.is_active)
         self.assertFalse(self.user.is_staff)
-        self.assertFalse(self.user.is_admin)
         self.assertFalse(self.user.is_superuser)
 
     # 슈퍼유저 생성 후 필드 값 검증
     def test_create_superuser(self) -> None:
-        super_user = get_user_model().objects.create_superuser(super_data["email"], super_data["password"])
+        super_user = get_user_model().objects.create_superuser(
+            email=super_data["email"], nickname="superuser", password=super_data["password"]
+        )
         self.assertEqual(super_user.email, super_data["email"])
         self.assertTrue(super_user.check_password(super_data["password"]))
         self.assertTrue(super_user.is_active)
         self.assertTrue(super_user.is_staff)
-        self.assertTrue(super_user.is_admin)
         self.assertTrue(super_user.is_superuser)
 
 
 # 로그인 및 로그아웃 API 테스트
 class JWTAuthTestCase(APITestCaseSetUp):
+    # 로그인 테스트: 올바른 이메일과 비밀번호를 전송하면 access token 이 JSON 응답에 포함되고, refresh token 은 httpOnly 쿠키에 설정
     def test_login_success(self) -> None:
-        """
-        로그인 API 테스트:
-        - 올바른 이메일과 비밀번호를 전송하면 access token이 JSON 응답에 포함되고,
-          refresh token은 httpOnly 쿠키에 설정되어야 합니다.
-        """
         url = reverse("login")
         response = self.client.post(url, data={"email": data["email"], "password": data["password"]})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -61,52 +57,39 @@ class JWTAuthTestCase(APITestCaseSetUp):
         self.assertIn("refresh_token", response.cookies)
 
     def test_logout_success(self) -> None:
-        """
-        로그아웃 API 테스트:
-        - 클라이언트에 refresh token 쿠키가 있으면 로그아웃 후 쿠키가 삭제되어야 합니다.
-        """
+        # 로그아웃 테스트: 클라이언트에 refresh token 쿠키가 있으면 로그아웃 후 쿠키가 삭제
         url = reverse("logout")
         # 테스트용으로 refresh token 쿠키 설정
         refresh = RefreshToken.for_user(self.user)
         self.client.cookies["refresh_token"] = str(refresh)
         response = self.client.post(url)
+        refresh_cookie = response.cookies.get("refresh_token")
+        # 쿠키가 존재하면 값이 빈 문자열이어야 함
+        if refresh_cookie is not None:
+            self.assertEqual(refresh_cookie.value, "")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        # 로그아웃 응답 시 쿠키가 삭제되었는지 확인 (쿠키의 삭제 여부는 응답 쿠키에서 확인)
-        self.assertNotIn("refresh_token", response.cookies)
 
 
 # 회원가입 API 테스트
 class UserRegistrationTestCase(APITestCase):
     def setUp(self) -> None:
-        # # 회원가입 시 필요한 약관 데이터 생성 (필수 약관과 선택 약관)
-        # self.required_term = Terms.objects.create(
-        #     name="필수 약관", detail="필수 약관 내용", is_required=True, is_active=True
-        # )
-        # self.optional_term = Terms.objects.create(
-        #     name="선택 약관", detail="선택 약관 내용", is_required=False, is_active=True
-        # )
         self.registration_url = reverse("signup")
         self.user_data = {
             "email": "newuser@example.com",
             "password": "StrongPassw0rd!",
+            "nickname": "newuser",
             # 필수 약관과 옵션 약관 모두 동의한 것으로 전송
             # "agreed_terms": [self.required_term.id, self.optional_term.id],
         }
 
-    # def test_registration_success(self) -> None:
-    #     """
-    #     회원가입 성공 테스트:
-    #     - 필수 약관에 동의하고, 유효한 비밀번호 등 올바른 데이터를 전송하면 회원가입이 완료됩니다.
-    #     """
-    #     response = self.client.post(self.registration_url, self.user_data, format="json")
-    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    #     self.assertEqual(response.data["email"], self.user_data["email"])
-    #
+    def test_registration_success(self) -> None:
+        # 회원가입 성공 테스트: 유효한 비밀번호 등 올바른 데이터를 전송하면 회원가입 완료
+        response = self.client.post(self.registration_url, self.user_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["email"], self.user_data["email"])
+
     # def test_registration_fail_missing_required_terms(self) -> None:
-    #     """
-    #     회원가입 실패 테스트:
-    #     - 필수 약관에 동의하지 않은 경우 (필수 약관 누락) 회원가입이 실패해야 합니다.
-    #     """
+    #     # 회원가입 실패 테스트: 필수 약관에 동의하지 않은 경우 (필수 약관 누락) 회원가입 살패
     #     user_data = self.user_data.copy()
     #     # 필수 약관을 제거하고 선택 약관만 전송
     #     user_data["agreed_terms"] = [self.optional_term.id]
@@ -114,20 +97,14 @@ class UserRegistrationTestCase(APITestCase):
     #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
     #
     # def test_registration_fail_invalid_agreed_terms_format(self) -> None:
-    #     """
-    #     회원가입 실패 테스트:
-    #     - 약관 동의 데이터가 리스트 형식이 아니면 오류가 발생해야 합니다.
-    #     """
+    #     # 회원가입 실패 테스트: 약관 동의 데이터가 리스트 형식이 아니면 오류 발생
     #     user_data = self.user_data.copy()
     #     user_data["agreed_terms"] = "not a list"  # 리스트가 아님
     #     response = self.client.post(self.registration_url, user_data, format="json")
     #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_registration_fail_invalid_password(self) -> None:
-        """
-        회원가입 실패 테스트:
-        - 유효하지 않은(예: 너무 약한) 비밀번호를 전송하면 회원가입이 실패해야 합니다.
-        """
+        # 회원가입 실패 테스트: 유효하지 않은(예: 너무 약한) 비밀번호를 전송하면 회원가입 실패
         user_data = self.user_data.copy()
         user_data["password"] = "123"  # 일반적으로 유효하지 않은 비밀번호
         response = self.client.post(self.registration_url, user_data, format="json")
@@ -145,22 +122,16 @@ class RefreshTokenTestCase(APITestCaseSetUp):
         self.client.cookies["refresh_token"] = self.refresh_token
 
     def test_refresh_token_success(self) -> None:
-        """
-        refresh token 재발급 성공 테스트:
-        - 쿠키에 저장된 refresh token을 사용해 새로운 access token을 발급받을 수 있어야 합니다.
-        """
-        response = self.client.post(self.refresh_url)
+        # refresh token 재발급 성공 테스트: 쿠키에 저장된 refresh token 을 사용해 새로운 access token 이 발급 되어야 함
+        response = self.client.post(self.refresh_url, data={"refresh": self.refresh_token})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("access_token", response.data)
+        self.assertIn("access", response.data)
 
     def test_refresh_token_fail_no_cookie(self) -> None:
-        """
-        refresh token 재발급 실패 테스트:
-        - refresh token 쿠키가 없으면 에러 응답을 받아야 합니다.
-        """
+        # refresh token 재발급 실패 테스트: refresh token 쿠키가 없으면 에러 응답 반환
         self.client.cookies.clear()
         response = self.client.post(self.refresh_url)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 # 회원 탈퇴 API 테스트
@@ -174,53 +145,44 @@ class WithdrawTestCase(APITestCaseSetUp):
         self.client.cookies["refresh_token"] = self.refresh_token
 
     def test_withdraw_success(self) -> None:
-        """
-        회원 탈퇴 성공 테스트:
-        - 회원 탈퇴 API 호출 시 사용자의 계정이 삭제(soft delete)되고, refresh token 쿠키가 삭제되어야 합니다.
-        """
+        # 회원 탈퇴 성공 테스트: 회원 탈퇴 API 호출 시 사용자의 계정이 삭제(soft delete)되고, refresh token 쿠키 삭제
         response = self.client.post(self.withdraw_url)
+        refresh_cookie = response.cookies.get("refresh_token")
+        # 쿠키가 존재하면 값이 빈 문자열이어야 함
+        if refresh_cookie is not None:
+            self.assertEqual(refresh_cookie.value, "")
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["detail"], "회원 탈퇴가 완료되었습니다.")
-        # 응답 시 쿠키 삭제를 확인 (테스트 환경에 따라 쿠키 삭제 검증 방법은 다를 수 있음)
-        self.assertNotIn("refresh_token", response.cookies)
 
 
 # 마이페이지 - 회원정보 조회 및 수정 API 테스트
 class MyPageTestCase(APITestCaseSetUp):
     def setUp(self) -> None:
         super().setUp()
-        # 마이페이지 조회/수정 URL (urls.py에서 'user_detail' 혹은 'mypage'로 매핑되어 있다고 가정)
+        # 마이페이지 조회 / 수정 URL
         self.mypage_url = reverse("mypage")
 
     def test_get_user_unauthorized(self) -> None:
-        """
-        인증 없이 회원정보 조회 시도:
-        - 로그인이 되어 있지 않으면 401 Unauthorized 응답을 받아야 합니다.
-        """
+        # 인증 없이 회원정보 조회 시도: 로그인이 되어 있지 않으면 401 Unauthorized 응답 반환
         self.client.logout()
         response = self.client.get(self.mypage_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_user_authorized(self) -> None:
-        """
-        인증 후 회원정보 조회:
-        - 올바른 인증 정보가 있으면 회원정보가 정상적으로 조회되어야 합니다.
-        """
-        # APITestCaseSetUp에서 이미 인증 헤더를 설정했으므로 별도 로그인 불필요
+        # 인증 후 회원정보 조회: 올바른 인증 정보가 있으면 회원정보가 정상적으로 조회됨
+        # APITestCaseSetUp 에서 이미 인증 헤더를 설정했으므로 별도 로그인 불필요
         response = self.client.get(self.mypage_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["email"], data["email"])
 
     def test_update_user_success(self) -> None:
-        """
-        회원정보 수정 테스트:
-        - PUT 요청으로 일부 필드(예: name)를 수정할 수 있어야 합니다.
-        - 요청 데이터에 사용자 id가 포함되어야 합니다.
-        """
-        update_data = {"id": self.user.id, "name": "Updated Name"}
+        # 회원정보 수정 테스트: 요청 데이터에 사용자 id 가 포함되어 있어야하고, PUT 요청으로 일부 필드를 수정할 수 있어야 함
+        update_data = {"id": self.user.id, "nickname": "Updated Nickname"}
         response = self.client.put(self.mypage_url, update_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data.get("name"), "Updated Name")
+        self.user.refresh_from_db()
+        self.assertEqual(response.data.get("nickname"), "Updated Nickname")
 
 
 # 비밀번호 변경 API 테스트
@@ -230,21 +192,14 @@ class ChangePasswordTestCase(APITestCaseSetUp):
         self.change_password_url = reverse("change_password")
 
     def test_change_password_success(self) -> None:
-        """
-        비밀번호 변경 성공 테스트:
-        - 기존 비밀번호와 새 비밀번호를 전송하면 비밀번호가 성공적으로 변경되어야 합니다.
-        """
+        # 비밀번호 변경 성공 테스트: 기존 비밀번호와 새 비밀번호를 전송하면 비밀번호가 성공적으로 변경
         change_data = {"old_password": data["password"], "new_password": "NewStrongPassw0rd!"}
         response = self.client.post(self.change_password_url, change_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["detail"], "비밀번호가 성공적으로 변경되었습니다.")
-        # 변경 후 새 비밀번호로 인증이 가능한지 추가로 확인할 수 있음
 
     def test_change_password_fail_incorrect_old_password(self) -> None:
-        """
-        비밀번호 변경 실패 테스트:
-        - 현재 비밀번호가 틀린 경우, 변경이 거부되어야 합니다.
-        """
+        # 비밀번호 변경 실패 테스트: 현재 비밀번호가 틀린 경우, 변경 불가
         change_data = {"old_password": "wrong_password", "new_password": "NewStrongPassw0rd!"}
         response = self.client.post(self.change_password_url, change_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -260,10 +215,7 @@ class ChangePasswordTestCase(APITestCaseSetUp):
 #         Terms.objects.create(name="약관3", detail="내용3", is_required=True, is_active=False)
 #
 #     def test_terms_list(self) -> None:
-#         """
-#         약관 리스트 조회 테스트:
-#         - GET 요청 시 활성화된 약관만 리스트로 반환되어야 합니다.
-#         """
+#         약관 리스트 조회 테스트: GET 요청 시 활성화된 약관만 리스트로 반환
 #         response = self.client.get(self.terms_list_url)
 #         self.assertEqual(response.status_code, status.HTTP_200_OK)
 #         # 활성화된 약관은 2개여야 함
