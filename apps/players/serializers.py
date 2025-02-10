@@ -79,15 +79,15 @@ class PlayerCreateSerializer(serializers.ModelSerializer[Player]):
     class Meta:
         model = Player
         fields = [
-            "team_id",     # 소속 팀의 ID
-            "realname",    # 선수의 실제 이름
-            "nickname",    # 선수의 닉네임
-            "gamename",    # 게임에서 사용하는 이름
-            "position",    # 포지션
-            "date_of_birth",    # 생년월일
-            "debut_date",   # 데뷔 날짜
-            "social",   # 소셜 미디어 정보
-            "agency",   # 소속 에이전시
+            "team_id",  # 소속 팀의 ID
+            "realname",  # 선수의 실제 이름
+            "nickname",  # 선수의 닉네임
+            "gamename",  # 게임에서 사용하는 이름
+            "position",  # 포지션
+            "date_of_birth",  # 생년월일
+            "debut_date",  # 데뷔 날짜
+            "social",  # 소셜 미디어 정보
+            "agency",  # 소속 에이전시
         ]
 
     def create(self, validated_data: Dict[str, Any]) -> Player:
