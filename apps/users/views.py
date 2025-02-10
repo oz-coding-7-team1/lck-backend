@@ -17,9 +17,7 @@ from .serializers import UserSerializer
 
 # 회원가입 (약관 동의 포함)
 class UserRegisterView(APIView):
-    permission_classes = (
-        AllowAny,
-    )
+    permission_classes = (AllowAny,)
 
     def post(self, request: Any) -> Response:
         agreed_terms = request.data.get("agreed_terms")
@@ -44,20 +42,20 @@ class UserRegisterView(APIView):
         serializer = UserSerializer(data=request.data)
 
         try:
-            validate_password(password) # 비밀번호 유효성 검사
+            validate_password(password)  # 비밀번호 유효성 검사
         except Exception as e:
             raise ParseError("비밀번호가 유효하지 않습니다. " + str(e))
 
-        if serializer.is_valid(): # 데이터 유효성 검사
-            user = serializer.save() # 새로운 유저 생성
-            user.set_password(password) # 비밀번호 해시화
+        if serializer.is_valid():  # 데이터 유효성 검사
+            user = serializer.save()  # 새로운 유저 생성
+            user.set_password(password)  # 비밀번호 해시화
             user.save()
 
             # 사용자가 동의한 약관 기록 생성 (유효한 약관만 처리)
             for term_id in agreed_terms:
                 try:
                     term = Terms.objects.get(id=term_id, is_active=True)
-                    TermsAgreement.objects.create(user=user, terms=term, is_active=True) # 약관 동의 정보 저장
+                    TermsAgreement.objects.create(user=user, terms=term, is_active=True)  # 약관 동의 정보 저장
                 except Terms.DoesNotExist:
                     raise ParseError(f"존재하지 않거나 활성화된 약관이 아닙니다: {term_id}")
 
@@ -69,25 +67,42 @@ class UserRegisterView(APIView):
 
 # 로그인
 class UserLoginView(APIView):
-    permission_classes = (
-        AllowAny,
-)
+    permission_classes = (AllowAny,)
 
     def post(self, request: Any) -> Response:
         email = request.data.get("email")
         password = request.data.get("password")
-        user = authenticate(request, email=email, password=password)
-        if user is not None: # 유저가 존재하면 True
-            refresh = RefreshToken.for_user(user)
-            return Response(
-                {
-                    "refresh": str(refresh),
-                    "access": str(refresh.access_token),
-                },
-                status=status.HTTP_200_OK,
+        user = authenticate(email=email, password=password)
+        if user is not None:  # 유저가 존재하면 True
+            refresh = RefreshToken.for_user(user) # JWT token 생성
+            access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
+
+            # access token 은 JSON 응답으로 반환
+            response = Response({"access_token": access_token}, status=status.HTTP_200_OK)
+            # refresh token 은 httpOnly, secure cookie 에 저장
+            response.set_cookie(
+                key="refresh_token",
+                value=refresh_token,
+                httponly=True, # 클라이언트의 자바스크립트에서 쿠키에 접근할 수 없게 함
+                secure=True, # HTTPS 환경에서만 쿠키가 전송되도록 함
+                samesite="Strict" # 쿠키가 현재 도메인에서 발생하는 요청에만 전송되도록 제한
             )
+            return response
         else:
             return Response({"detail": "잘못된 인증 정보입니다."}, status=status.HTTP_401_UNAUTHORIZED)
+
+    """
+    - set_cookie 메서드 (응답 헤더에 쿠키를 설정하게 해주는 메서드)
+        httponly=True: 자바스크립트 코드에서 해당 쿠키에 접근할 수 없게 만드는 옵션 (XSS 공격 시 악의적인 스크립트가 쿠키에 저장된 민감한 정보를 읽어가는 것을 방지)
+        secure=True: 해당 쿠키는 HTTPS (보안 연결) 를 통해서만 브라우저와 서버 간의 전송이 가능해짐 -> 개발 환경에서는 False 로 설정 가능
+        samesite="Strict": 쿠키가 오직 동일 사이트 (현재 도메인에서 발생하는 요청) 에만 전송되도록 제한 (CSRF 공격을 방어할 수 있음) -> 추후 소셜로그인 추가 시 None 으로 변경하고 다른 방어를 강화할 필요 요망
+       
+    - XSS (크로스 사이트 스크립팅): 공격자가 웹 애플리케이션에 악성 스크립트를 삽입하여, 다른 사용자의 브라우저에서 실행되도록 만드는 공격
+            예) 세션 쿠키, 인증 정보, 민감 데이터 탈취
+    - CSRF (크로스 사이트 요청 위조): 사용자가 이미 인증된 상태에서, 악의적인 사이트나 스크립트가 사용자의 의지와 상관없이 해당 사용자의 권한으로 요청을 보내도록 유도하는 공격
+            예) 사용자의 인증 정보를 바탕으로 금전 이체, 개인정보 변경 등 원치 않는 작업 실행
+    """
 
 
 # 로그아웃
@@ -99,7 +114,7 @@ class UserLogoutView(APIView):
         try:
             refresh_token = request.data.get("refresh")
             token = RefreshToken(refresh_token)
-            token.blacklist() # 로그아웃 시 refresh token을 블랙리스트에 등록
+            token.blacklist()  # 로그아웃 시 refresh token을 블랙리스트에 등록
             return Response({"detail": "로그아웃에 성공하였습니다."}, status=status.HTTP_204_NO_CONTENT)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -121,13 +136,14 @@ class ChangePasswordView(APIView):
             raise PermissionDenied("현재 비밀번호가 일치하지 않습니다.")
 
         try:
-            validate_password(new_password) # 비밀번호 유효성 검사
+            validate_password(new_password)  # 비밀번호 유효성 검사
         except Exception as e:
             raise ParseError("새 비밀번호가 유효하지 않습니다. " + str(e))
 
         user.set_password(new_password)
         user.save()
         return Response({"detail": "비밀번호가 성공적으로 변경되었습니다."}, status=status.HTTP_200_OK)
+
     """
     - 역직렬화는 클라이언트에게 객체의 상세 정보를 전달할 때 사용되므로 비밀번호 변경 후 사용자 정보를 재전달할 필요 없이 성공 메세지만 전달
     - set_password 와 save 메서드 만으로 변경된 비밀번호가 DB에 자동 저장됨
@@ -139,15 +155,13 @@ class ChangePasswordView(APIView):
 
 # 약관 리스트 조회 (약관 내용을 확인할 수 있도록)
 class TermsListView(APIView):
-    permission_classes = (
-        AllowAny,
-    )
+    permission_classes = (AllowAny,)
 
     def get(self, request: Any) -> Response:
         # filter(): 조건에 맞는 쿼리셋을 반환
         # .all() 을 붙여도 동일한 결과를 내지만 중복된 호출이므로 filter(is_active=True) 만 사용
-        terms = Terms.objects.filter(is_active=True) # 활성화 된 약관을 조회
-        terms_data = [] # TermsList 를 만들기 위한 list
+        terms = Terms.objects.filter(is_active=True)  # 활성화 된 약관을 조회
+        terms_data = []  # TermsList 를 만들기 위한 list
         for term in terms:
             terms_data.append(
                 {
