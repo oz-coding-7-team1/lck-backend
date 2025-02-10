@@ -12,6 +12,7 @@ from apps.users.views import (
     UserLoginView,
     UserLogoutView,
     UserRegisterView,
+    WithdrawAPIView,
 )
 
 urlpatterns = [
@@ -21,7 +22,7 @@ urlpatterns = [
     path("signup/", UserRegisterView.as_view(), name="signup"),
     path("login/", UserLoginView.as_view(), name="login"),
     path("logout/", UserLogoutView.as_view(), name="logout"),
-    # path("Withdrawal/",),
+    path("withdraw/", WithdrawAPIView.as_view(), name="withdraw"),
     path("mypage/", MyPageView.as_view(), name="mypage"),
     path("password/", ChangePasswordView.as_view(), name="change-password"),
     # path("image/",),

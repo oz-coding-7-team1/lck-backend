@@ -1,6 +1,6 @@
 from typing import Any
 
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, logout
 from django.contrib.auth.password_validation import validate_password
 from django.shortcuts import get_object_or_404
 from rest_framework import status
@@ -9,7 +9,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Terms, TermsAgreement, User
 from .serializers import UserSerializer
@@ -74,7 +74,7 @@ class UserLoginView(APIView):
         password = request.data.get("password")
         user = authenticate(email=email, password=password)
         if user is not None:  # 유저가 존재하면 True
-            refresh = RefreshToken.for_user(user) # JWT token 생성
+            refresh = RefreshToken.for_user(user)  # JWT token 생성
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
 
@@ -84,9 +84,9 @@ class UserLoginView(APIView):
             response.set_cookie(
                 key="refresh_token",
                 value=refresh_token,
-                httponly=True, # 자바스크립트에서 접근 불가능하게 설정
-                secure=True, # HTTPS 환경에서만 쿠키가 전송되도록 함
-                samesite="Strict" # 같은 사이트에서만 쿠키 전송
+                httponly=True,  # 자바스크립트에서 접근 불가능하게 설정
+                secure=True,  # HTTPS 환경에서만 쿠키가 전송되도록 함
+                samesite="Strict",  # 같은 사이트에서만 쿠키 전송
             )
             return response
         else:
@@ -105,6 +105,7 @@ class UserLoginView(APIView):
     """
 
 
+# access token 재발급
 class RefreshTokenView(APIView):
     permission_classes = (AllowAny,)
 
@@ -118,7 +119,7 @@ class RefreshTokenView(APIView):
             refresh = RefreshToken(refresh_token)
             new_access_token = str(refresh.access_token)
             return Response({"access_token": new_access_token}, status=status.HTTP_200_OK)
-        except TokenError:
+        except:
             return Response({"detail": "잘못된 refresh token 입니다."}, status=status.HTTP_403_FORBIDDEN)
 
 
@@ -135,6 +136,54 @@ class UserLogoutView(APIView):
         response = Response({"detail": "로그아웃 되었습니다."}, status=status.HTTP_204_NO_CONTENT)
         response.delete_cookie(key="refresh_token")
         return response
+
+
+# 회원 탈퇴
+class WithdrawAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request: Any, *args: Any, **kwargs: Any) -> Response:
+        # 쿠키에서 refresh token 추출
+        refresh_token = request.COOKIES.get("refresh_token")
+        if refresh_token:
+            try:
+                token = RefreshToken(refresh_token)
+                token.blacklist()  # refresh token 을 블랙리스트에 등록
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # soft delete 처리 (탈퇴 상태로 저장)
+        user = request.user
+        user.delete()
+
+        # refresh token 삭제 후 응답 반환
+        response = Response({"detail": "회원 탈퇴가 완료되었습니다."}, status=status.HTTP_200_OK)
+        response.delete_cookie("refresh_token")
+        return response
+
+
+# 회원정보 조회, 수정 (MyPage)
+class MyPageView(APIView):
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    # 조회
+    def get(self, request: Any) -> Response:
+        user = request.user
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # 수정
+    def put(self, request: Any) -> Response:
+        user = get_object_or_404(User, id=request.data["id"])
+        serializer = UserSerializer(user, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            user = serializer.save()
+            serializer = UserSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # 비밀번호 변경
@@ -189,28 +238,3 @@ class TermsListView(APIView):
                 }
             )
         return Response(terms_data, status=status.HTTP_200_OK)
-
-
-# 회원정보 조회, 수정 (MyPage)
-class MyPageView(APIView):
-    authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
-
-    # 조회
-    def get(self, request: Any) -> Response:
-        user = request.user
-        serializer = UserSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    # 수정
-    def put(self, request: Any) -> Response:
-        user = get_object_or_404(User, id=request.data["id"])
-        serializer = UserSerializer(user, data=request.data, partial=True)
-
-        if serializer.is_valid():
-            user = serializer.save()
-            serializer = UserSerializer(user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
