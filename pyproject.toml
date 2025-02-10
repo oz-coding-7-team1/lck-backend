@@ -60,7 +60,8 @@ module = [
     "apps.users.models",
     "apps.teams.models",
     "apps.players.models",
-    "apps.subscriptions.models"
+    "apps.subscriptions.models",
+    "apps.cloud_images.models",
 ]
 ignore_errors = true
 
