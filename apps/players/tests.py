@@ -1,196 +1,267 @@
-from datetime import date, datetime, timedelta
-from typing import Any
+from datetime import date, timedelta
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.players.models import Player, PlayerSchedule
 from apps.subscriptions.models import PlayerSubscription
+from apps.teams.models import Team
 
-# 커스텀 User 모델을 가져
 User = get_user_model()
 
 
-# 테스트용 Player 객체를 생성하는 헬퍼 함수
-# 반환값: 생성된 Player 인스턴스
-def create_player(nickname: str, realname: str, position: str) -> Player:
-    return Player.objects.create(
-        realname=realname,  # 플레이어의 실제 이름
-        nickname=nickname,  # 플레이어의 고유 닉네임
-        gamename=f"game_{nickname}",  # 게임 내에서 사용하는 이름 (닉네임 기반)
-        position=position,  # 플레이어의 포지션
-        date_of_birth=date(2000, 1, 1),  # 예시 생년월일
-        debut_date=date(2020, 1, 1),  # 예시 데뷔일
-        agency="TestAgency",  # 테스트용 소속사 이름
-        social={},  # 소셜 미디어 정보 (빈 딕셔너리)
-    )
-
-
-# 테스트용 PlayerSubscription 객체를 생성하는 헬퍼 함수
-def create_subscription(player: Player, user: Any) -> PlayerSubscription:
-    return PlayerSubscription.objects.create(player=player, user=user)
-
-
-# 전체 플레이어 중 구독 수가 많은 상위 플레이어들을 반환하는 API 엔드포인트를 테스트하는 클래스
-class TopPlayersAPITest(APITestCase):
-    # 각 테스트가 실행되기 전에 호출되는 설정 메서드
+class PlayerAPITestCase(APITestCase):
     def setUp(self) -> None:
-        # 테스트용 사용자(User)들을 생성합니다. 각 사용자는 고유의 nickname을 가짐
-        self.user1 = User.objects.create_user(email="user1@example.com", password="pass", nickname="user1")
-        self.user2 = User.objects.create_user(email="user2@example.com", password="pass", nickname="user2")
-        self.user3 = User.objects.create_user(email="user3@example.com", password="pass", nickname="user3")
-        self.user4 = User.objects.create_user(email="user4@example.com", password="pass", nickname="user4")
-        self.user5 = User.objects.create_user(email="user5@example.com", password="pass", nickname="user5")
-        self.user6 = User.objects.create_user(email="user6@example.com", password="pass", nickname="user6")
-
-        # 3명의 플레이어 객체를 생성
-        self.player1 = create_player("P1", "Player One", "top")
-        self.player2 = create_player("P2", "Player Two", "mid")
-        self.player3 = create_player("P3", "Player Three", "bot")
-
-        # player1에 대해 2명의 사용자가 구독 (구독 수 = 2)
-        create_subscription(self.player1, self.user1)
-        create_subscription(self.player1, self.user2)
-
-        # player2에 대해 3명의 사용자가 구독 (구독 수 = 3)
-        create_subscription(self.player2, self.user1)
-        create_subscription(self.player2, self.user2)
-        create_subscription(self.player2, self.user3)
-
-        # player3에 대해 1명의 사용자가 구독 (구독 수 = 1)
-        create_subscription(self.player3, self.user1)
-
-    # 구독 수가 많은 상위 플레이어들이 올바른 순서로 반환되는지 테스트
-    # 예상 결과:
-    #   - player2 (구독 수 3)
-    #   - player1 (구독 수 2)
-    #   - player3 (구독 수 1)
-    def test_top_players_ordering(self) -> None:
-        # URL 패턴 이름 "top-players"를 사용하여 API URL을 조회
-        url = reverse("top-players")
-        # 조회한 URL로 GET 요청
-        response = self.client.get(url)
-        # 응답 상태 코드가 200(성공)인지 확인
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        # 응답 JSON 데이터를 파싱
-        data = response.json()
-        # 반환된 플레이어 수가 3개인지 확인
-        self.assertEqual(len(data), 3)
-        # 반환된 데이터의 순서가 구독 수 내림차순인지 확인
-        # 첫 번째 항목은 구독 수가 3인 player2여야함
-        self.assertEqual(data[0]["nickname"], "P2")
-        # 두 번째 항목은 구독 수가 2인 player1이어야함
-        self.assertEqual(data[1]["nickname"], "P1")
-        # 세 번째 항목은 구독 수가 1인 player3이어야함
-        self.assertEqual(data[2]["nickname"], "P3")
-
-
-# 특정 포지션의 플레이어 중 구독 수가 많은 순서대로 상위 5개를 반환하는 API 엔드포인트를 테스트하는 클래스
-class PositionTopAPITest(APITestCase):
-    # 각 테스트가 실행되기 전에 호출되는 설정 메서드
-    def setUp(self) -> None:
-        # 테스트용 사용자(User)들을 생성
-        self.user1 = User.objects.create_user(email="user1@example.com", password="pass", nickname="user1")
-        self.user2 = User.objects.create_user(email="user2@example.com", password="pass", nickname="user2")
-        self.user3 = User.objects.create_user(email="user3@example.com", password="pass", nickname="user3")
-        self.user4 = User.objects.create_user(email="user4@example.com", password="pass", nickname="user4")
-
-        # 'mid' 포지션에 해당하는 플레이어 3개를 생성
-        self.player_mid_1 = create_player("M1", "Mid One", "mid")
-        self.player_mid_2 = create_player("M2", "Mid Two", "mid")
-        self.player_mid_3 = create_player("M3", "Mid Three", "mid")
-
-        # player_mid_1에 대해 1명의 사용자가 구독 (구독 수 = 1)
-        create_subscription(self.player_mid_1, self.user1)
-
-        # player_mid_2에 대해 3명의 사용자가 구독 (구독 수 = 3)
-        create_subscription(self.player_mid_2, self.user1)
-        create_subscription(self.player_mid_2, self.user2)
-        create_subscription(self.player_mid_2, self.user3)
-
-        # player_mid_3에 대해 2명의 사용자가 구독 (구독 수 = 2)
-        create_subscription(self.player_mid_3, self.user1)
-        create_subscription(self.player_mid_3, self.user2)
-
-    # 포지션 파라미터가 전달되지 않았을 때 API가 400 에러를 반환하는지 테스트
-    def test_position_top_without_parameter(self) -> None:
-        # URL 패턴 이름 "position-top"을 사용하여 API URL을 조회
-        url = reverse("position-top")
-        # 쿼리 파라미터 없이 GET 요청
-        response = self.client.get(url)
-        # 응답 상태 코드가 400(Bad Request)인지 확인
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        # 응답 오류 메시지에 "Position parameter is required"가 포함되어 있는지 확인
-        self.assertIn("Position parameter is required", response.json().get("error", ""))
-
-    # 'mid' 포지션의 플레이어 중 구독 수 내림차순 정렬 결과가 올바르게 반환되는지 테스트
-    # 예상 결과:
-    #   - player_mid_2 (구독 수 3)
-    #   - player_mid_3 (구독 수 2)
-    #   - player_mid_1 (구독 수 1)
-    def test_position_top_ordering(self) -> None:
-        # URL 패턴 이름 "position-top"을 사용하여 API URL을 조회
-        url = reverse("position-top")
-        # 'position' 쿼리 파라미터를 'mid'로 설정하여 GET 요청
-        response = self.client.get(url, {"position": "mid"})
-        # 응답 상태 코드가 200(성공)인지 확인
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        # 응답 JSON 데이터를 파싱
-        data = response.json()
-        # 'mid' 포지션의 플레이어 수가 3개인지 확인
-        self.assertEqual(len(data), 3)
-        # 반환된 데이터가 구독 수 내림차순으로 정렬되어 있는지 확인
-        # 첫 번째 항목은 구독 수가 3인 player_mid_2여야함
-        self.assertEqual(data[0]["nickname"], "M2")
-        # 두 번째 항목은 구독 수가 2인 player_mid_3이어야함
-        self.assertEqual(data[1]["nickname"], "M3")
-        # 세 번째 항목은 구독 수가 1인 player_mid_1이어야함
-        self.assertEqual(data[2]["nickname"], "M1")
-
-
-class DummyScheduleAPITest(APITestCase):
-    # 각 테스트 전에 더미 스케줄 생성을 위한 초기 설정을 수행
-    def setUp(self) -> None:
-        # 테스트용 사용자(User) 생성 (스케줄 생성에는 직접 필요하지 않을 수 있음)
-        self.user = User.objects.create_user(email="test@example.com", password="pass", nickname="testuser")
-        # 테스트용 플레이어 생성
-        self.player = create_player("TestP", "Test Player", "mid")
-        # 만약 이전에 생성된 스케줄이 있다면 삭제 (소프트 딜리트가 적용되어 있다면 활성 데이터만 고려)
-        PlayerSchedule.objects.filter(player=self.player).delete()
-
-    # 선수 스케줄 더미 데이터를 직접 ORM을 통해 생성하고,
-    # 기존 PlayerScheduleList 뷰를 호출하여 조회되는지를 테스트
-    def test_dummy_schedule_creation_and_retrieval(self) -> None:
-        # 더미 스케줄 데이터 생성
-        # 예시로, 각 플레이어당 3개의 스케줄 데이터를 생성
-        start_period = datetime.now()
-        for i in range(3):
-            # 각 스케줄의 시작 일시는 start_period부터 i일 후로 설정
-            # i=0이면 현재 시간, i=1이면 내일, i=2이면 모레
-            random_start = start_period + timedelta(days=i)
-            # 종료 일시는 시작일시로부터 2시간 후로 설정
-            random_end = random_start + timedelta(hours=2)
-            # PlayerSchedule 모델을 직접 이용해 스케줄 데이터를 생성
-            PlayerSchedule.objects.create(
-                player=self.player,
-                category="경기",  # 유효한 값: "생일", "경기", "개인방송"
-                start_date=random_start,
-                end_date=random_end,
-                place=f"Place {self.player.nickname} {i+1}",
-                title=f"Dummy Schedule {i+1} for {self.player.nickname}",
-                detail="This is a dummy schedule generated for testing purposes.",
+        # 관리자 유저 1명 생성
+        self.admin_user = User.objects.create_user(
+            email="admin@example.com", password="adminpass", is_staff=True, nickname="admin"  # 관리자 고유 nickname
+        )
+        # 일반 유저 20명 생성
+        self.normal_users = []
+        for i in range(20):
+            user = User.objects.create_user(
+                email=f"normal{i}@example.com",
+                password="normalpass",
+                nickname=f"normal{i}",  # 각 일반 유저는 고유한 nickname을 가짐
             )
+            self.normal_users.append(user)
 
-        # 기존 스케줄 조회 API (PlayerScheduleList 뷰)를 호출하여 생성된 스케줄 데이터를 확인.
-        schedule_url = reverse("player-schedule", kwargs={"pk": self.player.id})
-        response = self.client.get(schedule_url)
-        # 응답 상태 코드가 200(성공)인지 확인
+        # 선수 생성에 사용할 팀 객체를 생성
+        self.team = Team.objects.create(name="Test Team")
+
+        # 15명의 선수를 생성
+        # 짝수 인덱스의 선수는 팀에 소속되고 홀수 인덱스의 선수는 소속되지 않음
+        # positions 리스트를 순환하여 각 선수에게 포지션 값을 할당
+        positions = ["top", "jungle", "mid", "bottom", "support"]
+        self.players = []
+        for i in range(15):
+            player = Player.objects.create(
+                team=self.team if i % 2 == 0 else None,  # 짝수 인덱스: 팀 소속, 홀수 인덱스: 팀 미소속
+                realname=f"RealName{i}",
+                nickname=f"Nick{i}",  # 각 선수의 nickname은 고유하게 생성
+                gamename=f"GameName{i}",
+                position=positions[i % len(positions)],  # positions 리스트의 값을 순환하며 할당
+                date_of_birth=date(1990, 1, 1),
+                debut_date=date(2010, 1, 1),
+                social={"insta": f"http://instagram.com/player{i}"},
+                agency="AgencyX",
+            )
+            self.players.append(player)
+
+        # 테스트용으로 첫 번째 선수(self.players[0])의 스케줄 하나를 생성
+        self.schedule = PlayerSchedule.objects.create(
+            player=self.players[0],
+            category="경기",  # 경기 일정으로 분류
+            start_date=timezone.now(),
+            end_date=timezone.now() + timedelta(hours=2),
+            place="Stadium",
+            title="Match 1",
+            detail="Detail info",
+        )
+
+    # 전체 선수 목록을 조회하는 API
+    def test_get_player_list(self) -> None:
+        # 'player-list' URL 경로를 reverse 함수를 통해 생성
+        url = reverse("player-list")
+        response = self.client.get(url)
+        # HTTP 200 OK 상태 코드를 반환하는지 확인
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.json()
-        # 생성된 스케줄 데이터가 3개인지 확인
-        self.assertEqual(len(data), 3)
+        # 반환된 데이터의 길이가 15인지 (생성한 선수 수와 일치) 확인
+        self.assertEqual(len(response.data), 15)
+
+    # 관리자 계정으로 새로운 선수를 생성하는 API
+    def test_create_player_by_admin(self) -> None:
+        url = reverse("player-list")
+        data = {
+            "team_id": self.team.id,
+            "realname": "New RealName",
+            "nickname": "NewNick",  # 새로운 고유 nickname
+            "gamename": "NewGameName",
+            "position": "top",
+            "date_of_birth": "1995-05-05",
+            "debut_date": "2015-05-05",
+            "social": {"insta": "http://instagram.com/newplayer"},
+            "agency": "AgencyY",
+        }
+        # 관리자 계정으로 로그인 (이메일이 username 역할)
+        self.client.login(username="admin@example.com", password="adminpass")
+        response = self.client.post(url, data, format="json")
+        # HTTP 201 Created 상태 코드를 반환하는지 확인
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # 응답 데이터에 '선수 등록 완료'라는 메시지가 포함되어 있는지 확인
+        self.assertEqual(response.data.get("detail"), "선수 등록 완료")
+
+    # 일반 사용자로 선수를 생성하려고 시도할 때
+    def test_create_player_by_normal_user(self) -> None:
+        url = reverse("player-list")
+        data = {
+            "team_id": self.team.id,
+            "realname": "New RealName2",
+            "nickname": "NewNick2",
+            "gamename": "NewGameName2",
+            "position": "mid",
+            "date_of_birth": "1996-06-06",
+            "debut_date": "2016-06-06",
+            "social": {"insta": "http://instagram.com/newplayer2"},
+            "agency": "AgencyZ",
+        }
+        # 일반 사용자 계정으로 로그인
+        self.client.login(username="normal0@example.com", password="normalpass")
+        # POST 요청 시도를 통해 선수를 생성하려고 함
+        response = self.client.post(url, data, format="json")
+        # 일반 사용자는 관리자 권한이 없으므로 HTTP 403 Forbidden 상태 코드를 반환
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    # 특정 선수의 상세 정보를 조회하는 API
+    def test_get_player_detail(self) -> None:
+        # 테스트 대상 선수 선택 (players 리스트의 첫 번째 선수)
+        player = self.players[0]
+        # 'player-detail' URL 경로를 생성하며 URL의 pk 파라미터에 선수 id를 전달
+        url = reverse("player-detail", kwargs={"pk": player.id})
+        # GET 요청으로 선수의 상세 정보를 조회
+        response = self.client.get(url)
+        # HTTP 200 OK 상태 코드를 반환하는지 확인
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # 응답 데이터의 id와 nickname이 생성된 선수의 정보와 일치하는지 확인
+        self.assertEqual(response.data["id"], player.id)
+        self.assertEqual(response.data["nickname"], player.nickname)
+
+    # 관리자가 선수의 상세 정보를 수정하는 API
+    def test_update_player_detail(self) -> None:
+        player = self.players[0]
+        # 'player-detail' URL 경로 생성 (선수의 id를 URL에 포함)
+        url = reverse("player-detail", kwargs={"pk": player.id})
+        # 관리자 계정으로 로그인
+        self.client.login(username="admin@example.com", password="adminpass")
+        data = {
+            "team_id": self.team.id,
+            "realname": "Updated RealName",
+            "nickname": player.nickname,  # nickname은 중복 이슈를 피하기 위해 기존 값 유지
+            "gamename": "UpdatedGameName",
+            "position": player.position,
+            "date_of_birth": "1991-01-01",
+            "debut_date": "2011-01-01",
+            "social": {"insta": "http://instagram.com/updated"},
+            "agency": "UpdatedAgency",
+        }
+        # PUT 요청을 통해 전체 객체를 업데이트
+        response = self.client.put(url, data, format="json")
+        # HTTP 200 OK 상태 코드를 반환하는지 확인
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # 응답에 '선수 프로필 수정 완료' 메시지가 포함되어 있는지 확인
+        self.assertEqual(response.data.get("detail"), "선수 프로필 수정 완료")
+
+    # 관리자가 선수를 비활성화(활성 상태 변경)하는 API
+    def test_deactivate_player(self) -> None:
+        player = self.players[0]
+        # 'player-detail' URL 경로 생성
+        url = reverse("player-detail", kwargs={"pk": player.id})
+        # 관리자 계정으로 로그인
+        self.client.login(username="admin@example.com", password="adminpass")
+        data = {"is_active": False}
+        # PATCH 요청으로 선수의 일부 속성(여기서는 is_active)을 업데이트
+        response = self.client.patch(url, data, format="json")
+        # HTTP 204 No Content 상태 코드를 반환하는지 확인
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        # DB에서 최신 선수 데이터를 불러와 is_active 값이 False로 변경되었는지 확인
+        player.refresh_from_db()
+        self.assertFalse(player.is_active)
+
+    # 관리자가 선수를 삭제하는 API
+    def test_delete_player(self) -> None:
+        player = self.players[0]
+        # 'player-detail' URL 경로 생성 (삭제할 선수의 id 포함)
+        url = reverse("player-detail", kwargs={"pk": player.id})
+        self.client.login(username="admin@example.com", password="adminpass")
+        response = self.client.delete(url)
+        # HTTP 204 No Content 상태 코드를 반환하는지 확인
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        # 삭제된 선수를 DB에서 조회할 경우, Player.DoesNotExist 예외가 발생해야 함
+        with self.assertRaises(Player.DoesNotExist):
+            Player.objects.get(pk=player.id)
+
+    # 구독 수를 기반으로 인기 선수를 조회하는 API
+    def test_top_players(self) -> None:
+        # 상위 5명의 선수에 대해, 각각 다른 수의 구독을 생성
+        # 첫 번째 선수에는 5개의 구독, 두 번째 선수에는 4개, ... 형식으로 생성
+        for i, player in enumerate(self.players[:5]):
+            count = 5 - i  # 각 선수에 할당할 구독 수
+            for user in self.normal_users[:count]:
+                PlayerSubscription.objects.create(user=user, player=player)
+        url = reverse("top-players")
+        response = self.client.get(url)
+        # HTTP 200 OK 상태 코드를 반환하는지 확인
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # 응답 데이터의 첫 번째 항목이 가장 인기 있는 선수여야 함
+        top_player = response.data[0]
+        self.assertEqual(top_player["id"], self.players[0].id)
+
+    # 특정 포지션의 선수들을 조회하는 API
+    def test_position_top(self) -> None:
+        # 'position-top' URL 경로에 쿼리 파라미터로 position=top을 전달
+        url = reverse("position-top") + "?position=top"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # 응답 데이터의 각 선수의 position 필드가 'top'인지 확인
+        for player_data in response.data:
+            self.assertEqual(player_data["position"], "top")
+
+    # 특정 선수의 스케줄 목록을 조회하는 API
+    def test_get_player_schedule_list(self) -> None:
+        player = self.players[0]
+        url = reverse("player-schedule-list", kwargs={"player_id": player.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # 생성 시점에 추가한 스케줄이 1개 있는지 확인
+        self.assertEqual(len(response.data), 1)
+
+    # 관리자가 선수를 위한 새로운 스케줄을 생성하는 API
+    def test_create_player_schedule(self) -> None:
+        player = self.players[1]
+        url = reverse("player-schedule-list", kwargs={"player_id": player.id})
+        data = {
+            "category": "생일",
+            "start_date": timezone.now().isoformat(),  # ISO 포맷의 날짜 문자열
+            "end_date": (timezone.now() + timedelta(hours=1)).isoformat(),
+            "place": "Arena",
+            "title": "Birthday Event",
+            "detail": "Celebrate birthday",
+        }
+        self.client.login(username="admin@example.com", password="adminpass")
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # 응답 메시지가 '선수 스케줄 생성 완료'인지 확인
+        self.assertEqual(response.data.get("detail"), "선수 스케줄 생성 완료")
+
+    # 관리자가 선수의 스케줄 정보를 수정하는 API
+    def test_update_player_schedule(self) -> None:
+        schedule = self.schedule
+        url = reverse(
+            "player-schedule-detail",
+            kwargs={"player_id": schedule.player.id, "schedule_id": schedule.id},
+        )
+        self.client.login(username="admin@example.com", password="adminpass")
+        data = {
+            "title": "Updated Match Title",
+            "detail": "Updated details",
+        }
+        response = self.client.patch(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get("detail"), "선수 스케줄 수정 완료")
+
+    # 관리자가 선수의 스케줄을 삭제하는 API
+    def test_delete_player_schedule(self) -> None:
+        schedule = self.schedule
+        url = reverse(
+            "player-schedule-detail",
+            kwargs={"player_id": schedule.player.id, "schedule_id": schedule.id},
+        )
+        self.client.login(username="admin@example.com", password="adminpass")
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        # 삭제된 스케줄을 DB에서 조회할 경우 PlayerSchedule.DoesNotExist 예외가 발생해야 함
+        with self.assertRaises(PlayerSchedule.DoesNotExist):
+            PlayerSchedule.objects.get(pk=schedule.id)
