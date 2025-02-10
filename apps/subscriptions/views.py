@@ -34,7 +34,7 @@ class PlayerSubscriptionView(APIView):
                 status=status.HTTP_200_OK,
             )
 
-        # 2️⃣ Soft-delete된 구독이 있는지 확인 (all_objects 사용)
+        # Soft-delete된 구독이 있는지 확인 (all_objects 사용)
         deleted_subscription = PlayerSubscription.deleted_objects.filter(user=user, player=player).first()
 
         if deleted_subscription:
@@ -82,7 +82,7 @@ class TeamSubscriptionView(APIView):
                 status=status.HTTP_200_OK,
             )
 
-        # 2️⃣ Soft-delete된 구독이 있는지 확인 (all_objects 사용)
+        # Soft-delete된 구독이 있는지 확인 (all_objects 사용)
         deleted_subscription = TeamSubscription.deleted_objects.filter(user=user, team=team).first()
 
         if deleted_subscription:
