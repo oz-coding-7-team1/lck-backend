@@ -15,17 +15,17 @@ from apps.users.views import (
 )
 
 urlpatterns = [
-    path("obtain/", TokenObtainPairView.as_view(), name="token_obtain"),
-    path("refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path("verify/", TokenVerifyView.as_view(), name="token_verify"),
+    path("token/obtain/", TokenObtainPairView.as_view(), name="token_obtain"),
+    path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("token/verify/", TokenVerifyView.as_view(), name="token_verify"),
     path("signup/", UserRegisterView.as_view(), name="signup"),
     path("login/", UserLoginView.as_view(), name="login"),
     path("logout/", UserLogoutView.as_view(), name="logout"),
     # path("Withdrawal/",),
-    path("user/mypage/", MyPageView.as_view(), name="mypage"),
-    path("user/password/", ChangePasswordView.as_view(), name="change-password"),
-    # path("user/image/",),
-    # path("user/image/<int:pk>",),
-    # path("user/<int:pk>",),
+    path("mypage/", MyPageView.as_view(), name="mypage"),
+    path("password/", ChangePasswordView.as_view(), name="change-password"),
+    # path("image/",),
+    # path("image/<int:pk>",),
+    # path("<int:pk>",),
     path("terms/", TermsListView.as_view(), name="terms"),
 ]
