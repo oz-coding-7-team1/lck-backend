@@ -8,7 +8,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Player, PlayerSchedule
+from .models import Player, PlayerSchedule, Position
 from .serializers import (
     PlayerCreateSerializer,
     PlayerPositionSerializer,
@@ -156,7 +156,7 @@ class TopPlayers(APIView):
             """
             어노테이션은 QuerySet에 새로운 필드(계산된 값)를 추가하기 위한 메서드,
             subscriber_count는 각 선수의 구독자 수를 나타내는 동적으로 추가된 필드,
-            Count("subscriptions")는 각 Player 객체와 연결된 subscriptions의 개수를 계산
+            Count("player_subscriptions")는 각 Player 객체와 연결된 subscriptions의 개수를 계산
             """
             # 각 Player 객체에 대해 연결된 subscriptions의 개수를 어노테이션하여
             # subscriber_count 필드에 저장한 후, 이를 기준으로 내림차순 정렬하고 상위 10개를 조회
@@ -179,32 +179,26 @@ class TopPlayers(APIView):
 
 # 특정 포지션의 구독 수가 많은 상위 5명의 선수 조회
 class PositionTop(APIView):
-    def get(self, request: Request) -> Response:
-        # 클라이언트의 요청에서 쿼리 파라미터로 전달된 'position' 값을 가져옴
-        position = request.query_params.get("position")
-        if not position:
-            # 만약 'position' 값이 제공되지 않았다면,
-            # 클라이언트에게 400 오류와 함께 에러 메시지를 반환
-            return Response({"error": "Position parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
+    def get(self, request: Any) -> Response:
         try:
-            # Player 모델에서, 포지션 필드가 요청한 값과 일치하는 선수들만 필터링함
-            # 필터링된 Player 객체들에 대해, 연결된 subscriptions의 개수를 계산하여
-            # subscriber_count라는 이름의 동적 필드로 추가
-            # 이후, subscriber_count 필드를 기준으로 내림차순 정렬한 후 상위 5명을 선택
-            top_players = (
-                Player.objects.filter(position=position)
-                .annotate(subscriber_count=Count("player_subscriptions"))
-                .order_by("-subscriber_count")[:5]
-            )
+            result = {}
+            # Position Enum에 정의된 모든 포지션에 대해 반복
+            for pos in Position:
+                # 해당 포지션에 속하는 선수들을 필터링하고 구독자 수를 어노테이션한 후 내림차순 정렬하여 상위 5명을 선택
+                players_qs = (
+                    Player.objects.filter(position=pos.value)
+                    .annotate(subscriber_count=Count("player_subscriptions"))
+                    .order_by("-subscriber_count")[:5]
+                )
+                # 선택된 선수들을 직렬화
+                serializer = PlayerPositionSerializer(players_qs, many=True)
+                # 결과 딕셔너리에 포지션 값을 키로 하여 직렬화된 데이터를 저장
+                result[pos.value] = serializer.data
 
-            # 조회된 Player 객체들을 PlayerPositionSerializer를 사용하여 직렬화
-            # many=True는 여러 개의 객체를 직렬화할 때 사용
-            serializer = PlayerPositionSerializer(top_players, many=True)
-
-            # 직렬화된 데이터를 HTTP 200상태 코드와 함께 Response 객체로 반환
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            # 모든 포지션에 대한 결과를 포함하는 딕셔너리를 반환
+            return Response(result, status=status.HTTP_200_OK)
         except Exception as e:
-            # 예외 발생 시, 에러 메시지와 함께 HTTP 500상태 코드를 반환
+            # 예외 발생 시 에러 메시지와 함께 500 상태 코드를 반환
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
