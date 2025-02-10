@@ -21,6 +21,7 @@ class PlayerSubscriptionTests(APITestCase):
         # APIClient는 장고의 기본 Client보다 restAPI에 최적화 돼있음(응답 기본값이 JSON)
         self.client = APIClient()
         self.user = User.objects.create_user(email="testuser@example.com", password="testpass")
+        # JWT 토큰 생성 및 헤더 설정
         refresh = RefreshToken.for_user(self.user)
         self.token = str(refresh.access_token)
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
@@ -78,6 +79,7 @@ class TeamSubscriptionTests(APITestCase):
     def setUp(self) -> None:
         self.client = APIClient()
         self.user = User.objects.create_user(email="testuser@example.com", password="testpass")
+        # JWT 토큰 생성 및 헤더 설정
         refresh = RefreshToken.for_user(self.user)
         self.token = str(refresh.access_token)
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
