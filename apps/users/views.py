@@ -9,7 +9,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 from .models import Terms, TermsAgreement, User
 from .serializers import UserSerializer
@@ -84,9 +84,9 @@ class UserLoginView(APIView):
             response.set_cookie(
                 key="refresh_token",
                 value=refresh_token,
-                httponly=True, # 클라이언트의 자바스크립트에서 쿠키에 접근할 수 없게 함
+                httponly=True, # 자바스크립트에서 접근 불가능하게 설정
                 secure=True, # HTTPS 환경에서만 쿠키가 전송되도록 함
-                samesite="Strict" # 쿠키가 현재 도메인에서 발생하는 요청에만 전송되도록 제한
+                samesite="Strict" # 같은 사이트에서만 쿠키 전송
             )
             return response
         else:
@@ -105,19 +105,36 @@ class UserLoginView(APIView):
     """
 
 
-# 로그아웃
-class UserLogoutView(APIView):
-    authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
+class RefreshTokenView(APIView):
+    permission_classes = (AllowAny,)
 
     def post(self, request: Any) -> Response:
+        # 쿠키에서 refresh token 가져오기
+        refresh_token = request.COOKIES.get("refresh_token")
+        if not refresh_token:
+            return Response({"detail": "Refresh token 이 제공되지 않았습니다."}, status=status.HTTP_401_UNAUTHORIZED)
+
         try:
-            refresh_token = request.data.get("refresh")
-            token = RefreshToken(refresh_token)
-            token.blacklist()  # 로그아웃 시 refresh token을 블랙리스트에 등록
-            return Response({"detail": "로그아웃에 성공하였습니다."}, status=status.HTTP_204_NO_CONTENT)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            refresh = RefreshToken(refresh_token)
+            new_access_token = str(refresh.access_token)
+            return Response({"access_token": new_access_token}, status=status.HTTP_200_OK)
+        except TokenError:
+            return Response({"detail": "잘못된 refresh token 입니다."}, status=status.HTTP_403_FORBIDDEN)
+
+
+# 로그아웃
+class UserLogoutView(APIView):
+    def post(self, request: Any) -> Response:
+        refresh_token = request.COOKIES.get("refresh_token")
+        if refresh_token:
+            try:
+                token = RefreshToken(refresh_token)
+                token.blacklist()  # 로그아웃 시 refresh token을 블랙리스트에 등록
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        response = Response({"detail": "로그아웃 되었습니다."}, status=status.HTTP_204_NO_CONTENT)
+        response.delete_cookie(key="refresh_token")
+        return response
 
 
 # 비밀번호 변경
@@ -196,3 +213,4 @@ class MyPageView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
