@@ -31,7 +31,12 @@ class PlayerSubscriptionTests(APITestCase):
             debut_date="2010-01-01",
             agency="Test Agency",
         )
-        self.client.login(email="testuser@example.com", password="testpass")
+        # JWT 토큰 생성
+        refresh = RefreshToken.for_user(self.user)
+        self.access_token = str(refresh.access_token)
+
+        # 헤더에 토큰 추가
+        self.client.credentials(HTTP_AUTHORIZATION="Bearer " + self.access_token)
 
     def test_subscribe_to_player(self) -> None:
         url = reverse("player_subscription", args=[self.player.id])
@@ -50,7 +55,7 @@ class PlayerSubscriptionTests(APITestCase):
 
     def test_get_player_subscription_count(self) -> None:
         PlayerSubscription.objects.create(user=self.user, player=self.player)
-        url = reverse("player_subscription", args=[self.player.id])
+        url = reverse("player_subscription_count", args=[self.player.id])
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["count"], 1)
@@ -100,7 +105,7 @@ class TeamSubscriptionTests(APITestCase):
 
     def test_get_team_subscription_count(self) -> None:
         TeamSubscription.objects.create(user=self.user, team=self.team)
-        url = reverse("team_subscription", args=[self.team.id])
+        url = reverse("team_subscription_count", args=[self.team.id])
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["count"], 1)
