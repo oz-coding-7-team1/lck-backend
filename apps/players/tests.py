@@ -183,12 +183,12 @@ class PlayerAPITestCase(APITestCase):
         with self.assertRaises(Player.DoesNotExist):
             Player.objects.get(pk=player.id)
 
-    # 구독 수를 기반으로 인기 선수를 조회하는 API
+    # 구독 수를 기반으로 상위 선수 10명을 조회하는 API
     def test_top_players(self) -> None:
         # 상위 5명의 선수에 대해, 각각 다른 수의 구독을 생성
         # 첫 번째 선수에는 5개의 구독, 두 번째 선수에는 4개, ... 형식으로 생성
-        for i, player in enumerate(self.players[:5]):
-            count = 5 - i  # 각 선수에 할당할 구독 수
+        for i, player in enumerate(self.players[:10]):
+            count = 10 - i  # 각 선수에 할당할 구독 수
             for user in self.normal_users[:count]:
                 PlayerSubscription.objects.create(user=user, player=player)
         url = reverse("top-players")
@@ -199,15 +199,18 @@ class PlayerAPITestCase(APITestCase):
         top_player = response.data[0]
         self.assertEqual(top_player["id"], self.players[0].id)
 
-    # 특정 포지션의 선수들을 조회하는 API
+    # 구독 수를 기반으로 상위 특정 포지션의 상위 5명 선수들을 조회하는 API
     def test_position_top(self) -> None:
-        # 'position-top' URL 경로에 쿼리 파라미터로 position=top을 전달
-        url = reverse("position-top") + "?position=top"
+        url = reverse("position-top")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # 응답 데이터의 각 선수의 position 필드가 'top'인지 확인
-        for player_data in response.data:
-            self.assertEqual(player_data["position"], "top")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # 응답 데이터는 포지션 이름을 키로 하고 해당 포지션의 선수 리스트를 값으로 갖는 딕셔너리
+        positions_data = response.data  # {"top": [...], "jungle": [...], ...}
+        # 모든 포지션에 대해 각 선수의 position 필드가 해당 키와 일치하는지 확인
+        for position, players in positions_data.items():
+            for player in players:
+                self.assertEqual(player["position"], position)
 
     # 특정 선수의 스케줄 목록을 조회하는 API
     def test_get_player_schedule_list(self) -> None:
