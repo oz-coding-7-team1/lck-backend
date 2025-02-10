@@ -121,8 +121,8 @@ class PlayerDetail(APIView):
             # Player 객체의 is_active 필드를 False로 변경
             player.is_active = False
             player.save()
-            # 성공 메시지와 함께 HTTP 204 No Content 상태 코드를 반환
-            return Response({"detail": "선수 비활성화 완료"}, status=status.HTTP_204_NO_CONTENT)
+            # HTTP 204 No Content 상태 코드를 반환
+            return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             # 요청 데이터가 올바르지 않으면 에러 메시지와 함께 HTTP 400 상태 코드 반환
             return Response(
@@ -141,8 +141,8 @@ class PlayerDetail(APIView):
 
         # soft delete 방식으로 Player 객체 삭제 (실제 삭제가 아닌 상태 변경)
         player.delete()
-        # 삭제 완료 메시지와 함께 HTTP 204 No Content 상태 코드를 반환
-        return Response({"detail": "선수 삭제 완료"}, status=status.HTTP_204_NO_CONTENT)
+        # HTTP 204 No Content 상태 코드를 반환
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # -----------------------------------------------------------------------------------------------------------------------
@@ -160,7 +160,7 @@ class TopPlayers(APIView):
             """
             # 각 Player 객체에 대해 연결된 subscriptions의 개수를 어노테이션하여
             # subscriber_count 필드에 저장한 후, 이를 기준으로 내림차순 정렬하고 상위 10개를 조회
-            top_players = Player.objects.annotate(subscriber_count=Count("subscriptions")).order_by(
+            top_players = Player.objects.annotate(subscriber_count=Count("player_subscriptions")).order_by(
                 "-subscriber_count"
             )[:10]
             # 조회된 top_players 객체들을 PlayerTopSerializer를 사용하여 직렬화
@@ -193,7 +193,7 @@ class PositionTop(APIView):
             # 이후, subscriber_count 필드를 기준으로 내림차순 정렬한 후 상위 5명을 선택
             top_players = (
                 Player.objects.filter(position=position)
-                .annotate(subscriber_count=Count("subscriptions"))
+                .annotate(subscriber_count=Count("player_subscriptions"))
                 .order_by("-subscriber_count")[:5]
             )
 
@@ -298,5 +298,5 @@ class PlayerScheduleDetail(APIView):
             raise NotFound(detail="해당 스케줄을 찾을 수 없습니다.")
         # 조회된 스케줄 객체를 삭제
         schedule.delete()
-        # 삭제 완료 메시지와 함께 HTTP 204 상태 코드를 반환
-        return Response({"detail": "선수 스케줄 삭제 완료"}, status=status.HTTP_204_NO_CONTENT)
+        # HTTP 204 상태 코드를 반환
+        return Response(status=status.HTTP_204_NO_CONTENT)
