@@ -20,10 +20,6 @@ from .serializers import (
 
 
 class PlayerList(APIView):
-    """
-    타입 어노테이션은 변수나 함수의 타입 정보를 명시하여 코드의 가독성과 안정성을 높여주며, 정적 타입 검사 도구와 IDE의 기능을 향상시킴
-    """
-
     def get_permissions(self) -> List[Any]:
         """
         GET 요청은 누구나 접근할 수 있지만,
@@ -37,7 +33,7 @@ class PlayerList(APIView):
         return []
 
     # 전체 선수 조회
-    def get(self, request: Any, format: Optional[str] = None) -> Response:
+    def get(self, request: Any) -> Response:
         # 모든 Player 객체를 데이터베이스에서 조회
         players = Player.objects.all()
         # 조회한 Player 객체들을 PlayerSerializer를 사용하여 직렬화
@@ -47,7 +43,7 @@ class PlayerList(APIView):
         return Response(serializer.data)
 
     # 선수 등록
-    def post(self, request: Request, format: Optional[str] = None) -> Response:
+    def post(self, request: Request) -> Response:
         # 클라이언트가 전송한 JSON 데이터를 기반으로 PlayerCreateSerializer를 초기화
         serializer = PlayerCreateSerializer(data=request.data)
         # 데이터 유효성 검증 수행
@@ -72,7 +68,7 @@ class PlayerDetail(APIView):
         return []
 
     # 선수 프로필 조회
-    def get(self, request: Request, pk: int, format: Optional[str] = None) -> Response:
+    def get(self, request: Request, pk: int) -> Response:
         try:
             # 주어진 pk에 해당하는 Player 객체를 조회
             player = Player.objects.get(pk=pk)
@@ -89,7 +85,7 @@ class PlayerDetail(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 선수 프로필 수정
-    def put(self, request: Request, pk: int, format: Optional[str] = None) -> Response:
+    def put(self, request: Request, pk: int) -> Response:
         # 주어진 pk를 기반으로 Player 객체를 데이터베이스에서 조회
         try:
             player = Player.objects.get(pk=pk)
@@ -112,7 +108,7 @@ class PlayerDetail(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # 선수 비활성화
-    def patch(self, request: Request, pk: int, format: Optional[str] = None) -> Response:
+    def patch(self, request: Request, pk: int) -> Response:
         try:
             # 주어진 pk를 기반으로 Player 객체를 데이터베이스에서 조회
             player = Player.objects.get(pk=pk)
@@ -135,7 +131,7 @@ class PlayerDetail(APIView):
             )
 
     # 선수 삭제
-    def delete(self, request: Request, pk: int, format: Optional[str] = None) -> Response:
+    def delete(self, request: Request, pk: int) -> Response:
         try:
             # 주어진 pk를 기반으로 Player 객체를 데이터베이스에서 조회
             player = Player.objects.get(pk=pk)
@@ -155,7 +151,7 @@ class PlayerDetail(APIView):
 
 # 구독 수가 많은 상위 10명의 선수 조회
 class TopPlayers(APIView):
-    def get(self, request: Request, format: Optional[str] = None) -> Response:
+    def get(self, request: Request) -> Response:
         try:
             """
             어노테이션은 QuerySet에 새로운 필드(계산된 값)를 추가하기 위한 메서드,
@@ -183,7 +179,7 @@ class TopPlayers(APIView):
 
 # 특정 포지션의 구독 수가 많은 상위 5명의 선수 조회
 class PositionTop(APIView):
-    def get(self, request: Request, format: Optional[str] = None) -> Response:
+    def get(self, request: Request) -> Response:
         # 클라이언트의 요청에서 쿼리 파라미터로 전달된 'position' 값을 가져옴
         position = request.query_params.get("position")
         if not position:
@@ -223,7 +219,7 @@ class PlayerScheduleList(APIView):
         return []
 
     # 특정 선수의 스케줄 목록 조회
-    def get(self, request: Request, player_id: int, format: Optional[str] = None) -> Response:
+    def get(self, request: Request, player_id: int) -> Response:
         # 선수 ID에 해당하는 모든 스케줄 객체들을 필터링
         schedules = PlayerSchedule.objects.filter(player_id=player_id)
         # 조회한 스케줄 객체들을 PlayerScheduleSerializer를 이용하여 직렬화
@@ -233,7 +229,7 @@ class PlayerScheduleList(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 특정 선수의 스케줄 목록 생성
-    def post(self, request: Request, player_id: int, format: Optional[str] = None) -> Response:
+    def post(self, request: Request, player_id: int) -> Response:
         # 클라이언트가 전송한 데이터를 복사
         data = request.data.copy()
         # URL에서 전달된 선수 ID를 사용하여 데이터의 'player' 필드를 설정
@@ -260,7 +256,7 @@ class PlayerScheduleDetail(APIView):
         return []
 
     # 특정 선수 스케줄 상세 조회
-    def get(self, request: Request, player_id: int, schedule_id: int, format: Optional[str] = None) -> Response:
+    def get(self, request: Request, player_id: int, schedule_id: int) -> Response:
         try:
             # 데이터베이스에서 선수 ID와 스케줄 ID가 모두 일치하는 스케줄 객체를 조회
             schedule = PlayerSchedule.objects.get(pk=schedule_id, player_id=player_id)
@@ -275,7 +271,7 @@ class PlayerScheduleDetail(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 특정 선수 스케줄 상세 수정
-    def patch(self, request: Request, player_id: int, schedule_id: int, format: Optional[str] = None) -> Response:
+    def patch(self, request: Request, player_id: int, schedule_id: int) -> Response:
         try:
             # 데이터베이스에서 선수 ID와 스케줄 ID가 모두 일치하는 스케줄 객체를 조회
             schedule = PlayerSchedule.objects.get(pk=schedule_id, player_id=player_id)
@@ -293,7 +289,7 @@ class PlayerScheduleDetail(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # 특정 선수 스케줄 상세 삭제
-    def delete(self, request: Request, player_id: int, schedule_id: int, format: Optional[str] = None) -> Response:
+    def delete(self, request: Request, player_id: int, schedule_id: int) -> Response:
         try:
             # 데이터베이스에서 선수 ID와 스케줄 ID가 모두 일치하는 스케줄 객체를 조회
             schedule = PlayerSchedule.objects.get(pk=schedule_id, player_id=player_id)
