@@ -11,12 +11,15 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from apps.players.models import Player
+
 from apps.players.serializers import PlayerSerializer
 from apps.teams.models import Team
-from apps.teams.serializers import TeamSerializer
 
 from .models import PlayerSubscription, TeamSubscription
 from .serializers import PlayerSubscriptionSerializer, TeamSubscriptionSerializer
+
+from apps.teams.serializers import TeamSerializer
+
 
 
 class PlayerSubscriptionView(APIView):
