@@ -5,10 +5,9 @@ from rest_framework_simplejwt.views import (
     TokenVerifyView,
 )
 
-from apps.users.views import (
+from apps.users.views import (  # TermsListView,
     ChangePasswordView,
     MyPageView,
-    TermsListView,
     UserLoginView,
     UserLogoutView,
     UserRegisterView,
@@ -24,9 +23,9 @@ urlpatterns = [
     path("logout/", UserLogoutView.as_view(), name="logout"),
     path("withdraw/", WithdrawAPIView.as_view(), name="withdraw"),
     path("mypage/", MyPageView.as_view(), name="mypage"),
-    path("password/", ChangePasswordView.as_view(), name="change-password"),
+    path("password/", ChangePasswordView.as_view(), name="change_password"),
     # path("image/",),
     # path("image/<int:pk>",),
     # path("<int:pk>",),
-    path("terms/", TermsListView.as_view(), name="terms"),
+    # path("terms/", TermsListView.as_view(), name="terms"),
 ]

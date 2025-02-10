@@ -20,23 +20,23 @@ class UserRegisterView(APIView):
     permission_classes = (AllowAny,)
 
     def post(self, request: Any) -> Response:
-        agreed_terms = request.data.get("agreed_terms")
-        # isinstance(instance, type): 변수의 타입이 특정 클래스인지 확인
-        # 여러개의 약관 id를 담은 리스트 형태로 전달
-        if not isinstance(agreed_terms, list):
-            raise ParseError("약관 동의 데이터는 리스트 형식이어야 합니다.")
-
-        # 활성화되어 있고 필수인 약관 모두를 가져옴
-        required_terms = Terms.objects.filter(is_active=True, is_required=True)
-        # 데이터를 집합 자료형으로 변환 / 중복을 제거하고 수학적 집합 연산을 효율적으로 수행할 수 있어서 존재 여부를 빠르게 확인 가능
-        required_terms_ids = set(required_terms.values_list("id", flat=True))
-        agreed_terms_ids = set(agreed_terms)
-
-        # 필수 약관에 모두 동의했는지 확인
-        # A.issubset(B): 집합 A의 모든 요소가 집합 B에 포함되어 있는지 검사
-        # 필수 약관 id 집합이 동의한 약관 id 집합에 포함되어야 함
-        if not required_terms_ids.issubset(agreed_terms_ids):
-            raise ParseError("필수 약관에 모두 동의해야 합니다.")
+        # agreed_terms = request.data.get("agreed_terms")
+        # # isinstance(instance, type): 변수의 타입이 특정 클래스인지 확인
+        # # 여러개의 약관 id를 담은 리스트 형태로 전달
+        # if not isinstance(agreed_terms, list):
+        #     raise ParseError("약관 동의 데이터는 리스트 형식이어야 합니다.")
+        #
+        # # 활성화되어 있고 필수인 약관 모두를 가져옴
+        # required_terms = Terms.objects.filter(is_active=True, is_required=True)
+        # # 데이터를 집합 자료형으로 변환 / 중복을 제거하고 수학적 집합 연산을 효율적으로 수행할 수 있어서 존재 여부를 빠르게 확인 가능
+        # required_terms_ids = set(required_terms.values_list("id", flat=True))
+        # agreed_terms_ids = set(agreed_terms)
+        #
+        # # 필수 약관에 모두 동의했는지 확인
+        # # A.issubset(B): 집합 A의 모든 요소가 집합 B에 포함되어 있는지 검사
+        # # 필수 약관 id 집합이 동의한 약관 id 집합에 포함되어야 함
+        # if not required_terms_ids.issubset(agreed_terms_ids):
+        #     raise ParseError("필수 약관에 모두 동의해야 합니다.")
 
         password = request.data.get("password")
         serializer = UserSerializer(data=request.data)
@@ -51,14 +51,14 @@ class UserRegisterView(APIView):
             user.set_password(password)  # 비밀번호 해시화
             user.save()
 
-            # 사용자가 동의한 약관 기록 생성 (유효한 약관만 처리)
-            for term_id in agreed_terms:
-                try:
-                    term = Terms.objects.get(id=term_id, is_active=True)
-                    TermsAgreement.objects.create(user=user, terms=term, is_active=True)  # 약관 동의 정보 저장
-                except Terms.DoesNotExist:
-                    raise ParseError(f"존재하지 않거나 활성화된 약관이 아닙니다: {term_id}")
-
+            #     # 사용자가 동의한 약관 기록 생성 (유효한 약관만 처리)
+            #     for term_id in agreed_terms:
+            #         try:
+            #             term = Terms.objects.get(id=term_id, is_active=True)
+            #             TermsAgreement.objects.create(user=user, terms=term, is_active=True)  # 약관 동의 정보 저장
+            #         except Terms.DoesNotExist:
+            #             raise ParseError(f"존재하지 않거나 활성화된 약관이 아닙니다: {term_id}")
+            #
             serializer = UserSerializer(user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
@@ -134,7 +134,7 @@ class UserLogoutView(APIView):
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         response = Response({"detail": "로그아웃 되었습니다."}, status=status.HTTP_204_NO_CONTENT)
-        response.delete_cookie(key="refresh_token")
+        response.delete_cookie("refresh_token")
         return response
 
 
@@ -219,22 +219,22 @@ class ChangePasswordView(APIView):
     """
 
 
-# 약관 리스트 조회 (약관 내용을 확인할 수 있도록)
-class TermsListView(APIView):
-    permission_classes = (AllowAny,)
-
-    def get(self, request: Any) -> Response:
-        # filter(): 조건에 맞는 쿼리셋을 반환
-        # .all() 을 붙여도 동일한 결과를 내지만 중복된 호출이므로 filter(is_active=True) 만 사용
-        terms = Terms.objects.filter(is_active=True)  # 활성화 된 약관을 조회
-        terms_data = []  # TermsList 를 만들기 위한 list
-        for term in terms:
-            terms_data.append(
-                {
-                    "id": term.id,
-                    "name": term.name,
-                    "detail": term.detail,
-                    "is_required": term.is_required,
-                }
-            )
-        return Response(terms_data, status=status.HTTP_200_OK)
+# # 약관 리스트 조회 (약관 내용을 확인할 수 있도록)
+# class TermsListView(APIView):
+#     permission_classes = (AllowAny,)
+#
+#     def get(self, request: Any) -> Response:
+#         # filter(): 조건에 맞는 쿼리셋을 반환
+#         # .all() 을 붙여도 동일한 결과를 내지만 중복된 호출이므로 filter(is_active=True) 만 사용
+#         terms = Terms.objects.filter(is_active=True)  # 활성화 된 약관을 조회
+#         terms_data = []  # TermsList 를 만들기 위한 list
+#         for term in terms:
+#             terms_data.append(
+#                 {
+#                     "id": term.id,
+#                     "name": term.name,
+#                     "detail": term.detail,
+#                     "is_required": term.is_required,
+#                 }
+#             )
+#         return Response(terms_data, status=status.HTTP_200_OK)
