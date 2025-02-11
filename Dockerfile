@@ -8,8 +8,7 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=off \
     # pip 패키지 설치 시 버전 확인 off
     PIP_DISABLE_PIP_VERSION_CHECK=on \
-    PIP_DEFAULT_TIMEOUT=100 \
-    DJANGO_SETTINGS_MODULE=config.settings.prod
+    PIP_DEFAULT_TIMEOUT=100
 
 # Set work directory
 WORKDIR /app
@@ -33,9 +32,6 @@ COPY pyproject.toml poetry.lock /app/
 # Install dependencies
 # --no-interaction은 사용자 입력 요구 X, --no-ansi는 색상 제거 - 일부 터미널에서 이상해질 수 있음
 RUN poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi --no-root
-
-# Collect static files
-RUN python manage.py collectstatic --noinput
 
 # Expose port
 EXPOSE 8000
