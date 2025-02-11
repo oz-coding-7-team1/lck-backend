@@ -20,6 +20,8 @@ SIMPLE_JWT = {
     "SIGNING_KEY": SECRET_KEY,
 }
 
-REST_FRAMEWORK += {
+REST_FRAMEWORK.update(
+    {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-}
+    }
+)
