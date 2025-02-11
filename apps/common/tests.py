@@ -1,16 +1,14 @@
-
-from django.core.management import call_command
-
 from datetime import timedelta
 
+from django.core.management import call_command
 from django.utils.timezone import now
-
 from rest_framework.test import APITestCase
 
 from apps.players.models import Player
 from apps.subscriptions.models import PlayerSubscription, TeamSubscription
 from apps.teams.models import Team
 from apps.users.models import User
+
 
 # Create your tests here.
 class DeleteOldSubscriptionsTest(APITestCase):
