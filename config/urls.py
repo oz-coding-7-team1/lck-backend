@@ -25,7 +25,7 @@ from drf_spectacular.views import (
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/v1/players", include("apps.players.urls")),
+    path("api/v1/players/", include("apps.players.urls")),
     path("api/v1/subscriptions/", include("apps.subscriptions.urls")),
     path("api/v1/users/", include("apps.users.urls")),
     path("api/v1/schema/", SpectacularAPIView.as_view(), name="schema"),  # API 스키마 엔드포인트
