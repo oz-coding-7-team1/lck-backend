@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate, logout
 from django.contrib.auth.password_validation import validate_password
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import ParseError, PermissionDenied
@@ -11,10 +12,12 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Terms, TermsAgreement, User
-from .serializers import UserSerializer
+from .serializers import UserRegisterSerializer, UserSerializer, UserLoginSerializer, MypageSerializer, \
+    ChangePasswordSerializer
 
 
 # 회원가입 (약관 동의 포함)
@@ -22,6 +25,15 @@ class UserRegisterView(APIView):
     authentication_classes = []
     permission_classes = (AllowAny,)
 
+    @extend_schema(
+        request=UserRegisterSerializer,
+        responses={
+            201: UserRegisterSerializer,
+            400: dict,
+        },
+        summary="회원가입",
+        description="이메일, 닉네임, 비밀번호 등 회원 정보를 입력받아 새 사용자를 생성합니다.",
+    )
     def post(self, request: Any) -> Response:
         # agreed_terms = request.data.get("agreed_terms")
         # # isinstance(instance, type): 변수의 타입이 특정 클래스인지 확인
@@ -42,7 +54,7 @@ class UserRegisterView(APIView):
         #     raise ParseError("필수 약관에 모두 동의해야 합니다.")
 
         password = request.data.get("password")
-        serializer = UserSerializer(data=request.data)
+        serializer = UserRegisterSerializer(data=request.data)
 
         try:
             validate_password(password)  # 비밀번호 유효성 검사
@@ -62,7 +74,7 @@ class UserRegisterView(APIView):
             #         except Terms.DoesNotExist:
             #             raise ParseError(f"존재하지 않거나 활성화된 약관이 아닙니다: {term_id}")
             #
-            serializer = UserSerializer(user)
+            serializer = UserRegisterSerializer(user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -72,6 +84,16 @@ class UserRegisterView(APIView):
 class UserLoginView(APIView):
     authentication_classes = []
     permission_classes = (AllowAny,)
+
+    @extend_schema(
+        request=UserLoginSerializer,
+        responses={
+            200: dict,
+            401: dict,
+        },
+        summary="로그인",
+        description="이메일과 비밀번호로 사용자를 인증하여 JWT 토큰을 발급합니다.",
+    )
 
     def post(self, request: Any) -> Response:
         email = request.data.get("email")
@@ -113,6 +135,15 @@ class UserLoginView(APIView):
 class RefreshTokenView(APIView):
     permission_classes = (AllowAny,)
 
+    @extend_schema(
+        responses={
+            200: TokenRefreshSerializer,
+            401: dict,
+            403: dict,
+        },
+        summary="Access Token 재발급",
+        description="쿠키에 저장된 refresh token 을 이용하여 새로운 access token 을 발급합니다.",
+    )
     def post(self, request: Any) -> Response:
         # 쿠키에서 refresh token 가져오기
         refresh_token = request.COOKIES.get("refresh_token")
@@ -152,6 +183,15 @@ class RefreshTokenView(APIView):
 
 # 로그아웃
 class UserLogoutView(APIView):
+    @extend_schema(
+        responses={
+            204: dict,
+            400: dict,
+        },
+        summary="로그아웃",
+        description="refresh token 을 블랙리스트에 등록하고 쿠키를 삭제합니다.",
+    )
+
     def post(self, request: Any) -> Response:
         refresh_token = request.COOKIES.get("refresh_token")
         if refresh_token:
@@ -170,6 +210,14 @@ class WithdrawAPIView(APIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
+    @extend_schema(
+        responses={
+            200: dict,
+            400: dict,
+        },
+        summary="회원 탈퇴",
+        description="회원 탈퇴 시 refresh token 을 블랙리스트에 등록하고 soft delete 처리합니다.",
+    )
     def post(self, request: Any, *args: Any, **kwargs: Any) -> Response:
         # 쿠키에서 refresh token 추출
         refresh_token = request.COOKIES.get("refresh_token")
@@ -195,20 +243,36 @@ class MyPageView(APIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
+    @extend_schema(
+        responses={200: MypageSerializer},
+        summary="회원정보 조회",
+        description="현재 로그인한 사용자의 정보를 조회합니다.",
+    )
+
     # 조회
     def get(self, request: Any) -> Response:
         user = request.user
-        serializer = UserSerializer(user)
+        serializer = MypageSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        request=MypageSerializer,
+        responses={
+            200: MypageSerializer,
+            400: dict,
+        },
+        summary="회원정보 수정",
+        description="회원정보를 부분 업데이트합니다.",
+    )
 
     # 수정
     def put(self, request: Any) -> Response:
         user = get_object_or_404(User, id=request.data["id"])
-        serializer = UserSerializer(user, data=request.data, partial=True)
+        serializer = MypageSerializer(user, data=request.data, partial=True)
 
         if serializer.is_valid():
             user = serializer.save()
-            serializer = UserSerializer(user)
+            serializer = MypageSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -219,6 +283,16 @@ class ChangePasswordView(APIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
+    @extend_schema(
+        request=ChangePasswordSerializer,
+        responses={
+            200: dict,
+            400: dict,
+            403: dict,
+        },
+        summary="비밀번호 변경",
+        description="현재 비밀번호와 새 비밀번호를 받아 비밀번호를 변경합니다.",
+    )
     def post(self, request: Any) -> Response:
         user = request.user
         old_password = request.data.get("old_password")
