@@ -6,12 +6,14 @@ from django.urls import reverse
 from django.utils.timezone import now
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.players.models import Player
 from apps.subscriptions.models import PlayerSubscription, TeamSubscription
 from apps.teams.models import Team
+from apps.users.models import User
 
-User = get_user_model()
+# User = get_user_model()
 
 
 class PlayerSubscriptionTests(APITestCase):
@@ -19,6 +21,10 @@ class PlayerSubscriptionTests(APITestCase):
         # APIClient는 장고의 기본 Client보다 restAPI에 최적화 돼있음(응답 기본값이 JSON)
         self.client = APIClient()
         self.user = User.objects.create_user(email="testuser@example.com", password="testpass")
+        # JWT 토큰 생성 및 헤더 설정
+        refresh = RefreshToken.for_user(self.user)
+        self.token = str(refresh.access_token)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
         self.player = Player.objects.create(
             realname="Test Realname",
             nickname="Test Nickname",
@@ -73,6 +79,10 @@ class TeamSubscriptionTests(APITestCase):
     def setUp(self) -> None:
         self.client = APIClient()
         self.user = User.objects.create_user(email="testuser@example.com", password="testpass")
+        # JWT 토큰 생성 및 헤더 설정
+        refresh = RefreshToken.for_user(self.user)
+        self.token = str(refresh.access_token)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
         self.team = Team.objects.create(name="Test Team")
         self.client.login(email="testuser@example.com", password="testpass")
 
