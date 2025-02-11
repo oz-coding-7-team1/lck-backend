@@ -1,6 +1,7 @@
 from typing import Any, List, Optional
 
 from django.db.models import Count
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -32,6 +33,7 @@ class PlayerList(APIView):
             return [IsAuthenticated(), IsAdminUser()]
         return []
 
+    @extend_schema(summary="전체 선수 조회")
     # 전체 선수 조회
     def get(self, request: Any) -> Response:
         # 모든 Player 객체를 데이터베이스에서 조회
@@ -41,6 +43,8 @@ class PlayerList(APIView):
         serializer = PlayerSerializer(players, many=True)
         # 직렬화된 데이터를 Response 객체로 반환
         return Response(serializer.data)
+
+    @extend_schema(request=PlayerCreateSerializer, responses={201: PlayerCreateSerializer}, summary="선수 등록")
 
     # 선수 등록
     def post(self, request: Request) -> Response:
@@ -67,6 +71,7 @@ class PlayerDetail(APIView):
             return [IsAuthenticated(), IsAdminUser()]
         return []
 
+    @extend_schema(summary="선수 프로필 조회")
     # 선수 프로필 조회
     def get(self, request: Request, pk: int) -> Response:
         try:
@@ -84,6 +89,7 @@ class PlayerDetail(APIView):
         # 직렬화된 데이터를 Response 객체에 담아 클라이언트에게 반환
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @extend_schema(summary="선수 프로필 수정")
     # 선수 프로필 수정
     def put(self, request: Request, pk: int) -> Response:
         # 주어진 pk를 기반으로 Player 객체를 데이터베이스에서 조회
@@ -107,6 +113,7 @@ class PlayerDetail(APIView):
         # 데이터 유효성 검사에 실패한 경우, 에러 메시지와 함께 HTTP 400 상태 코드를 반환
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(summary="선수 비활성화")
     # 선수 비활성화
     def patch(self, request: Request, pk: int) -> Response:
         try:
@@ -130,6 +137,7 @@ class PlayerDetail(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+    @extend_schema(summary="선수 삭제")
     # 선수 삭제
     def delete(self, request: Request, pk: int) -> Response:
         try:
@@ -151,6 +159,7 @@ class PlayerDetail(APIView):
 
 # 구독 수가 많은 상위 10명의 선수 조회
 class TopPlayers(APIView):
+    @extend_schema(summary="전체 선수 중 구독수 상위 10위")
     def get(self, request: Request) -> Response:
         try:
             """
@@ -179,6 +188,7 @@ class TopPlayers(APIView):
 
 # 특정 포지션의 구독 수가 많은 상위 5명의 선수 조회
 class PositionTop(APIView):
+    @extend_schema(summary="포지션 별 선수 중 구독수 상위 5위")
     def get(self, request: Any) -> Response:
         try:
             result = {}
@@ -212,6 +222,7 @@ class PlayerScheduleList(APIView):
             return [IsAuthenticated(), IsAdminUser()]
         return []
 
+    @extend_schema(summary="선수 스케줄 조회")
     # 특정 선수의 스케줄 목록 조회
     def get(self, request: Request, player_id: int) -> Response:
         # 선수 ID에 해당하는 모든 스케줄 객체들을 필터링
@@ -222,6 +233,7 @@ class PlayerScheduleList(APIView):
         # 직렬화된 데이터를 HTTP 200 상태 코드와 함께 클라이언트에 반환
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @extend_schema(summary="선수 스케줄 생성")
     # 특정 선수의 스케줄 목록 생성
     def post(self, request: Request, player_id: int) -> Response:
         # 클라이언트가 전송한 데이터를 복사
@@ -249,6 +261,7 @@ class PlayerScheduleDetail(APIView):
             return [IsAuthenticated(), IsAdminUser()]
         return []
 
+    @extend_schema(summary="선수 상세 스케줄 조회")
     # 특정 선수 스케줄 상세 조회
     def get(self, request: Request, player_id: int, schedule_id: int) -> Response:
         try:
@@ -264,6 +277,7 @@ class PlayerScheduleDetail(APIView):
         # 직렬화된 데이터를 포함하는 응답 객체를 HTTP 200 상태 코드와 함께 반환
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @extend_schema(summary="선수 상세 스케줄 수정")
     # 특정 선수 스케줄 상세 수정
     def patch(self, request: Request, player_id: int, schedule_id: int) -> Response:
         try:
@@ -282,6 +296,7 @@ class PlayerScheduleDetail(APIView):
         # 데이터 유효성 검사에 실패하면 오류 메시지와 함께 HTTP 400 상태 코드를 반환
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(summary="선수 상세 스케줄 삭제")
     # 특정 선수 스케줄 상세 삭제
     def delete(self, request: Request, player_id: int, schedule_id: int) -> Response:
         try:
