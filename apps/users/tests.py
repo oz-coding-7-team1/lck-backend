@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
@@ -14,6 +15,9 @@ super_data = {"email": "super@gmail.com", "nickname": "superuser", "password": "
 # 인증이 필요한 테스트에서 공통적으로 사용할 클래스
 class APITestCaseSetUp(APITestCase):
     def setUp(self) -> None:
+        # 테스트 환경에서 해당 속성이 없으면 기본값 (False) 으로 설정
+        if not hasattr(settings, "REFRESH_TOKEN_COOKIE_SECURE"):
+            settings.REFRESH_TOKEN_COOKIE_SECURE = False
         # 테스트용 일반 사용자 생성
         self.user = User.objects.create_user(email=data["email"], nickname=data["nickname"], password=data["password"])
         # JWT access token 생성 후 클라이언트 헤더에 등록
@@ -123,15 +127,20 @@ class RefreshTokenTestCase(APITestCaseSetUp):
 
     def test_refresh_token_success(self) -> None:
         # refresh token 재발급 성공 테스트: 쿠키에 저장된 refresh token 을 사용해 새로운 access token 이 발급 되어야 함
-        response = self.client.post(self.refresh_url, data={"refresh": self.refresh_token})
+        response = self.client.post(self.refresh_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("access", response.data)
+        # JSON 응답에 "access_token" 키로 새 access token 이 반환됨
+        self.assertIn("access_token", response.data)
+        # 응답 쿠키에 새 refresh token 이 설정되었는지 확인 (값이 빈 문자열이 아니어야 함)
+        new_refresh_token = response.cookies.get("refresh_token")
+        self.assertIsNotNone(new_refresh_token)
+        self.assertNotEqual(new_refresh_token, "")
 
     def test_refresh_token_fail_no_cookie(self) -> None:
         # refresh token 재발급 실패 테스트: refresh token 쿠키가 없으면 에러 응답 반환
         self.client.cookies.clear()
         response = self.client.post(self.refresh_url)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 # 회원 탈퇴 API 테스트
@@ -139,7 +148,7 @@ class WithdrawTestCase(APITestCaseSetUp):
     def setUp(self) -> None:
         super().setUp()
         self.withdraw_url = reverse("withdraw")
-        # 회원 탈퇴 시에도 refresh token을 블랙리스트에 추가해야 하므로 쿠키에 추가
+        # 회원 탈퇴 시에도 refresh token 을 블랙리스트에 추가해야 하므로 쿠키에 추가
         refresh = RefreshToken.for_user(self.user)
         self.refresh_token = str(refresh)
         self.client.cookies["refresh_token"] = self.refresh_token

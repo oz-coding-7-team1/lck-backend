@@ -1,9 +1,11 @@
 from typing import Any
 
+from django.conf import settings
 from django.contrib.auth import authenticate, logout
 from django.contrib.auth.password_validation import validate_password
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import ParseError, PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -17,6 +19,7 @@ from .serializers import UserSerializer
 
 # 회원가입 (약관 동의 포함)
 class UserRegisterView(APIView):
+    authentication_classes = []
     permission_classes = (AllowAny,)
 
     def post(self, request: Any) -> Response:
@@ -67,6 +70,7 @@ class UserRegisterView(APIView):
 
 # 로그인
 class UserLoginView(APIView):
+    authentication_classes = []
     permission_classes = (AllowAny,)
 
     def post(self, request: Any) -> Response:
@@ -85,7 +89,7 @@ class UserLoginView(APIView):
                 key="refresh_token",
                 value=refresh_token,
                 httponly=True,  # 자바스크립트에서 접근 불가능하게 설정
-                secure=True,  # HTTPS 환경에서만 쿠키가 전송되도록 함
+                secure=settings.REFRESH_TOKEN_COOKIE_SECURE,  # True: HTTPS 환경에서만 쿠키가 전송되도록 함
                 samesite="Strict",  # 같은 사이트에서만 쿠키 전송
             )
             return response
@@ -116,9 +120,32 @@ class RefreshTokenView(APIView):
             return Response({"detail": "Refresh token 이 제공되지 않았습니다."}, status=status.HTTP_401_UNAUTHORIZED)
 
         try:
-            refresh = RefreshToken(refresh_token)
-            new_access_token = str(refresh.access_token)
-            return Response({"access_token": new_access_token}, status=status.HTTP_200_OK)
+            # 기존 리프레쉬 토큰 검증
+            old_refresh = RefreshToken(refresh_token)
+            user_id = old_refresh.payload.get("user_id")
+            if not user_id:
+                raise Exception("유저 정보가 존재하지 않습니다.")
+            user = User.objects.get(id=user_id)
+
+            # 기존 refresh token 블랙리스트 처리
+            old_refresh.blacklist()
+
+            # 새 refresh token 생성
+            new_refresh = RefreshToken.for_user(user)
+            new_access_token = str(new_refresh.access_token)
+
+            # body 에 access token 만 포함한 응답 생성
+            response = Response({"access_token": new_access_token}, status=status.HTTP_200_OK)
+
+            # 새 refresh token 을 쿠키에 설정
+            response.set_cookie(
+                key="refresh_token",
+                value=str(new_refresh),
+                httponly=True,
+                secure=settings.REFRESH_TOKEN_COOKIE_SECURE,
+                samesite="Strict",
+            )
+            return response
         except:
             return Response({"detail": "잘못된 refresh token 입니다."}, status=status.HTTP_403_FORBIDDEN)
 
@@ -140,6 +167,7 @@ class UserLogoutView(APIView):
 
 # 회원 탈퇴
 class WithdrawAPIView(APIView):
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def post(self, request: Any, *args: Any, **kwargs: Any) -> Response:
