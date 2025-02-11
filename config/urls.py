@@ -17,10 +17,10 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import include, path
-from drf_spectacular.views import SpectacularRedocView  # 기획자나 PM에게 보여줄 때 많이 쓰임
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularSwaggerView,
+    SpectacularRedocView
 )
 
 urlpatterns = [
@@ -28,7 +28,6 @@ urlpatterns = [
     path("api/v1/players/", include("apps.players.urls")),
     path("api/v1/subscriptions/", include("apps.subscriptions.urls")),
     path("api/v1/users/", include("apps.users.urls")),
-    path("api/v1/cloud-images/", include("apps.cloud_images.urls")),
     path("api/v1/cloud-images/", include("apps.cloud_images.urls")),
     path("api/v1/schema/", SpectacularAPIView.as_view(), name="schema"),  # API 스키마 엔드포인트
     path(
