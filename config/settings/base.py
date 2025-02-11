@@ -25,13 +25,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 env = environ.Env()
 
 # 사용할 환경 설정 파일 결정
-ENV_MODE = os.getenv("DJANGO_ENV", "dev")
+ENV_MODE = os.getenv("DJANGO_ENV", "")
 ENV_FILE = BASE_DIR / f".envs/{ENV_MODE}.env"
-# 환경변수 명령어 export DJANGO_SETTINGS_MODULE=config.settings.dev(prod)
-# .toml 파일에 config.settings.prod 변경 후 mypy 실행
 
-environ.Env.read_env(str(ENV_FILE))
-
+# 환경 변수 파일 로드
+if os.path.exists(ENV_FILE):
+    env.read_env(str(ENV_FILE))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -154,7 +153,7 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
