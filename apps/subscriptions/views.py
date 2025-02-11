@@ -11,15 +11,13 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from apps.players.models import Player
-
 from apps.players.serializers import PlayerSerializer
 from apps.teams.models import Team
 
 from .models import PlayerSubscription, TeamSubscription
 from .serializers import PlayerSubscriptionSerializer, TeamSubscriptionSerializer
 
-from apps.teams.serializers import TeamSerializer
-
+# from apps.teams.serializers import TeamSerializer
 
 
 class PlayerSubscriptionView(APIView):
@@ -148,17 +146,18 @@ class TeamSubscriptionView(APIView):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 
-class TeamSubscriptionDetailView(APIView):
-    authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
-
-    def get(self, request: Any) -> Response:
-        # 현재 로그인한 사용자의 활성화된 구독 선수 정보 조회
-        subscribed_players = TeamSubscription.objects.filter(user=request.user, deleted_at__isnull=True).first()
-
-        # Player 객체들을 시리얼라이즈
-        serializer = TeamSerializer(subscribed_players)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+# Team serializer 미구현
+# class TeamSubscriptionDetailView(APIView):
+#     authentication_classes = (JWTAuthentication,)
+#     permission_classes = (IsAuthenticated,)
+#
+#     def get(self, request: Any) -> Response:
+#         # 현재 로그인한 사용자의 활성화된 구독 선수 정보 조회
+#         subscribed_players = TeamSubscription.objects.filter(user=request.user, deleted_at__isnull=True).first()
+#
+#         # Team 객체들을 시리얼라이즈
+#         serializer = TeamSerializer(subscribed_players)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class PlayerSubscriptionCountView(APIView):
