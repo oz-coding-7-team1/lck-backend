@@ -1,10 +1,11 @@
 from django.urls import path
+
 from .views import (
-    TeamList,
     TeamDetail,
+    TeamList,
     TeamRank,
-    TeamScheduleList,
     TeamScheduleDetail,
+    TeamScheduleList,
 )
 
 urlpatterns = [
