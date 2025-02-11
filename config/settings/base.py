@@ -69,6 +69,7 @@ PACKAGE = [
     "taggit_templatetags2",
 ]
 
+
 INSTALLED_APPS = DJANGO_APPS + PACKAGE
 
 MIDDLEWARE = [

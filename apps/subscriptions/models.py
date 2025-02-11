@@ -11,7 +11,7 @@ from apps.users.models import User
 class PlayerSubscription(BaseModel, SoftDeleteModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, help_text="구독한 유저 식별자")
     player = models.ForeignKey(
-        Player, on_delete=models.CASCADE, related_name="subscriptions", help_text="구독한 선수 식별자"
+        Player, on_delete=models.CASCADE, related_name="player_subscriptions", help_text="구독한 선수 식별자"
     )
 
     class Meta:
@@ -24,7 +24,9 @@ class TeamSubscription(BaseModel, SoftDeleteModel):
     # 구독한 유저 식별자(한명의 유저는 하나의 팀만 구독이 가능함)
     user = models.ForeignKey(User, on_delete=models.CASCADE, help_text="구독한 유저 식별자")
     # 구독한 팀 식별자(하나의 팀은 여러명의 구독자를 가질 수 있음)
-    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="subscriptions", help_text="구독한 팀 식별자")
+    team = models.ForeignKey(
+        Team, on_delete=models.CASCADE, related_name="team_subscriptions", help_text="구독한 팀 식별자"
+    )
 
     class Meta:
         db_table = "team_subscription"
