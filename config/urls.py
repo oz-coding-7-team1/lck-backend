@@ -17,10 +17,16 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import include, path
+from drf_spectacular.views import(
+    SpectacularAPIView,
+    SpectacularRedocView, # 기획자나 PM에게 보여줄 때 많이 쓰임
+    SpectacularSwaggerView
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/v1/players", include("apps.players.urls")),
     path("api/v1/subscriptions/", include("apps.subscriptions.urls")),
     path("api/v1/users/", include("apps.users.urls")),
+    path('api/v1/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]
