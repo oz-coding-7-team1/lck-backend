@@ -1,5 +1,6 @@
 from typing import Any
 
+from django.conf import settings
 from django.contrib.auth import authenticate, logout
 from django.contrib.auth.password_validation import validate_password
 from django.shortcuts import get_object_or_404
@@ -13,7 +14,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Terms, TermsAgreement, User
 from .serializers import UserSerializer
-from django.conf import settings
 
 
 # 회원가입 (약관 동의 포함)
@@ -111,8 +111,8 @@ class RefreshTokenView(APIView):
     permission_classes = (AllowAny,)
 
     def post(self, request: Any) -> Response:
-        # 쿠키에서 refresh token 가져오기
-        refresh_token = request.COOKIES.get("refresh_token")
+        # HTTP 헤더 "Refresh-Token" 에서 refresh token 가져오기
+        refresh_token = request.headers.get("Refresh-Token")
         if not refresh_token:
             return Response({"detail": "Refresh token 이 제공되지 않았습니다."}, status=status.HTTP_401_UNAUTHORIZED)
 
