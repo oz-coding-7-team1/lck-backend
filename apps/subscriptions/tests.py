@@ -1,6 +1,5 @@
 from datetime import timedelta
 
-from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.urls import reverse
 from django.utils.timezone import now
@@ -12,8 +11,6 @@ from apps.players.models import Player
 from apps.subscriptions.models import PlayerSubscription, TeamSubscription
 from apps.teams.models import Team
 from apps.users.models import User
-
-# User = get_user_model()
 
 
 class PlayerSubscriptionTests(APITestCase):

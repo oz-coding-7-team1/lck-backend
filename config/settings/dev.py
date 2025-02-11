@@ -8,7 +8,6 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 INSTALLED_APPS += [
     "drf_spectacular",
-    "drf_spectacular_sidecar",
 ]
 
 SIMPLE_JWT = {
