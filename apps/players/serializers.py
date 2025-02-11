@@ -2,7 +2,7 @@ from typing import Any, Dict
 
 from rest_framework import serializers
 
-from .models import Player, PlayerImage, PlayerSchedule
+from .models import Player, PlayerSchedule
 
 
 # 소셜 미디어 정보를 직렬화하는 시리얼라이저
@@ -53,13 +53,6 @@ class PlayerProfileSerializer(serializers.ModelSerializer[Player]):
             "social",  # 소셜 미디어 정보
             "agency",  # 소속 에이전시
         ]
-
-
-# PlayerImage 모델의 데이터를 직렬화하는 시리얼라이저
-class PlayerImageSerializer(serializers.ModelSerializer[PlayerImage]):
-    class Meta:
-        model = PlayerImage
-        fields = "__all__"  # 모델의 모든 필드를 포함
 
 
 # PlayerSchedule 모델의 데이터를 직렬화하는 시리얼라이저
