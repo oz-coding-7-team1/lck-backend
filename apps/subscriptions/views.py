@@ -4,6 +4,7 @@ from typing import Any, List, Optional, Sequence
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
@@ -33,6 +34,7 @@ class PlayerSubscriptionView(APIView):
         # permission_classes의 각 클래스의 인스턴스를 생성하여 반환해야 함
         return [permission() for permission in self.permission_classes]  # type: ignore
 
+    @extend_schema(summary="선수 구독 생성")
     @transaction.atomic  # 동시성 문제를 해결하기 위해 트랜잭션
     def post(self, request: Any, player_id: int) -> Response:
         user = request.user
@@ -85,6 +87,7 @@ class PlayerSubscriptionView(APIView):
             serializer = PlayerSubscriptionSerializer(subscription)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    @extend_schema(summary="선수 구독 취소")
     @transaction.atomic
     def delete(self, request: Any, player_id: int) -> Response:
         user = request.user
@@ -101,6 +104,7 @@ class PlayerSubscriptionDetailView(APIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
+    @extend_schema(summary="최애 선수 조회")
     def get(self, request: Any) -> Response:
         # 현재 로그인한 사용자의 활성화된 구독 선수 정보 조회
         subscribed_player = PlayerSubscription.objects.filter(user=request.user, deleted_at__isnull=True).first()
@@ -117,6 +121,7 @@ class TeamSubscriptionView(APIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
+    @extend_schema(summary="팀 구독 생성")
     @transaction.atomic  # 동시성 문제를 해결하기 위해 트랜잭션
     def post(self, request: Any, team_id: int) -> Response:
         user = request.user
@@ -148,6 +153,7 @@ class TeamSubscriptionView(APIView):
             serializer = TeamSubscriptionSerializer(subscription)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    @extend_schema(summary="팀 구독 취소")
     @transaction.atomic
     def delete(self, request: Any, team_id: int) -> Response:
         user = request.user
@@ -162,7 +168,8 @@ class TeamSubscriptionView(APIView):
 # class TeamSubscriptionDetailView(APIView):
 #     authentication_classes = (JWTAuthentication,)
 #     permission_classes = (IsAuthenticated,)
-#
+
+#     @extend_schema(summary="최애 팀 조회")
 #     def get(self, request: Any) -> Response:
 #         # 현재 로그인한 사용자의 활성화된 구독 선수 정보 조회
 #         subscribed_team = TeamSubscription.objects.filter(user=request.user, deleted_at__isnull=True).first()
@@ -176,14 +183,14 @@ class TeamSubscriptionView(APIView):
 
 
 class PlayerSubscriptionCountView(APIView):
-
+    @extend_schema(summary="선수 구독 수")
     def get(self, request: Any, player_id: int) -> Response:
         count = PlayerSubscription.objects.filter(player_id=player_id, deleted_at__isnull=True).count()
         return Response({"count": count})
 
 
 class TeamSubscriptionCountView(APIView):
-
+    @extend_schema(summary="팀 구독 수")
     def get(self, request: Any, team_id: int) -> Response:
         count = TeamSubscription.objects.filter(team_id=team_id, deleted_at__isnull=True).count()
         return Response({"count": count})
