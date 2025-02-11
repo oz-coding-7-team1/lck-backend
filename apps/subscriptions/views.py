@@ -41,8 +41,17 @@ class PlayerSubscriptionView(APIView):
         player = get_object_or_404(Player, id=player_id)
         now = timezone.now()
 
+        # 이미 다른 선수를 구독 중인지 확인
+        existing_subscription = PlayerSubscription.objects.filter(user=user, deleted_at__isnull=True).first()
+        if existing_subscription:
+            return Response(
+                {"error": "You can only subscribe to one player at a time. Unsubscribe first."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 이미 같은 선수를 구독 중인지 확인
         active_subscription: Optional[PlayerSubscription] = PlayerSubscription.objects.filter(
-            user=user, player=player
+            user=user, player=player, deleted_at__isnull=True
         ).first()
         if active_subscription:
             return Response(
