@@ -22,6 +22,6 @@ SIMPLE_JWT = {
 
 REST_FRAMEWORK.update(
     {
-    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+        "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     }
 )
