@@ -34,4 +34,5 @@ urlpatterns = [
     path(
         "api/v1/schema/swgger-ui/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"
     ),  # Swagger UI 엔드포인트
+    path('api/v1/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
