@@ -61,6 +61,7 @@ PACKAGE = [
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
+    "apps.common",
     "apps.users.apps.UsersConfig",
     "apps.players.apps.PlayersConfig",
     "apps.teams.apps.TeamsConfig",
