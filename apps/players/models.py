@@ -13,7 +13,7 @@ class Position(Enum):
     TOP = "top"
     JGL = "jungle"
     MID = "mid"
-    BOT = "bottom"
+    AD = "AD Carry"
     SPT = "support"
 
 
@@ -45,7 +45,7 @@ class Player(BaseModel, SoftDeleteModel):
 
 
 # 선수 스케줄 관리 모델
-class PlayerSchedule(BaseModel, SoftDeleteModel):
+class PlayerSchedule(BaseModel):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     category = models.CharField(
         max_length=10, choices=[("생일", "생일"), ("경기", "경기일정"), ("개인방송", "개인방송")]
@@ -58,16 +58,3 @@ class PlayerSchedule(BaseModel, SoftDeleteModel):
 
     class Meta:
         db_table = "player_schedule"
-
-
-# 선수 이미지 관리 모델
-class PlayerImage(BaseModel, SoftDeleteModel):
-    player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    type = models.CharField(
-        max_length=15,
-        choices=[("profile", "프로필 이미지"), ("background", "배경 이미지"), ("gallery", "갤러리 이미지")],
-    )  # 이미지 분류 항목
-    url = models.CharField(max_length=255)  # 이미지 URL
-
-    class Meta:
-        db_table = "player_image"

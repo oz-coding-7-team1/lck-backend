@@ -1,25 +1,37 @@
 from datetime import timedelta
-from typing import Any
+from typing import Any, List, Optional, Sequence
 
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from apps.players.models import Player
+from apps.players.serializers import PlayerSerializer
 from apps.teams.models import Team
 
 from .models import PlayerSubscription, TeamSubscription
 from .serializers import PlayerSubscriptionSerializer, TeamSubscriptionSerializer
 
+# from apps.teams.serializers import TeamSerializer
+
 
 class PlayerSubscriptionView(APIView):
-    # authentication_classes = (JWTAuthentication,)  # JWT 토큰 검증
-    # permission_classes = (IsAuthenticated,)  # 인증된 사용자만 접근 가능
+    # Sequence: 순서를 가진 데이터의 집합을 나타내는 타입(list, tuple, str)
+    # 이렇게 관리해보고 싶어서 만들어봄
+    def get_permissions(self) -> List[BasePermission]:
+        if self.request.method in ["POST", "DELETE", "GET"]:
+            # authentication은 어떤 사용자로부터 왔는지를 판별, JWT로 검증하겠다는 의미
+            self.authentication_classes = (JWTAuthentication,)  # 반환 필요 없음
+            # permission은 인증된 사용자가 해당 리소스에 접근할 권한이 있는지를 판단
+            # 인등된 사용자만 접근 가능하게 하겠다는 의미
+            self.permission_classes = (IsAuthenticated,)  # 반환 필요함
+        # permission_classes의 각 클래스의 인스턴스를 생성하여 반환해야 함
+        return [permission() for permission in self.permission_classes]  # type: ignore
 
     @transaction.atomic  # 동시성 문제를 해결하기 위해 트랜잭션
     def post(self, request: Any, player_id: int) -> Response:
@@ -27,22 +39,34 @@ class PlayerSubscriptionView(APIView):
         player = get_object_or_404(Player, id=player_id)
         now = timezone.now()
 
-        active_subscription = PlayerSubscription.objects.filter(user=user, player=player).first()
+        active_subscription: Optional[PlayerSubscription] = PlayerSubscription.objects.filter(
+            user=user, player=player
+        ).first()
         if active_subscription:
             return Response(
                 {"message": "You are already subscribed to this player."},
                 status=status.HTTP_200_OK,
             )
 
-        # 2️⃣ Soft-delete된 구독이 있는지 확인 (all_objects 사용)
-        deleted_subscription = PlayerSubscription.deleted_objects.filter(user=user, player=player).first()
+        # Soft-delete된 구독이 있는지 확인 (deleted_objects 사용)
+        # Optional: 값이 존재할 수도 존재하지 않을 수도 있음
+        deleted_subscription: Optional[PlayerSubscription] = PlayerSubscription.deleted_objects.filter(
+            user=user, player=player
+        ).first()
 
-        if deleted_subscription:
-            if deleted_subscription.deleted_at and now - deleted_subscription.deleted_at < timedelta(hours=24):
-                return Response(
-                    {"error": "You cannot resubscribe within 24 hours of unsubscribing."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        # 구독을 취소한 지 24시간이 지났는 지 유효성 검사
+        if (
+            deleted_subscription
+            and deleted_subscription.deleted_at
+            and now - deleted_subscription.deleted_at < timedelta(hours=24)
+        ):
+            return Response(
+                {"error": "You cannot resubscribe within 24 hours of unsubscribing."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 새로운 구독자가 이전과 같으면 restore, 아니면 새로 생성
+        if deleted_subscription and deleted_subscription.player.id == player.id:
             deleted_subscription.restore()
             deleted_subscription.save()
             serializer = PlayerSubscriptionSerializer(deleted_subscription)
@@ -55,19 +79,31 @@ class PlayerSubscriptionView(APIView):
     @transaction.atomic
     def delete(self, request: Any, player_id: int) -> Response:
         user = request.user
-        subscription = get_object_or_404(PlayerSubscription, user=user, player_id=player_id)
-        subscription.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        subscription: Optional[PlayerSubscription] = get_object_or_404(
+            PlayerSubscription, user=user, player_id=player_id
+        )
+        if subscription:
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
-    # permission_classes = [AllowAny]  # get은 인증되지 않은 사용자도 접근 가능
-    def get(self, request: Any, player_id: int) -> Response:
-        count = PlayerSubscription.objects.filter(player_id=player_id, deleted_at__isnull=True).count()
-        return Response({"count": count})
+
+class PlayerSubscriptionDetailView(APIView):
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request: Any) -> Response:
+        # 현재 로그인한 사용자의 활성화된 구독 선수 정보 조회
+        subscribed_players = PlayerSubscription.objects.filter(user=request.user, deleted_at__isnull=True).first()
+
+        # Player 객체들을 시리얼라이즈
+        serializer = PlayerSerializer(subscribed_players)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class TeamSubscriptionView(APIView):
-    # authentication_classes = (JWTAuthentication,)  # JWT 토큰 검증
-    # permission_classes = (IsAuthenticated,)  # 인증된 사용자만 접근 가능
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     @transaction.atomic  # 동시성 문제를 해결하기 위해 트랜잭션
     def post(self, request: Any, team_id: int) -> Response:
@@ -75,14 +111,14 @@ class TeamSubscriptionView(APIView):
         team = get_object_or_404(Team, id=team_id)
         now = timezone.now()
 
-        active_subscription = TeamSubscription.objects.filter(user=user, team=team).first()
+        active_subscription: Optional[TeamSubscription] = TeamSubscription.objects.filter(user=user, team=team).first()
         if active_subscription:
             return Response(
                 {"message": "You are already subscribed to this team."},
                 status=status.HTTP_200_OK,
             )
 
-        # 2️⃣ Soft-delete된 구독이 있는지 확인 (all_objects 사용)
+        # Soft-delete된 구독이 있는지 확인 (all_objects 사용)
         deleted_subscription = TeamSubscription.deleted_objects.filter(user=user, team=team).first()
 
         if deleted_subscription:
@@ -103,11 +139,36 @@ class TeamSubscriptionView(APIView):
     @transaction.atomic
     def delete(self, request: Any, team_id: int) -> Response:
         user = request.user
-        subscription = get_object_or_404(TeamSubscription, user=user, team_id=team_id)
-        subscription.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        subscription: Optional[TeamSubscription] = get_object_or_404(TeamSubscription, user=user, team_id=team_id)
+        if subscription:
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
-    # permission_classes = [AllowAny]  # 인증되지 않은 사용자도 접근 가능
+
+# Team serializer 미구현
+# class TeamSubscriptionDetailView(APIView):
+#     authentication_classes = (JWTAuthentication,)
+#     permission_classes = (IsAuthenticated,)
+#
+#     def get(self, request: Any) -> Response:
+#         # 현재 로그인한 사용자의 활성화된 구독 선수 정보 조회
+#         subscribed_players = TeamSubscription.objects.filter(user=request.user, deleted_at__isnull=True).first()
+#
+#         # Team 객체들을 시리얼라이즈
+#         serializer = TeamSerializer(subscribed_players)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class PlayerSubscriptionCountView(APIView):
+
+    def get(self, request: Any, player_id: int) -> Response:
+        count = PlayerSubscription.objects.filter(player_id=player_id, deleted_at__isnull=True).count()
+        return Response({"count": count})
+
+
+class TeamSubscriptionCountView(APIView):
+
     def get(self, request: Any, team_id: int) -> Response:
         count = TeamSubscription.objects.filter(team_id=team_id, deleted_at__isnull=True).count()
         return Response({"count": count})

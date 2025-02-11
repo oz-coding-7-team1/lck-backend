@@ -14,7 +14,6 @@ psycopg2-binary = ">=2.9.10"
 djangorestframework-simplejwt = ">=5.3.1"
 django-cors-headers = "^4.6.0"
 pillow = "^11.1.0"
-psycopg = "^3.2.4"
 django-environ = ">=0.11.2"
 isort = "^6.0.0"
 postgres = ">=4.0"
@@ -60,7 +59,8 @@ module = [
     "apps.users.models",
     "apps.teams.models",
     "apps.players.models",
-    "apps.subscriptions.models"
+    "apps.subscriptions.models",
+    "apps.cloud_images.models",
 ]
 ignore_errors = true
 

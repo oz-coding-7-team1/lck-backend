@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class CommonConfig(AppConfig):
+class CloudImagesConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "apps.common"
+    name = "apps.cloud_images"
