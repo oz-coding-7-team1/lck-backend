@@ -1,6 +1,5 @@
 from datetime import date, timedelta
 
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -9,8 +8,7 @@ from rest_framework.test import APITestCase
 from apps.players.models import Player, PlayerSchedule
 from apps.subscriptions.models import PlayerSubscription
 from apps.teams.models import Team
-
-User = get_user_model()
+from apps.users.models import User
 
 
 class PlayerAPITestCase(APITestCase):
