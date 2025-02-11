@@ -107,10 +107,13 @@ class PlayerSubscriptionDetailView(APIView):
     @extend_schema(summary="최애 선수 조회")
     def get(self, request: Any) -> Response:
         # 현재 로그인한 사용자의 활성화된 구독 선수 정보 조회
-        subscribed_players = PlayerSubscription.objects.filter(user=request.user, deleted_at__isnull=True).first()
+        subscribed_player = PlayerSubscription.objects.filter(user=request.user, deleted_at__isnull=True).first()
+        
+        if not subscribed_player:
+            return Response({"message": "No subscribed player found."}, status=status.HTTP_404_NOT_FOUND)
 
         # Player 객체들을 시리얼라이즈
-        serializer = PlayerSerializer(subscribed_players)
+        serializer = PlayerSerializer(subscribed_player.player)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -169,10 +172,13 @@ class TeamSubscriptionView(APIView):
 #     @extend_schema(summary="최애 팀 조회")
 #     def get(self, request: Any) -> Response:
 #         # 현재 로그인한 사용자의 활성화된 구독 선수 정보 조회
-#         subscribed_players = TeamSubscription.objects.filter(user=request.user, deleted_at__isnull=True).first()
+#         subscribed_team = TeamSubscription.objects.filter(user=request.user, deleted_at__isnull=True).first()
+#
+#         if not subscribed_team:
+#             return Response({"message": "No subscribed team found."}, status=status.HTTP_404_NOT_FOUND)
 #
 #         # Team 객체들을 시리얼라이즈
-#         serializer = TeamSerializer(subscribed_players)
+#         serializer = TeamSerializer(subscribed_team.team)
 #         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
