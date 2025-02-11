@@ -13,7 +13,7 @@ class Position(Enum):
     TOP = "top"
     JGL = "jungle"
     MID = "mid"
-    BOT = "bottom"
+    AD = "AD Carry"
     SPT = "support"
 
 
