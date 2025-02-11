@@ -16,8 +16,13 @@ from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Terms, TermsAgreement, User
-from .serializers import UserRegisterSerializer, UserSerializer, UserLoginSerializer, MypageSerializer, \
-    ChangePasswordSerializer
+from .serializers import (
+    ChangePasswordSerializer,
+    MypageSerializer,
+    UserLoginSerializer,
+    UserRegisterSerializer,
+    UserSerializer,
+)
 
 
 # 회원가입 (약관 동의 포함)
@@ -94,7 +99,6 @@ class UserLoginView(APIView):
         summary="로그인",
         description="이메일과 비밀번호로 사용자를 인증하여 JWT 토큰을 발급합니다.",
     )
-
     def post(self, request: Any) -> Response:
         email = request.data.get("email")
         password = request.data.get("password")
@@ -191,7 +195,6 @@ class UserLogoutView(APIView):
         summary="로그아웃",
         description="refresh token 을 블랙리스트에 등록하고 쿠키를 삭제합니다.",
     )
-
     def post(self, request: Any) -> Response:
         refresh_token = request.COOKIES.get("refresh_token")
         if refresh_token:
