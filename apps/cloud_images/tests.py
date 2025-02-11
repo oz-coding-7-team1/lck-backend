@@ -2,7 +2,7 @@ from typing import Any
 
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase, APIClient
+from rest_framework.test import APIClient, APITestCase
 
 from apps.cloud_images.models import PlayerImage, TeamImage
 from apps.players.models import Player
@@ -52,7 +52,7 @@ class TeamImageListViewTest(APITestCase):
             team=self.team, type="background", url="https://s3.amazonaws.com/bucket/t1_background.jpg"
         )
         self.url: str = reverse("team_image_list", kwargs={"team_id": self.team.id})
-        
+
     def test_get_team_images(self) -> None:
         response = self.client.get(self.url)
 
