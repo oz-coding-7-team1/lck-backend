@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate, logout
 from django.contrib.auth.password_validation import validate_password
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import ParseError, PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -18,6 +19,7 @@ from .serializers import UserSerializer
 
 # 회원가입 (약관 동의 포함)
 class UserRegisterView(APIView):
+    authentication_classes = []
     permission_classes = (AllowAny,)
 
     def post(self, request: Any) -> Response:
@@ -68,6 +70,7 @@ class UserRegisterView(APIView):
 
 # 로그인
 class UserLoginView(APIView):
+    authentication_classes = []
     permission_classes = (AllowAny,)
 
     def post(self, request: Any) -> Response:

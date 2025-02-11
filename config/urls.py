@@ -28,6 +28,8 @@ urlpatterns = [
     path("api/v1/players", include("apps.players.urls")),
     path("api/v1/subscriptions/", include("apps.subscriptions.urls")),
     path("api/v1/users/", include("apps.users.urls")),
-    path("api/v1/schema/", SpectacularAPIView.as_view(), name="schema"), # API 스키마 엔드포인트
-    path("api/v1/schema/swgger-ui/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"), # Swagger UI 엔드포인트
+    path("api/v1/schema/", SpectacularAPIView.as_view(), name="schema"),  # API 스키마 엔드포인트
+    path(
+        "api/v1/schema/swgger-ui/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"
+    ),  # Swagger UI 엔드포인트
 ]
