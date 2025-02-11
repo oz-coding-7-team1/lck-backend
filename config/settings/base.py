@@ -26,7 +26,7 @@ env = environ.Env()
 
 # 사용할 환경 설정 파일 결정
 ENV_MODE = os.getenv("DJANGO_ENV", "dev")
-ENV_FILE = BASE_DIR / f"envs/{ENV_MODE}.env"
+ENV_FILE = BASE_DIR / f".envs/{ENV_MODE}.env"
 # 환경변수 명령어 export DJANGO_SETTINGS_MODULE=config.settings.dev(prod)
 # .toml 파일에 config.settings.prod 변경 후 mypy 실행
 
