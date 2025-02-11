@@ -39,7 +39,7 @@ class PlayerAPITestCase(APITestCase):
         # 15명의 선수를 생성
         # 짝수 인덱스의 선수는 팀에 소속되고 홀수 인덱스의 선수는 소속되지 않음
         # positions 리스트를 순환하여 각 선수에게 포지션 값을 할당
-        positions = ["top", "jungle", "mid", "bottom", "support"]
+        positions = ["top", "jungle", "mid", "AD Carry", "support"]
         self.players = []
         for i in range(15):
             player = Player.objects.create(
