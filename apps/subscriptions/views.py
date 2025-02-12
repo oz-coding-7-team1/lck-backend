@@ -133,7 +133,6 @@ class PlayerSubscriptionDetailView(APIView):
     def get(self, request: Any) -> Response:
         # 현재 로그인한 사용자의 활성화된 구독 선수 정보 조회
         subscribed_player = PlayerSubscription.objects.filter(user=request.user, deleted_at__isnull=True).first()
-
         if not subscribed_player:
             return Response({"message": "No subscribed player found."}, status=status.HTTP_404_NOT_FOUND)
 
