@@ -1,48 +1,22 @@
 services:
-  django_prod:
-    build: .
-    restart: always
+  django:
+    image: umdoong/oz_main_dev:latest
     container_name: django_prod_container
     environment:
-      - DJANGO_ENV=prod
+      - DJANGO_ENV=dev
     env_file:
-      - .envs/prod.env
-    command: bash -c "python manage.py collectstatic --no-input && python manage.py makemigrations && python manage.py migrate"
-    volumes:
-      - static_volume:/app/static
-      - media_volume:/app/media
+      - .env
     # network는 컨테이너 간 통신할 때 쓰는 network 설정
     networks:
       - app_network
     ports:
       - "8000:8000"
 
-  django_dev:
-    build: .
-    container_name: django_dev_container
-    environment:
-      - DJANGO_ENV=dev
-    env_file:
-      - .envs/dev.env
-    command: bash -c "python manage.py collectstatic --no-input && python manage.py makemigrations && python manage.py migrate"
-    volumes:
-      - static_volume:/app/static
-      - media_volume:/app/media
-    # network는 컨테이너 간 통신할 때 쓰는 network 설정
-    networks:
-      - app_network
-    ports:
-      - "8001:8000"
-
   nginx:
-    image: nginx:latest
+    image: umdoong/oz_main_nginx:latest
     restart: always
     depends_on:
-      - django_prod
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - static_volume:/app/static
-      - media_volume:/app/media
+      - django
     ports:
       - "80:80"
     networks:
@@ -50,7 +24,3 @@ services:
 
 networks:
   app_network:
-
-volumes:
-  static_volume:
-  media_volume:
