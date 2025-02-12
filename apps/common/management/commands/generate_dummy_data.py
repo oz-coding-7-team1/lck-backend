@@ -11,7 +11,7 @@ class Command(BaseCommand):
     help = "Generate dummy data for Teams and Players (without Faker, with duplicate check)"
 
     def handle(self, *args: Any, **kwargs: Any) -> None:
-        self.stdout.write(self.style.SUCCESS("🔄 Generating dummy data without Faker..."))
+        self.stdout.write(self.style.SUCCESS("Generating dummy data without Faker..."))
 
         positions: list[Position] = list(Position)
 
