@@ -1,10 +1,19 @@
-#!/bin/sh
+#!/bin/bash
 
-set -e
+# 가상 환경 활성화
+source ~/.bashrc
 
-python manage.py wait_for_db
-python manage.py collectstatic --noinput
-python manage.py migrate
 
-# uWSGI: Nginx로부터 데이터를 받아오면 Django랑 소통을 하는 역활
-uwsgi --socket :9000 --workers 4 --master --enable-threads --module app.wsgi
+export DJANGO_SETTINGS_MODULE=config.settings.dev
+
+# 데이터베이스 마이그레이션
+echo "Applying database migrations..."
+poetry run python manage.py migrate --no-input
+
+# 정적 파일 수집
+echo "Collecting static files..."
+poetry run python manage.py collectstatic --no-input
+
+# Gunicorn 실행
+echo "Starting Gunicorn..."
+exec poetry run gunicorn config.wsgi:application --bind 0.0.0.0:8000

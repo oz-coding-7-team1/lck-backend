@@ -1,0 +1,26 @@
+services:
+  django:
+    image: umdoong/oz_main_dev:latest
+    container_name: django_prod_container
+    environment:
+      - DJANGO_ENV=dev
+    env_file:
+      - .env
+    # network는 컨테이너 간 통신할 때 쓰는 network 설정
+    networks:
+      - app_network
+    ports:
+      - "8000:8000"
+
+  nginx:
+    image: umdoong/oz_main_nginx:latest
+    restart: always
+    depends_on:
+      - django
+    ports:
+      - "80:80"
+    networks:
+      - app_network
+
+networks:
+  app_network:

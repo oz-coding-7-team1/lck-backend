@@ -4,7 +4,7 @@ DEBUG = True
 
 REFRESH_TOKEN_COOKIE_SECURE = False
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+# ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",")
 
 INSTALLED_APPS += [
     "drf_spectacular",
