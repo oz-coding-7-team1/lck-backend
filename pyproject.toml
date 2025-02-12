@@ -57,6 +57,7 @@ module = [
     "manage",
     "*.migrations.*",
     "config.*",
+    "apps.*.admin",
     "apps.users.models",
     "apps.teams.models",
     "apps.players.models",
