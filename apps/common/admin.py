@@ -2,6 +2,7 @@ from typing import Any
 
 from django.contrib import admin
 
+
 class BaseModelAdmin(admin.ModelAdmin):
     def has_add_permission(self, request: Any) -> bool:
         return request.user.is_staff

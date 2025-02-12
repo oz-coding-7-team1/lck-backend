@@ -11,6 +11,7 @@ from apps.users.models import Terms, TermsAgreement, User
 data = {"email": "test@gmail.com", "nickname": "testuser", "password": "password"}
 super_data = {"email": "super@gmail.com", "nickname": "superuser", "password": "password"}
 
+
 # 인증이 필요한 테스트에서 공통적으로 사용할 클래스
 class APITestCaseSetUp(APITestCase):
     def setUp(self) -> None:
@@ -18,7 +19,7 @@ class APITestCaseSetUp(APITestCase):
         if not hasattr(settings, "REFRESH_TOKEN_COOKIE_SECURE"):
             settings.REFRESH_TOKEN_COOKIE_SECURE = False
         # 테스트용 일반 사용자 생성
-        self.user = User.objects.create_user(email=data["email"], nickname=data["nickname"], password=data["password"]) # type: ignore
+        self.user = User.objects.create_user(email=data["email"], nickname=data["nickname"], password=data["password"])  # type: ignore
         # JWT access token 생성 후 클라이언트 헤더에 등록
         refresh = RefreshToken.for_user(self.user)
         self.token = str(refresh.access_token)
