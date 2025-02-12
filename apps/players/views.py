@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 
 from django.db.models import Count
-from drf_spectacular.utils import OpenApiExample, OpenApiParameter, extend_schema
+from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -87,8 +87,7 @@ class PlayerDetail(APIView):
 
     @extend_schema(
         summary="선수 프로필 조회",
-        description="선수의 상세 프로필 정보를 조회합니다. URL의 pk 값에 해당하는 선수를 반환합니다.",
-        parameters=[OpenApiParameter("pk", int, description="조회할 선수의 ID", required=True)],
+        description="선수의 상세 프로필 정보를 조회합니다.",
         responses={200: PlayerProfileSerializer},
     )
     # 선수 프로필 조회
@@ -111,7 +110,6 @@ class PlayerDetail(APIView):
     @extend_schema(
         summary="선수 프로필 수정",
         description="선수의 프로필 정보를 수정합니다. 전체 데이터를 재전송해야 합니다.",
-        parameters=[OpenApiParameter("pk", int, description="수정할 선수의 ID", required=True)],
         request=PlayerProfileSerializer,
         responses={200: OpenApiExample("수정 성공", value={"detail": "선수 프로필 수정 완료"})},
     )
@@ -141,7 +139,6 @@ class PlayerDetail(APIView):
     @extend_schema(
         summary="선수 비활성화",
         description="요청 본문에 is_active: false가 포함된 경우 선수를 비활성화합니다.",
-        parameters=[OpenApiParameter("pk", int, description="비활성화할 선수의 ID", required=True)],
         responses={
             204: OpenApiExample("비활성화 성공", value={"detail": "No Content"}),
             400: OpenApiExample(
@@ -176,7 +173,6 @@ class PlayerDetail(APIView):
     @extend_schema(
         summary="선수 삭제",
         description="해당 선수의 정보를 soft delete 방식으로 삭제합니다.",
-        parameters=[OpenApiParameter("pk", int, description="삭제할 선수의 ID", required=True)],
         responses={204: OpenApiExample("삭제 성공", value={"detail": "No Content"})},
     )
     # 선수 삭제
@@ -274,7 +270,6 @@ class PlayerScheduleList(APIView):
     @extend_schema(
         summary="선수 스케줄 조회",
         description="특정 선수의 스케줄 목록을 조회합니다.",
-        parameters=[OpenApiParameter("player_id", int, description="스케줄을 조회할 선수의 ID", required=True)],
         responses={200: PlayerScheduleSerializer(many=True)},
     )
     # 특정 선수의 스케줄 목록 조회
@@ -290,7 +285,6 @@ class PlayerScheduleList(APIView):
     @extend_schema(
         summary="선수 스케줄 생성",
         description="요청 본문에 스케줄 정보를 포함하여 특정 선수의 스케줄을 생성합니다.",
-        parameters=[OpenApiParameter("player_id", int, description="스케줄을 생성할 선수의 ID", required=True)],
         request=PlayerScheduleSerializer,
         responses={201: OpenApiExample("생성 성공", value={"detail": "선수 스케줄 생성 완료"})},
     )
@@ -324,10 +318,6 @@ class PlayerScheduleDetail(APIView):
     @extend_schema(
         summary="선수 상세 스케줄 조회",
         description="특정 선수의 특정 스케줄 상세 정보를 조회합니다.",
-        parameters=[
-            OpenApiParameter("player_id", int, description="선수의 ID", required=True),
-            OpenApiParameter("schedule_id", int, description="스케줄의 ID", required=True),
-        ],
         responses={200: PlayerScheduleSerializer},
     )
     # 특정 선수 스케줄 상세 조회
@@ -348,10 +338,6 @@ class PlayerScheduleDetail(APIView):
     @extend_schema(
         summary="선수 상세 스케줄 수정",
         description="요청 본문에 포함된 데이터로 특정 선수의 스케줄을 부분 수정합니다.",
-        parameters=[
-            OpenApiParameter("player_id", int, description="선수의 ID", required=True),
-            OpenApiParameter("schedule_id", int, description="스케줄의 ID", required=True),
-        ],
         request=PlayerScheduleSerializer,
         responses={200: OpenApiExample("수정 성공", value={"detail": "선수 스케줄 수정 완료"})},
     )
@@ -376,10 +362,6 @@ class PlayerScheduleDetail(APIView):
     @extend_schema(
         summary="선수 상세 스케줄 삭제",
         description="특정 선수의 스케줄을 삭제합니다.",
-        parameters=[
-            OpenApiParameter("player_id", int, description="선수의 ID", required=True),
-            OpenApiParameter("schedule_id", int, description="스케줄의 ID", required=True),
-        ],
         responses={204: OpenApiExample("삭제 성공", value={"detail": "No Content"})},
     )
     # 특정 선수 스케줄 상세 삭제
