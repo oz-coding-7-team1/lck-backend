@@ -14,11 +14,10 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from apps.players.models import Player
 from apps.players.serializers import PlayerSerializer
 from apps.teams.models import Team
+from apps.teams.serializers import TeamSerializer
 
 from .models import PlayerSubscription, TeamSubscription
 from .serializers import PlayerSubscriptionSerializer, TeamSubscriptionSerializer
-
-# from apps.teams.serializers import TeamSerializer
 
 
 class PlayerSubscriptionView(APIView):
@@ -214,22 +213,22 @@ class TeamSubscriptionView(APIView):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 
-# Team serializer 미구현
-# class TeamSubscriptionDetailView(APIView):
-#     authentication_classes = (JWTAuthentication,)
-#     permission_classes = (IsAuthenticated,)
 
-#     @extend_schema(summary="최애 팀 조회")
-#     def get(self, request: Any) -> Response:
-#         # 현재 로그인한 사용자의 활성화된 구독 선수 정보 조회
-#         subscribed_team = TeamSubscription.objects.filter(user=request.user, deleted_at__isnull=True).first()
-#
-#         if not subscribed_team:
-#             return Response({"message": "No subscribed team found."}, status=status.HTTP_404_NOT_FOUND)
-#
-#         # Team 객체들을 시리얼라이즈
-#         serializer = TeamSerializer(subscribed_team.team)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
+class TeamSubscriptionDetailView(APIView):
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(summary="최애 팀 조회")
+    def get(self, request: Any) -> Response:
+        # 현재 로그인한 사용자의 활성화된 구독 선수 정보 조회
+        subscribed_team = TeamSubscription.objects.filter(user=request.user, deleted_at__isnull=True).first()
+
+        if not subscribed_team:
+            return Response({"message": "No subscribed team found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Team 객체들을 시리얼라이즈
+        serializer = TeamSerializer(subscribed_team.team)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class PlayerSubscriptionCountView(APIView):
