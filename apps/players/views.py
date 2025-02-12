@@ -50,7 +50,7 @@ class PlayerList(APIView):
 
     @extend_schema(
         summary="선수 등록",
-        description="새로운 선수를 등록합니다. 요청 본문에 선수 정보(팀ID, 본명, 선수명, 게임 이름, 포지션, 생년월일, 데뷔 날짜, 소셜 미디어, 소속사)를 포함합니다.",
+        description="새로운 선수를 등록합니다. position: top / jungle / mid / AD Carry / support",
         request=PlayerCreateSerializer,
         responses={
             201: OpenApiExample(
@@ -268,7 +268,7 @@ class PlayerScheduleList(APIView):
         return []
 
     @extend_schema(
-        summary="선수 스케줄 조회",
+        summary="선수 스케줄 전체 조회",
         description="특정 선수의 스케줄 목록을 조회합니다.",
         responses={200: PlayerScheduleSerializer(many=True)},
     )
@@ -284,7 +284,7 @@ class PlayerScheduleList(APIView):
 
     @extend_schema(
         summary="선수 스케줄 생성",
-        description="요청 본문에 스케줄 정보를 포함하여 특정 선수의 스케줄을 생성합니다.",
+        description="요청 본문에 스케줄 정보를 포함하여 특정 선수의 스케줄을 생성합니다. 생일 / 경기 / 개인방송",
         request=PlayerScheduleSerializer,
         responses={201: OpenApiExample("생성 성공", value={"detail": "선수 스케줄 생성 완료"})},
     )
@@ -316,7 +316,7 @@ class PlayerScheduleDetail(APIView):
         return []
 
     @extend_schema(
-        summary="선수 상세 스케줄 조회",
+        summary="선수 스케줄 상세 조회",
         description="특정 선수의 특정 스케줄 상세 정보를 조회합니다.",
         responses={200: PlayerScheduleSerializer},
     )
@@ -336,7 +336,7 @@ class PlayerScheduleDetail(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @extend_schema(
-        summary="선수 상세 스케줄 수정",
+        summary="선수 스케줄 수정",
         description="요청 본문에 포함된 데이터로 특정 선수의 스케줄을 부분 수정합니다.",
         request=PlayerScheduleSerializer,
         responses={200: OpenApiExample("수정 성공", value={"detail": "선수 스케줄 수정 완료"})},
@@ -360,7 +360,7 @@ class PlayerScheduleDetail(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @extend_schema(
-        summary="선수 상세 스케줄 삭제",
+        summary="선수 스케줄 삭제",
         description="특정 선수의 스케줄을 삭제합니다.",
         responses={204: OpenApiExample("삭제 성공", value={"detail": "No Content"})},
     )
