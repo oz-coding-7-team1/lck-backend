@@ -1,6 +1,7 @@
 from typing import Any, List, Optional
 
 from django.db.models import Count
+from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -32,6 +33,11 @@ class PlayerList(APIView):
             return [IsAuthenticated(), IsAdminUser()]
         return []
 
+    @extend_schema(
+        summary="전체 선수 조회",
+        description="데이터베이스에 존재하는 모든 선수 정보를 조회합니다.",
+        responses={200: PlayerSerializer(many=True)},
+    )
     # 전체 선수 조회
     def get(self, request: Any) -> Response:
         # 모든 Player 객체를 데이터베이스에서 조회
@@ -42,6 +48,18 @@ class PlayerList(APIView):
         # 직렬화된 데이터를 Response 객체로 반환
         return Response(serializer.data)
 
+    @extend_schema(
+        summary="선수 등록",
+        description="새로운 선수를 등록합니다. position: top / jungle / mid / AD Carry / support",
+        request=PlayerCreateSerializer,
+        responses={
+            201: OpenApiExample(
+                "성공 응답 예시",
+                summary="선수 등록 성공",
+                value={"detail": "선수 등록 완료"},
+            )
+        },
+    )
     # 선수 등록
     def post(self, request: Request) -> Response:
         # 클라이언트가 전송한 JSON 데이터를 기반으로 PlayerCreateSerializer를 초기화
@@ -67,6 +85,11 @@ class PlayerDetail(APIView):
             return [IsAuthenticated(), IsAdminUser()]
         return []
 
+    @extend_schema(
+        summary="선수 프로필 조회",
+        description="선수의 상세 프로필 정보를 조회합니다.",
+        responses={200: PlayerProfileSerializer},
+    )
     # 선수 프로필 조회
     def get(self, request: Request, pk: int) -> Response:
         try:
@@ -84,6 +107,12 @@ class PlayerDetail(APIView):
         # 직렬화된 데이터를 Response 객체에 담아 클라이언트에게 반환
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @extend_schema(
+        summary="선수 프로필 수정",
+        description="선수의 프로필 정보를 수정합니다. 전체 데이터를 재전송해야 합니다.",
+        request=PlayerProfileSerializer,
+        responses={200: OpenApiExample("수정 성공", value={"detail": "선수 프로필 수정 완료"})},
+    )
     # 선수 프로필 수정
     def put(self, request: Request, pk: int) -> Response:
         # 주어진 pk를 기반으로 Player 객체를 데이터베이스에서 조회
@@ -107,6 +136,17 @@ class PlayerDetail(APIView):
         # 데이터 유효성 검사에 실패한 경우, 에러 메시지와 함께 HTTP 400 상태 코드를 반환
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(
+        summary="선수 비활성화",
+        description="요청 본문에 is_active: false가 포함된 경우 선수를 비활성화합니다.",
+        responses={
+            204: OpenApiExample("비활성화 성공", value={"detail": "No Content"}),
+            400: OpenApiExample(
+                "잘못된 요청",
+                value={"error": "요청 데이터가 올바르지 않습니다. is_active 값은 반드시 False여야 합니다."},
+            ),
+        },
+    )
     # 선수 비활성화
     def patch(self, request: Request, pk: int) -> Response:
         try:
@@ -130,6 +170,11 @@ class PlayerDetail(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+    @extend_schema(
+        summary="선수 삭제",
+        description="해당 선수의 정보를 soft delete 방식으로 삭제합니다.",
+        responses={204: OpenApiExample("삭제 성공", value={"detail": "No Content"})},
+    )
     # 선수 삭제
     def delete(self, request: Request, pk: int) -> Response:
         try:
@@ -151,6 +196,11 @@ class PlayerDetail(APIView):
 
 # 구독 수가 많은 상위 10명의 선수 조회
 class TopPlayers(APIView):
+    @extend_schema(
+        summary="전체 선수 중 구독수 상위 10위",
+        description="각 선수의 구독자 수를 계산하여 내림차순 정렬 후 상위 10명의 정보를 반환합니다.",
+        responses={200: PlayerTopSerializer(many=True)},
+    )
     def get(self, request: Request) -> Response:
         try:
             """
@@ -179,6 +229,11 @@ class TopPlayers(APIView):
 
 # 특정 포지션의 구독 수가 많은 상위 5명의 선수 조회
 class PositionTop(APIView):
+    @extend_schema(
+        summary="포지션 별 선수 중 구독수 상위 5위",
+        description="Position Enum에 정의된 각 포지션에 대해 구독자 수 기준 상위 5명의 선수를 반환합니다.",
+        responses={200: PlayerPositionSerializer(many=True)},
+    )
     def get(self, request: Any) -> Response:
         try:
             result = {}
@@ -212,6 +267,11 @@ class PlayerScheduleList(APIView):
             return [IsAuthenticated(), IsAdminUser()]
         return []
 
+    @extend_schema(
+        summary="선수 스케줄 전체 조회",
+        description="특정 선수의 스케줄 목록을 조회합니다.",
+        responses={200: PlayerScheduleSerializer(many=True)},
+    )
     # 특정 선수의 스케줄 목록 조회
     def get(self, request: Request, player_id: int) -> Response:
         # 선수 ID에 해당하는 모든 스케줄 객체들을 필터링
@@ -222,6 +282,12 @@ class PlayerScheduleList(APIView):
         # 직렬화된 데이터를 HTTP 200 상태 코드와 함께 클라이언트에 반환
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @extend_schema(
+        summary="선수 스케줄 생성",
+        description="요청 본문에 스케줄 정보를 포함하여 특정 선수의 스케줄을 생성합니다. 생일 / 경기 / 개인방송",
+        request=PlayerScheduleSerializer,
+        responses={201: OpenApiExample("생성 성공", value={"detail": "선수 스케줄 생성 완료"})},
+    )
     # 특정 선수의 스케줄 목록 생성
     def post(self, request: Request, player_id: int) -> Response:
         # 클라이언트가 전송한 데이터를 복사
@@ -249,6 +315,11 @@ class PlayerScheduleDetail(APIView):
             return [IsAuthenticated(), IsAdminUser()]
         return []
 
+    @extend_schema(
+        summary="선수 스케줄 상세 조회",
+        description="특정 선수의 특정 스케줄 상세 정보를 조회합니다.",
+        responses={200: PlayerScheduleSerializer},
+    )
     # 특정 선수 스케줄 상세 조회
     def get(self, request: Request, player_id: int, schedule_id: int) -> Response:
         try:
@@ -264,6 +335,12 @@ class PlayerScheduleDetail(APIView):
         # 직렬화된 데이터를 포함하는 응답 객체를 HTTP 200 상태 코드와 함께 반환
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @extend_schema(
+        summary="선수 스케줄 수정",
+        description="요청 본문에 포함된 데이터로 특정 선수의 스케줄을 부분 수정합니다.",
+        request=PlayerScheduleSerializer,
+        responses={200: OpenApiExample("수정 성공", value={"detail": "선수 스케줄 수정 완료"})},
+    )
     # 특정 선수 스케줄 상세 수정
     def patch(self, request: Request, player_id: int, schedule_id: int) -> Response:
         try:
@@ -282,6 +359,11 @@ class PlayerScheduleDetail(APIView):
         # 데이터 유효성 검사에 실패하면 오류 메시지와 함께 HTTP 400 상태 코드를 반환
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(
+        summary="선수 스케줄 삭제",
+        description="특정 선수의 스케줄을 삭제합니다.",
+        responses={204: OpenApiExample("삭제 성공", value={"detail": "No Content"})},
+    )
     # 특정 선수 스케줄 상세 삭제
     def delete(self, request: Request, player_id: int, schedule_id: int) -> Response:
         try:

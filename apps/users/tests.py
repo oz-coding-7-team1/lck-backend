@@ -74,38 +74,52 @@ class JWTAuthTestCase(APITestCaseSetUp):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
-# 회원가입 API 테스트
+# 회원가입 API 테스트 (약관 동의 추가)
 class UserRegistrationTestCase(APITestCase):
     def setUp(self) -> None:
         self.registration_url = reverse("signup")
+        # DB 에 존재하는 모든 Terms 를 삭제하여, 테스트에 영향을 주지 않도록 함
+        Terms.objects.all().delete()
+        # 테스트용으로 필수 약관과 선택 약관을 생성 (필수 약관은 반드시 동의해야 함)
+        self.required_term = Terms.objects.create(
+            name="Required Terms", detail="required details", is_required=True, is_active=True
+        )
+        self.optional_term = Terms.objects.create(
+            name="Optional Terms", detail="optional details", is_required=False, is_active=True
+        )
         self.user_data = {
             "email": "newuser@example.com",
             "password": "StrongPassw0rd!",
             "nickname": "newuser",
-            # 필수 약관과 옵션 약관 모두 동의한 것으로 전송
-            # "agreed_terms": [self.required_term.id, self.optional_term.id],
+            # 필수 약관과 선택 약관 모두 동의한 것으로 전송 (각 항목은 dict 형태로 전달)
+            "terms_agreements": [
+                {"terms": self.required_term.id, "is_active": True},
+                {"terms": self.optional_term.id, "is_active": True},
+            ],
         }
 
     def test_registration_success(self) -> None:
-        # 회원가입 성공 테스트: 유효한 비밀번호 등 올바른 데이터를 전송하면 회원가입 완료
+        # 회원가입 성공 테스트: 올바른 데이터를 전송하면 회원가입 완료
         response = self.client.post(self.registration_url, self.user_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["email"], self.user_data["email"])
 
-    # def test_registration_fail_missing_required_terms(self) -> None:
-    #     # 회원가입 실패 테스트: 필수 약관에 동의하지 않은 경우 (필수 약관 누락) 회원가입 살패
-    #     user_data = self.user_data.copy()
-    #     # 필수 약관을 제거하고 선택 약관만 전송
-    #     user_data["agreed_terms"] = [self.optional_term.id]
-    #     response = self.client.post(self.registration_url, user_data, format="json")
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    #
-    # def test_registration_fail_invalid_agreed_terms_format(self) -> None:
-    #     # 회원가입 실패 테스트: 약관 동의 데이터가 리스트 형식이 아니면 오류 발생
-    #     user_data = self.user_data.copy()
-    #     user_data["agreed_terms"] = "not a list"  # 리스트가 아님
-    #     response = self.client.post(self.registration_url, user_data, format="json")
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+    def test_registration_fail_missing_required_terms(self) -> None:
+        # 회원가입 실패 테스트: 필수 약관 동의 누락 시 회원가입 실패
+        user_data = self.user_data.copy()
+        # 필수 약관 미동의 (옵션 약관만 전송)
+        user_data["terms_agreements"] = [
+            {"terms": self.optional_term.id, "is_active": True},
+        ]
+        response = self.client.post(self.registration_url, user_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_registration_rail_invalid_terms_agreements_format(self) -> None:
+        # 회원가입 실패 테스트: 약관 동의 데이터가 리스트 형식이 아닌 경우 오류 발생
+        user_data = self.user_data.copy()
+        user_data["terms_agreements"] = "not a list"  # 잘못된 형식
+        response = self.client.post(self.registration_url, user_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_registration_fail_invalid_password(self) -> None:
         # 회원가입 실패 테스트: 유효하지 않은(예: 너무 약한) 비밀번호를 전송하면 회원가입 실패
@@ -160,7 +174,6 @@ class WithdrawTestCase(APITestCaseSetUp):
         # 쿠키가 존재하면 값이 빈 문자열이어야 함
         if refresh_cookie is not None:
             self.assertEqual(refresh_cookie.value, "")
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["detail"], "회원 탈퇴가 완료되었습니다.")
 
@@ -169,17 +182,16 @@ class WithdrawTestCase(APITestCaseSetUp):
 class MyPageTestCase(APITestCaseSetUp):
     def setUp(self) -> None:
         super().setUp()
-        # 마이페이지 조회 / 수정 URL
         self.mypage_url = reverse("mypage")
 
     def test_get_user_unauthorized(self) -> None:
-        # 인증 없이 회원정보 조회 시도: 로그인이 되어 있지 않으면 401 Unauthorized 응답 반환
+        # 인증 없이 회원정보 조회 테스트: 로그인이 되어 있지 않으면 401 Unauthorized 응답 반환
         self.client.logout()
         response = self.client.get(self.mypage_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_user_authorized(self) -> None:
-        # 인증 후 회원정보 조회: 올바른 인증 정보가 있으면 회원정보가 정상적으로 조회됨
+        # 인증 후 회원정보 조회 테스트: 올바른 인증 정보가 있으면 회원정보가 정상적으로 조회됨
         # APITestCaseSetUp 에서 이미 인증 헤더를 설정했으므로 별도 로그인 불필요
         response = self.client.get(self.mypage_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -214,24 +226,26 @@ class ChangePasswordTestCase(APITestCaseSetUp):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-# # 약관 리스트 조회 (TermsListView) API 테스트
-# class TermsListTestCase(APITestCase):
-#     def setUp(self) -> None:
-#         self.terms_list_url = reverse('terms_list')
-#         # 활성화된 약관 2개와 비활성 약관 1개 생성
-#         Terms.objects.create(name="약관1", detail="내용1", is_required=True, is_active=True)
-#         Terms.objects.create(name="약관2", detail="내용2", is_required=False, is_active=True)
-#         Terms.objects.create(name="약관3", detail="내용3", is_required=True, is_active=False)
-#
-#     def test_terms_list(self) -> None:
-#         약관 리스트 조회 테스트: GET 요청 시 활성화된 약관만 리스트로 반환
-#         response = self.client.get(self.terms_list_url)
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         # 활성화된 약관은 2개여야 함
-#         self.assertEqual(len(response.data), 2)
-#         # 각 약관에 필요한 필드가 포함되어 있는지 확인
-#         for term in response.data:
-#             self.assertIn("id", term)
-#             self.assertIn("name", term)
-#             self.assertIn("detail", term)
-#             self.assertIn("is_required", term)
+# 약관 리스트 조회 API 테스트
+class TermsListTestCase(APITestCase):
+    def setUp(self) -> None:
+        self.terms_list_url = reverse("terms_list")
+        Terms.objects.all().delete()
+        # 활성화된 약관 2개와 비활성 약관 1개 생성
+        Terms.objects.create(name="약관1", detail="내용1", is_required=True, is_active=True)
+        Terms.objects.create(name="약관2", detail="내용2", is_required=False, is_active=True)
+        Terms.objects.create(name="약관3", detail="내용3", is_required=True, is_active=False)
+
+    def test_terms_list(self) -> None:
+        # 약관 리스트 조회 테스트: GET 요청 시 활성화된 약관만 리스트로 반환
+        response = self.client.get(self.terms_list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # 활성화된 약관은 2개여야 함
+        self.assertEqual(len(response.data), 2)
+        # 각 약관에 필요한 필드가 포함되어 있는지 확인
+        for term in response.data:
+            self.assertIn("id", term)
+            self.assertIn("name", term)
+            self.assertIn("detail", term)
+            self.assertIn("is_active", term)
+            self.assertIn("is_required", term)
