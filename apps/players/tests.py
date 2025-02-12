@@ -16,7 +16,6 @@ from apps.users.models import User
 
 
 class PlayerAPITestCase(APITestCase):
-    """선수 및 스케줄 관련 API 테스트 (권한, CRUD, 구독 기반 조회 포함)"""
 
     admin_user: ClassVar[User]
     normal_user: ClassVar[User]
@@ -26,9 +25,8 @@ class PlayerAPITestCase(APITestCase):
 
     @classmethod
     def setUpTestData(cls) -> None:
-        """한 번만 실행되는 테스트 데이터를 생성하여 테스트 속도 최적화"""
 
-        # 1️⃣ 관리자 계정 생성
+        # 관리자 계정 생성
         cls.admin_user = User.objects.create_user(
             email="admin@example.com",
             password="adminpass",
@@ -36,17 +34,17 @@ class PlayerAPITestCase(APITestCase):
             nickname="admin",
         )
 
-        # 2️⃣ 일반 유저 계정 생성
+        # 일반 유저 계정 생성
         cls.normal_user = User.objects.create_user(
             email="normal@example.com",
             password="normalpass",
             nickname="normaluser",
         )
 
-        # 3️⃣ 팀 생성
+        # 팀 생성
         cls.team = Team.objects.create(name="Test Team")
 
-        # 4️⃣ 선수 5명 생성 (각각 다른 포지션)
+        # 선수 5명 생성 (각각 다른 포지션)
         positions = ["top", "jungle", "mid", "bottom", "support"]
         cls.players = [
             Player.objects.create(
@@ -63,7 +61,7 @@ class PlayerAPITestCase(APITestCase):
             for i in range(5)
         ]
 
-        # 5️⃣ 첫 번째 선수의 스케줄 생성
+        # 첫 번째 선수의 스케줄 생성
         cls.schedule = PlayerSchedule.objects.create(
             player=cls.players[0],
             category="경기",
@@ -75,7 +73,6 @@ class PlayerAPITestCase(APITestCase):
         )
 
     def authenticate(self, user: User) -> None:
-        """JWT 인증 헤더 설정"""
         token = str(RefreshToken.for_user(user).access_token)
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
 
@@ -264,8 +261,7 @@ class PlayerAPITestCase(APITestCase):
     def test_top_players_by_subscriptions(self) -> None:
         from apps.subscriptions.models import PlayerSubscription
 
-        # 각 선수에 대해 구독 수 부여:
-        # players[0]: 5, players[1]: 3, players[2]: 1 구독 부여
+        # 각 선수에 대해 구독 수 부여
         for i in range(5):
             user = User.objects.create_user(
                 email=f"sub_top_{i}_{i}@example.com",
@@ -288,7 +284,6 @@ class PlayerAPITestCase(APITestCase):
         PlayerSubscription.objects.create(user=user, player=self.players[2])
 
         url = reverse("top-players")
-        # API가 인증을 필요로 하는 경우, 인증을 추가할 수도 있습니다.
         self.authenticate(self.normal_user)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -298,7 +293,7 @@ class PlayerAPITestCase(APITestCase):
     def test_position_top_players_by_subscriptions(self) -> None:
         from apps.subscriptions.models import PlayerSubscription
 
-        # 각 포지션별 구독 수를 부여합니다.
+        # 각 포지션별 구독 수를 부여
         subs_counts = {"top": 4, "jungle": 3, "mid": 2, "bottom": 1, "support": 0}
         for player in self.players:
             count = subs_counts.get(player.position, 0)
@@ -313,7 +308,7 @@ class PlayerAPITestCase(APITestCase):
         self.authenticate(self.normal_user)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.data  # 예: {"top": [...], "jungle": [...], ...}
+        data = response.data
         for position, players in data.items():
             for player in players:
                 self.assertEqual(player["position"], position)
