@@ -27,22 +27,24 @@ class UserManager(BaseUserManager):
         return self.filter(is_staff=True, is_active=False)
 
     # 함수 앞 _는 이 파일에서만 사용하겠다는 의미
-    def _create_user(self, email: str, password: Optional[str], **extra_fields):
-        email = self.normalize_email(email)
+    def create_user(self, email, password, **extra_fields):
+        if not email:
+            raise ValueError("이메일 주소는 필수입니다.")
+        if not password:
+            raise ValueError("비밀번호는 필수입니다.")
+        email = self.normalize_email(email)  # 이메일 정규화
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
-        user.save(using=self._db)
+        # self._db는 UserManager에서 사용 중인 데이터베이스를 말함
+        user.save(
+            using=self._db
+        )  # 다중 데이터 베이스를 사용하는 상황에서 정확히 지정해주기 위함이지만 단일에서도 관례적으로 사용
         return user
-
-    def create_user(self, email: str, password: Optional[str] = None, **extra_fields):
-        extra_fields.setdefault("is_staff", False)
-        extra_fields.setdefault("is_superuser", False)
-        return self._create_user(email, password, **extra_fields)
 
     def create_superuser(self, email: str, password: Optional[str], **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
-        return self._create_user(email, password, **extra_fields)
+        return self.create_user(email, password, **extra_fields)
 
 
 class User(BaseModel, AbstractBaseUser, PermissionsMixin, SoftDeleteModel):  # type: ignore

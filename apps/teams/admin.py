@@ -1,8 +1,10 @@
 from django.contrib import admin
 
+from apps.common.admin import BaseModelAdmin
+
 from .models import Team
 
 
 @admin.register(Team)
-class TeamAdmin(admin.ModelAdmin):  # type: ignore
+class TeamAdmin(BaseModelAdmin):
     pass
