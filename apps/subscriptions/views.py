@@ -36,10 +36,6 @@ class PlayerSubscriptionView(APIView):
 
     @extend_schema(
         summary="선수 구독 생성",
-        parameters=[
-            # URL 경로에 포함된 player_id 파라미터를 swagger에 명시
-            OpenApiParameter("player_id", int, description="구독할 선수의 ID", required=True),
-        ],
         responses={
             201: PlayerSubscriptionSerializer,  # 구독 생성 성공 시 생성된 구독 객체 반환
             200: OpenApiExample(
@@ -106,9 +102,6 @@ class PlayerSubscriptionView(APIView):
 
     @extend_schema(
         summary="선수 구독 취소",
-        parameters=[
-            OpenApiParameter("player_id", int, description="취소할 선수의 ID", required=True),
-        ],
         responses={
             204: OpenApiExample(
                 "구독 취소 성공",
@@ -155,9 +148,6 @@ class TeamSubscriptionView(APIView):
 
     @extend_schema(
         summary="팀 구독 생성",
-        parameters=[
-            OpenApiParameter("team_id", int, description="구독할 팀의 ID", required=True),
-        ],
         responses={
             201: TeamSubscriptionSerializer,  # 구독 생성 성공 시 생성된 구독 객체 반환
             200: OpenApiExample(
@@ -203,9 +193,6 @@ class TeamSubscriptionView(APIView):
 
     @extend_schema(
         summary="팀 구독 취소",
-        parameters=[
-            OpenApiParameter("team_id", int, description="취소할 팀의 ID", required=True),
-        ],
         responses={
             204: OpenApiExample(
                 "구독 취소 성공",
@@ -246,24 +233,14 @@ class TeamSubscriptionView(APIView):
 
 
 class PlayerSubscriptionCountView(APIView):
-    @extend_schema(
-        summary="선수 구독 수",
-        parameters=[
-            OpenApiParameter("player_id", int, description="구독 수를 조회할 선수의 ID", required=True),
-        ],
-    )
+    @extend_schema(summary="선수 구독 수")
     def get(self, request: Any, player_id: int) -> Response:
         count = PlayerSubscription.objects.filter(player_id=player_id, deleted_at__isnull=True).count()
         return Response({"count": count})
 
 
 class TeamSubscriptionCountView(APIView):
-    @extend_schema(
-        summary="팀 구독 수",
-        parameters=[
-            OpenApiParameter("team_id", int, description="구독 수를 조회할 팀의 ID", required=True),
-        ],
-    )
+    @extend_schema(summary="팀 구독 수")
     def get(self, request: Any, team_id: int) -> Response:
         count = TeamSubscription.objects.filter(team_id=team_id, deleted_at__isnull=True).count()
         return Response({"count": count})
