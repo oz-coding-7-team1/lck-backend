@@ -213,7 +213,6 @@ class TeamSubscriptionView(APIView):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 
-
 class TeamSubscriptionDetailView(APIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)

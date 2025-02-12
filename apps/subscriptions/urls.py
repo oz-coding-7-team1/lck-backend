@@ -1,10 +1,11 @@
 from django.urls import path
 
-from .views import (  TeamSubscriptionDetailView,
+from .views import (
     PlayerSubscriptionCountView,
     PlayerSubscriptionDetailView,
     PlayerSubscriptionView,
     TeamSubscriptionCountView,
+    TeamSubscriptionDetailView,
     TeamSubscriptionView,
 )
 
