@@ -1,7 +1,7 @@
 from typing import Any, List
 
 from django.db.models import Count
-from drf_spectacular.utils import extend_schema, OpenApiExample
+from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -284,7 +284,6 @@ class TeamScheduleDetail(APIView):
             serializer.save()
             return Response({"detail": "팀 스케줄 수정 완료"}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
     @extend_schema(
         summary="특정 팀 스케줄 삭제",

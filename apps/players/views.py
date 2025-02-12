@@ -94,8 +94,8 @@ class PlayerDetail(APIView):
         responses={
             200: PlayerProfileSerializer,
             404: OpenApiExample(
-                       "선수 조회 실패",
-                       value={"detail": "해당 선수를 찾을 수 없습니다."},
+                "선수 조회 실패",
+                value={"detail": "해당 선수를 찾을 수 없습니다."},
             ),
         },
     )
@@ -237,9 +237,9 @@ class TopPlayers(APIView):
         responses={
             200: PlayerTopSerializer(many=True),
             500: OpenApiExample(
-               "내부 서버 에러",
+                "내부 서버 에러",
                 value={"error": "에러 메시지"},
-           ),
+            ),
         },
     )
     def get(self, request: Request) -> Response:
