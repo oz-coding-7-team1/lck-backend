@@ -19,22 +19,22 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Poetry
-RUN pip install --upgrade pip && pip install poetry
-RUN poetry --version
+# Poetry 설치 및 PATH 설정
+RUN curl -sSL https://install.python-poetry.org | python3 -
+ENV PATH="/root/.local/bin:$PATH"
 
 # Copy project files
 COPY . /app/
 
-# Copy pyproject.toml and poetry.lock(의존성 파일 복사
-COPY pyproject.toml poetry.lock /app/
+# Copy pyproject.toml and poetry.lock(의존성 파일 복사)
+COPY pyproject.toml /app/pyproject.toml
+COPY poetry.lock /app/poetry.lock
 
 # Install dependencies
-# --no-interaction은 사용자 입력 요구 X, --no-ansi는 색상 제거 - 일부 터미널에서 이상해질 수 있음
-RUN poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi --no-root
+RUN poetry install --no-root
 
 # Expose port
 EXPOSE 8000
 
 # Start Gunicorn server
-CMD ["gunicorn", "--workers=3", "--bind=0.0.0.0:8000", "config.wsgi:application"]
+CMD ["bash", "resources/scripts/run.sh"]
