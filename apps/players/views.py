@@ -112,7 +112,7 @@ class PlayerDetail(APIView):
             raise NotFound(detail="해당 플레이어를 찾을 수 없습니다.")
 
         # 조회된 Player 객체를 PlayerProfileSerializer를 사용하여 직렬화
-        serializer = PlayerProfileSerializer(player)
+        serializer = PlayerProfileSerializer(player, context={"request": request})
         # 직렬화된 데이터를 Response 객체에 담아 클라이언트에게 반환
         return Response(serializer.data, status=status.HTTP_200_OK)
 
