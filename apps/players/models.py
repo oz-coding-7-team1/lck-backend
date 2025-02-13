@@ -36,7 +36,7 @@ class Player(BaseModel, SoftDeleteModel):
     agency = models.CharField(max_length=50)  # 소속사
     is_active = models.BooleanField(default=True)  # 선수 활성화 여부
     tags = TaggableManager(blank=True)
-    nationality = models.CharField(max_length=20) # 국적
+    nationality = models.CharField(max_length=20, default="Korea")  # 국적
 
     class Meta:
         db_table = "player"
