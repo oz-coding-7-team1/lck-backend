@@ -331,7 +331,7 @@ class PlayerScheduleList(APIView):
 
     @extend_schema(
         summary="선수 스케줄 생성",
-        description="요청 본문에 스케줄 정보를 포함하여 특정 선수의 스케줄을 생성합니다. 생일 / 경기 / 개인방송",
+        description="요청 본문에 스케줄 정보를 포함하여 특정 선수의 스케줄을 생성합니다. 경기 / 방송 / 팬미팅 / 기타",
         request=PlayerScheduleSerializer,
         responses={
             201: OpenApiExample(
@@ -400,7 +400,6 @@ class PlayerScheduleDetail(APIView):
     @extend_schema(
         summary="선수 스케줄 수정",
         description="요청 본문에 포함된 데이터로 특정 선수의 스케줄을 부분 수정합니다.",
-        request=PlayerScheduleSerializer,
         responses={
             200: OpenApiExample(
                 "수정 성공",
