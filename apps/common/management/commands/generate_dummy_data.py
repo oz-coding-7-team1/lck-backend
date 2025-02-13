@@ -16,14 +16,16 @@ class Command(BaseCommand):
         positions: list[Position] = list(Position)
 
         def random_social() -> dict[str, str]:
-            # 1~4개의 랜덤 소셜 미디어 정보 포함 (없을 수도 있음)
+            # 1~6개의 랜덤 소셜 미디어 정보 포함 (없을 수도 있음)
             social_platforms: dict[str, str] = {
                 "insta": "https://instagram.com/example",
                 "facebook": "https://facebook.com/example",
                 "youtube": "https://youtube.com/example",
                 "X": "https://twitter.com/example",
+                "soop": "https://soop.com/example",
+                "chzzk": "https://chzzk.com/example",
             }
-            selected_keys = random.sample(list(social_platforms.keys()), k=random.randint(0, 4))
+            selected_keys = random.sample(list(social_platforms.keys()), k=random.randint(0, 6))
             return {key: social_platforms[key] for key in selected_keys} if selected_keys else {}
 
         # 팀 데이터 생성 (중복 방지)
@@ -73,6 +75,7 @@ class Command(BaseCommand):
                     social=random_social(),
                     agency="Esports Management",
                     is_active=True,
+                    nationality="KOREA",
                 )
                 player_index += 1
 
@@ -93,6 +96,7 @@ class Command(BaseCommand):
                 social=random_social(),
                 agency="Freelancer",
                 is_active=True,
+                nationality="KOREA",
             )
 
         self.stdout.write(self.style.SUCCESS("Created 30 unassigned players"))
