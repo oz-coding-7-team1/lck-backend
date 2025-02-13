@@ -3,6 +3,7 @@ from typing import Any, Dict
 from rest_framework import serializers
 
 from apps.players.models import Player  # Player 모델 import
+from apps.subscriptions.models import TeamSubscription
 
 from .models import Team, TeamSchedule
 
@@ -27,10 +28,17 @@ class TeamSocialSerializer(serializers.Serializer[None]):
 class TeamDetailSerializer(serializers.ModelSerializer[Team]):
     social = TeamSocialSerializer()
     players = PlayerForTeamSerializer(many=True, source="player_set")  # 팀에 소속된 선수 목록 추가
+    is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = Team
-        fields = ["id", "name", "social", "players"]
+        fields = ["id", "name", "social", "players", "is_subscribed"]
+
+    def get_is_subscribed(self, obj: Team) -> bool:
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return TeamSubscription.objects.filter(team=obj, user=request.user, deleted_at__isnull=True).exists()
+        return False
 
 
 # 팀 전제 조회용 시리얼라이저
