@@ -94,7 +94,7 @@ class PlayerCreateSerializer(serializers.ModelSerializer[Player]):
             "debut_date",  # 데뷔 날짜
             "social",  # 소셜 미디어 정보
             "agency",  # 소속 에이전시
-            "nationality", # 국적
+            "nationality",  # 국적
         ]
 
     def create(self, validated_data: Dict[str, Any]) -> Player:
