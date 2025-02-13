@@ -36,6 +36,7 @@ class Player(BaseModel, SoftDeleteModel):
     agency = models.CharField(max_length=50)  # 소속사
     is_active = models.BooleanField(default=True)  # 선수 활성화 여부
     tags = TaggableManager(blank=True)
+    nationality = models.CharField(max_length=20) # 국적
 
     class Meta:
         db_table = "player"
@@ -48,7 +49,7 @@ class Player(BaseModel, SoftDeleteModel):
 class PlayerSchedule(BaseModel):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     category = models.CharField(
-        max_length=10, choices=[("생일", "생일"), ("경기", "경기일정"), ("개인방송", "개인방송")]
+        max_length=10, choices=[("경기", "경기"), ("방송", "방송"), ("팬미팅", "팬미팅"), ("기타", "기타")]
     )  # 스케줄 분류 항목
     start_date = models.DateTimeField()  # 이벤트 시작 일시
     end_date = models.DateTimeField()  # 이벤트 종료 일시
