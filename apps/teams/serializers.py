@@ -13,7 +13,7 @@ class PlayerForTeamSerializer(serializers.ModelSerializer[Player]):
     class Meta:
         model = Player
         # 선수의 주요 정보만 제공
-        fields = ["id", "nickname", "position", "gamename"]
+        fields = ["id", "nickname", "position", "gamename", "social"]
 
 
 # 소셜 미디어 정보를 직렬화하는 시리얼라이저
@@ -22,6 +22,8 @@ class TeamSocialSerializer(serializers.Serializer[None]):
     facebook = serializers.URLField(required=False)  # 이 필드는 필수 입력이 아님
     youtube = serializers.URLField(required=False)  # 이 필드는 필수 입력이 아님
     X = serializers.URLField(required=False)  # 이 필드는 필수 입력이 아님
+    soop = serializers.URLField(required=False)
+    chzzk = serializers.URLField(required=False)
 
 
 # 팀 상세 정보를 위한 시리얼라이저 (선수 목록 포함)
