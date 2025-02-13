@@ -13,6 +13,8 @@ class PlayerSocialSerializer(serializers.Serializer[None]):
     facebook = serializers.URLField(required=False)  # 이 필드는 필수 입력이 아님
     youtube = serializers.URLField(required=False)  # 이 필드는 필수 입력이 아님
     X = serializers.URLField(required=False)  # 이 필드는 필수 입력이 아님
+    soop = serializers.URLField(required=False)
+    chzzk = serializers.URLField(required=False)
 
 
 # 전체 선수 정보를 직렬화하는 시리얼라이저
@@ -55,6 +57,7 @@ class PlayerProfileSerializer(serializers.ModelSerializer[Player]):
             "debut_date",  # 데뷔 날짜
             "social",  # 소셜 미디어 정보
             "agency",  # 소속 에이전시
+            "nationality",  # 국적
             "is_subscribed",
         ]
 
@@ -91,6 +94,7 @@ class PlayerCreateSerializer(serializers.ModelSerializer[Player]):
             "debut_date",  # 데뷔 날짜
             "social",  # 소셜 미디어 정보
             "agency",  # 소속 에이전시
+            "nationality",  # 국적
         ]
 
     def create(self, validated_data: Dict[str, Any]) -> Player:
