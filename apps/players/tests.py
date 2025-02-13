@@ -147,12 +147,12 @@ class PlayerAPITestCase(APITestCase):
         player = self.players[1]
         url = reverse("player-schedule-list", kwargs={"player_id": player.id})
         data = {
-            "category": "생일",
+            "category": "방송",
             "start_date": timezone.now().isoformat(),
             "end_date": (timezone.now() + timedelta(hours=1)).isoformat(),
-            "place": "Arena",
-            "title": "Birthday Event",
-            "detail": "Celebrate birthday",
+            "place": "YouTube",
+            "title": "broadcast Event",
+            "detail": "",
         }
         self.authenticate(self.admin_user)
         response = self.client.post(url, data, format="json")
