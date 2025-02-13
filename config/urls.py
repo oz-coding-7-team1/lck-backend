@@ -27,6 +27,7 @@ from drf_spectacular.views import (
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/v1/", include("apps.common.urls")),
     path("api/v1/players/", include("apps.players.urls")),
     path("api/v1/teams/", include("apps.teams.urls")),
     path("api/v1/subscriptions/", include("apps.subscriptions.urls")),
@@ -37,5 +38,6 @@ urlpatterns = [
     path("api/v1/schema/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
 ]
 
+# 디버그일 때 정적 파일 관리
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
