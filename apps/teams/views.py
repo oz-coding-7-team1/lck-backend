@@ -87,7 +87,7 @@ class TeamDetail(APIView):
         except Team.DoesNotExist:
             raise NotFound(detail="해당 팀을 찾을 수 없습니다.")
 
-        serializer = TeamDetailSerializer(team)
+        serializer = TeamDetailSerializer(team, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @extend_schema(
