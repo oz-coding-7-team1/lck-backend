@@ -22,8 +22,10 @@ class Command(BaseCommand):
                 "facebook": "https://facebook.com/example",
                 "youtube": "https://youtube.com/example",
                 "X": "https://twitter.com/example",
+                "soop": "https://soop.com/example",
+                "chzzk": "https://chzzk.com/example",
             }
-            selected_keys = random.sample(list(social_platforms.keys()), k=random.randint(0, 4))
+            selected_keys = random.sample(list(social_platforms.keys()), k=random.randint(0, 6))
             return {key: social_platforms[key] for key in selected_keys} if selected_keys else {}
 
         # 팀 데이터 생성 (중복 방지)
@@ -73,6 +75,7 @@ class Command(BaseCommand):
                     social=random_social(),
                     agency="Esports Management",
                     is_active=True,
+                    nationality="KOREA",
                 )
                 player_index += 1
 
@@ -93,6 +96,7 @@ class Command(BaseCommand):
                 social=random_social(),
                 agency="Freelancer",
                 is_active=True,
+                nationality="KOREA",
             )
 
         self.stdout.write(self.style.SUCCESS("Created 30 unassigned players"))
