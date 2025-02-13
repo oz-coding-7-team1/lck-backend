@@ -16,7 +16,7 @@ class Command(BaseCommand):
         positions: list[Position] = list(Position)
 
         def random_social() -> dict[str, str]:
-            # 1~4개의 랜덤 소셜 미디어 정보 포함 (없을 수도 있음)
+            # 1~6개의 랜덤 소셜 미디어 정보 포함 (없을 수도 있음)
             social_platforms: dict[str, str] = {
                 "insta": "https://instagram.com/example",
                 "facebook": "https://facebook.com/example",
