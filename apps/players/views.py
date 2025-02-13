@@ -55,9 +55,12 @@ class PlayerList(APIView):
         responses={
             201: OpenApiExample(
                 "성공 응답 예시",
-                summary="선수 등록 성공",
                 value={"detail": "선수 등록 완료"},
-            )
+            ),
+            400: OpenApiExample(
+                "선수 등록 실패",
+                value={"field": ["에러 메시지 예시"]},
+            ),
         },
     )
     # 선수 등록
@@ -88,7 +91,13 @@ class PlayerDetail(APIView):
     @extend_schema(
         summary="선수 프로필 조회",
         description="선수의 상세 프로필 정보를 조회합니다.",
-        responses={200: PlayerProfileSerializer},
+        responses={
+            200: PlayerProfileSerializer,
+            404: OpenApiExample(
+                "선수 조회 실패",
+                value={"detail": "해당 선수를 찾을 수 없습니다."},
+            ),
+        },
     )
     # 선수 프로필 조회
     def get(self, request: Request, pk: int) -> Response:
@@ -111,7 +120,20 @@ class PlayerDetail(APIView):
         summary="선수 프로필 수정",
         description="선수의 프로필 정보를 수정합니다. 전체 데이터를 재전송해야 합니다.",
         request=PlayerProfileSerializer,
-        responses={200: OpenApiExample("수정 성공", value={"detail": "선수 프로필 수정 완료"})},
+        responses={
+            200: OpenApiExample(
+                "선수 수정 성공",
+                value={"detail": "선수 프로필 수정 완료"},
+            ),
+            400: OpenApiExample(
+                "선수 수정 실패",
+                value={"field": ["에러 메시지 예시"]},
+            ),
+            404: OpenApiExample(
+                "선수 조회 실패",
+                value={"detail": "해당 선수를 찾을 수 없습니다."},
+            ),
+        },
     )
     # 선수 프로필 수정
     def put(self, request: Request, pk: int) -> Response:
@@ -145,6 +167,10 @@ class PlayerDetail(APIView):
                 "잘못된 요청",
                 value={"error": "요청 데이터가 올바르지 않습니다. is_active 값은 반드시 False여야 합니다."},
             ),
+            404: OpenApiExample(
+                "선수 조회 실패",
+                value={"detail": "해당 플레이어를 찾을 수 없습니다."},
+            ),
         },
     )
     # 선수 비활성화
@@ -173,7 +199,16 @@ class PlayerDetail(APIView):
     @extend_schema(
         summary="선수 삭제",
         description="해당 선수의 정보를 soft delete 방식으로 삭제합니다.",
-        responses={204: OpenApiExample("삭제 성공", value={"detail": "No Content"})},
+        responses={
+            204: OpenApiExample(
+                "선수 삭제 성공",
+                value={"detail": "선수 삭제 완료 (204 No Content)"},
+            ),
+            404: OpenApiExample(
+                "선수 삭제 실패",
+                value={"detail": "해당 선수를 찾을 수 없습니다."},
+            ),
+        },
     )
     # 선수 삭제
     def delete(self, request: Request, pk: int) -> Response:
@@ -199,7 +234,13 @@ class TopPlayers(APIView):
     @extend_schema(
         summary="전체 선수 중 구독수 상위 10위",
         description="각 선수의 구독자 수를 계산하여 내림차순 정렬 후 상위 10명의 정보를 반환합니다.",
-        responses={200: PlayerTopSerializer(many=True)},
+        responses={
+            200: PlayerTopSerializer(many=True),
+            500: OpenApiExample(
+                "내부 서버 에러",
+                value={"error": "에러 메시지"},
+            ),
+        },
     )
     def get(self, request: Request) -> Response:
         try:
@@ -232,7 +273,13 @@ class PositionTop(APIView):
     @extend_schema(
         summary="포지션 별 선수 중 구독수 상위 5위",
         description="Position Enum에 정의된 각 포지션에 대해 구독자 수 기준 상위 5명의 선수를 반환합니다.",
-        responses={200: PlayerPositionSerializer(many=True)},
+        responses={
+            200: PlayerPositionSerializer(many=True),
+            500: OpenApiExample(
+                "내부 서버 에러",
+                value={"error": "에러 메시지"},
+            ),
+        },
     )
     def get(self, request: Any) -> Response:
         try:
@@ -284,9 +331,18 @@ class PlayerScheduleList(APIView):
 
     @extend_schema(
         summary="선수 스케줄 생성",
-        description="요청 본문에 스케줄 정보를 포함하여 특정 선수의 스케줄을 생성합니다. 생일 / 경기 / 개인방송",
+        description="요청 본문에 스케줄 정보를 포함하여 특정 선수의 스케줄을 생성합니다. 경기 / 방송 / 팬미팅 / 기타",
         request=PlayerScheduleSerializer,
-        responses={201: OpenApiExample("생성 성공", value={"detail": "선수 스케줄 생성 완료"})},
+        responses={
+            201: OpenApiExample(
+                "생성 성공",
+                value={"detail": "선수 스케줄 생성 완료"},
+            ),
+            400: OpenApiExample(
+                "선수 스케줄 생성 실패",
+                value={"field": ["에러 메시지 예시"]},
+            ),
+        },
     )
     # 특정 선수의 스케줄 목록 생성
     def post(self, request: Request, player_id: int) -> Response:
@@ -318,7 +374,13 @@ class PlayerScheduleDetail(APIView):
     @extend_schema(
         summary="선수 스케줄 상세 조회",
         description="특정 선수의 특정 스케줄 상세 정보를 조회합니다.",
-        responses={200: PlayerScheduleSerializer},
+        responses={
+            200: PlayerScheduleSerializer,
+            404: OpenApiExample(
+                "스케줄 조회 실패",
+                value={"detail": "해당 선수 스케줄을 찾을 수 없습니다."},
+            ),
+        },
     )
     # 특정 선수 스케줄 상세 조회
     def get(self, request: Request, player_id: int, schedule_id: int) -> Response:
@@ -338,8 +400,20 @@ class PlayerScheduleDetail(APIView):
     @extend_schema(
         summary="선수 스케줄 수정",
         description="요청 본문에 포함된 데이터로 특정 선수의 스케줄을 부분 수정합니다.",
-        request=PlayerScheduleSerializer,
-        responses={200: OpenApiExample("수정 성공", value={"detail": "선수 스케줄 수정 완료"})},
+        responses={
+            200: OpenApiExample(
+                "수정 성공",
+                value={"detail": "선수 스케줄 수정 완료"},
+            ),
+            400: OpenApiExample(
+                "선수 스케줄 수정 실패",
+                value={"field": ["에러 메시지 예시"]},
+            ),
+            404: OpenApiExample(
+                "스케줄 조회 실패",
+                value={"detail": "해당 선수 스케줄을 찾을 수 없습니다."},
+            ),
+        },
     )
     # 특정 선수 스케줄 상세 수정
     def patch(self, request: Request, player_id: int, schedule_id: int) -> Response:
@@ -362,7 +436,16 @@ class PlayerScheduleDetail(APIView):
     @extend_schema(
         summary="선수 스케줄 삭제",
         description="특정 선수의 스케줄을 삭제합니다.",
-        responses={204: OpenApiExample("삭제 성공", value={"detail": "No Content"})},
+        responses={
+            204: OpenApiExample(
+                "선수 스케줄 삭제 성공",
+                value={"detail": "No Content"},
+            ),
+            404: OpenApiExample(
+                "스케줄 삭제 실패",
+                value={"detail": "해당 선수 스케줄을 찾을 수 없습니다."},
+            ),
+        },
     )
     # 특정 선수 스케줄 상세 삭제
     def delete(self, request: Request, player_id: int, schedule_id: int) -> Response:
