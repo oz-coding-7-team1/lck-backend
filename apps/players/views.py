@@ -4,7 +4,7 @@ from django.db.models import Count
 from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
 from rest_framework.exceptions import NotFound
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -231,6 +231,9 @@ class PlayerDetail(APIView):
 
 # 구독 수가 많은 상위 10명의 선수 조회
 class TopPlayers(APIView):
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+
     @extend_schema(
         summary="전체 선수 중 구독수 상위 10위",
         description="각 선수의 구독자 수를 계산하여 내림차순 정렬 후 상위 10명의 정보를 반환합니다.",
@@ -270,6 +273,9 @@ class TopPlayers(APIView):
 
 # 특정 포지션의 구독 수가 많은 상위 5명의 선수 조회
 class PositionTop(APIView):
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+
     @extend_schema(
         summary="포지션 별 선수 중 구독수 상위 5위",
         description="Position Enum에 정의된 각 포지션에 대해 구독자 수 기준 상위 5명의 선수를 반환합니다.",

@@ -1,5 +1,5 @@
 import random
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from django.core.management.base import BaseCommand
 
@@ -8,16 +8,21 @@ from apps.teams.models import Team
 
 
 class Command(BaseCommand):
-    help = "Generate dummy data for Teams and Players (without Faker, with duplicate check)"
+    help = "Generate dummy data for Teams and Players (without Faker, with duplicate check), or add tags only"
+
+    def add_arguments(self, parser: Any) -> None:
+        parser.add_argument(
+            "--tags-only",
+            action="store_true",
+            help="Only add tags to existing players without generating teams or players.",
+        )
 
     def handle(self, *args: Any, **kwargs: Any) -> None:
-        self.stdout.write(self.style.SUCCESS("Generating dummy data without Faker..."))
+        tags_only: bool = kwargs.get("tags_only", False)
 
-        positions: list[Position] = list(Position)
-
-        def random_social() -> dict[str, str]:
+        def random_social() -> Dict[str, str]:
             # 1~6개의 랜덤 소셜 미디어 정보 포함 (없을 수도 있음)
-            social_platforms: dict[str, str] = {
+            social_platforms: Dict[str, str] = {
                 "insta": "https://instagram.com/example",
                 "facebook": "https://facebook.com/example",
                 "youtube": "https://youtube.com/example",
@@ -28,8 +33,21 @@ class Command(BaseCommand):
             selected_keys = random.sample(list(social_platforms.keys()), k=random.randint(0, 6))
             return {key: social_platforms[key] for key in selected_keys} if selected_keys else {}
 
+        if tags_only:
+            self.stdout.write(self.style.SUCCESS("Adding tags only to existing players..."))
+            players = Player.objects.all()
+            for player in players:
+                num_tags = random.randint(1, 3)
+                for _ in range(num_tags):
+                    random_tag = f"tag_{random.randint(1, 100)}"
+                    player.tags.add(random_tag)
+            self.stdout.write(self.style.SUCCESS("Tags added to all existing players"))
+            return
+
+        self.stdout.write(self.style.SUCCESS("Generating dummy data for teams and players..."))
+
         # 팀 데이터 생성 (중복 방지)
-        team_names: list[str] = [
+        team_names: List[str] = [
             "T1",
             "Gen.G",
             "DK",
@@ -41,10 +59,10 @@ class Command(BaseCommand):
             "Liiv Sandbox",
             "OK Savings Bank",
         ]
-        teams: list[Team] = []
+        teams: List[Team] = []
 
         for name in team_names:
-            team, created = Team.objects.get_or_create(
+            team, _ = Team.objects.get_or_create(
                 name=name,
                 defaults={"social": random_social()},
             )
@@ -52,9 +70,10 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS("Created or retrieved 10 teams"))
 
-        # 팀당 5명의 선수 생성 (각 포지션 1명씩)
-        nicknames: list[str] = [f"Player{i}" for i in range(1, 51)]
-        realnames: list[str] = [f"Real Name {i}" for i in range(1, 51)]
+        # 선수 데이터 생성: 팀당 5명의 선수 (각 포지션 1명씩)
+        positions: List[Position] = list(Position)
+        nicknames: List[str] = [f"Player{i}" for i in range(1, 51)]
+        realnames: List[str] = [f"Real Name {i}" for i in range(1, 51)]
 
         player_index: int = 0
         for team in teams:
@@ -64,7 +83,7 @@ class Command(BaseCommand):
                 position = random.choice(available_positions)
                 used_positions.add(position)
 
-                Player.objects.create(
+                player_instance = Player.objects.create(
                     team=team,
                     realname=realnames[player_index],
                     nickname=nicknames[player_index],
@@ -77,15 +96,20 @@ class Command(BaseCommand):
                     is_active=True,
                     nationality="KOREA",
                 )
+                # 태그 추가: 1~3개의 태그 무작위 추가
+                num_tags = random.randint(1, 3)
+                for _ in range(num_tags):
+                    random_tag = f"tag_{random.randint(1, 100)}"
+                    player_instance.tags.add(random_tag)
+
                 player_index += 1
 
         self.stdout.write(self.style.SUCCESS("Assigned 5 players to each team (Total: 50 players)"))
 
-        # 나머지 30명의 선수는 팀 없이 생성 (무소속)
+        # 무소속 선수 30명 생성
         for i in range(50, 80):
             position = random.choice(positions)
-
-            Player.objects.create(
+            player_instance = Player.objects.create(
                 team=None,
                 realname=f"Player {i+1}",
                 nickname=f"Nickname {i+1}",
@@ -98,6 +122,10 @@ class Command(BaseCommand):
                 is_active=True,
                 nationality="KOREA",
             )
+            num_tags = random.randint(1, 3)
+            for _ in range(num_tags):
+                random_tag = f"tag_{random.randint(1, 100)}"
+                player_instance.tags.add(random_tag)
 
         self.stdout.write(self.style.SUCCESS("Created 30 unassigned players"))
         self.stdout.write(self.style.SUCCESS("Dummy data generation complete!"))
