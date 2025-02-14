@@ -20,7 +20,7 @@ from .serializers import (
 
 
 class TeamList(APIView):
-    def get_authenticators(self):
+    def get_authenticators(self) -> List[Any]:
         if not hasattr(self, "request") or self.request is None:
             return super().get_authenticators()
 
@@ -73,7 +73,7 @@ class TeamList(APIView):
 
 
 class TeamDetail(APIView):
-    def get_authenticators(self):
+    def get_authenticators(self) -> List[Any]:
         if not hasattr(self, "request") or self.request is None:
             return super().get_authenticators()
 
@@ -201,7 +201,7 @@ class TeamRank(APIView):
 
 class TeamScheduleList(APIView):
 
-    def get_authenticators(self):
+    def get_authenticators(self) -> List[Any]:
         if not hasattr(self, "request") or self.request is None:
             return super().get_authenticators()
 
@@ -256,7 +256,7 @@ class TeamScheduleList(APIView):
 
 
 class TeamScheduleDetail(APIView):
-    def get_authenticators(self):
+    def get_authenticators(self) -> List[Any]:
         if not hasattr(self, "request") or self.request is None:
             return super().get_authenticators()
 

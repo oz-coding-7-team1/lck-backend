@@ -31,7 +31,7 @@ urlpatterns = [
     path("api/v1/players/", include("apps.players.urls")),
     path("api/v1/teams/", include("apps.teams.urls")),
     path("api/v1/subscriptions/", include("apps.subscriptions.urls")),
-    path("api/v1/communitys/", include("apps.communitys.urls")),
+    path("api/v1/communities/", include("apps.communities.urls")),
     path("api/v1/users/", include("apps.users.urls")),
     path("api/v1/cloud-images/", include("apps.cloud_images.urls")),
     path("api/v1/schema/", SpectacularAPIView.as_view(), name="schema"),

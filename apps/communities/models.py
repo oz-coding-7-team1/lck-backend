@@ -15,7 +15,7 @@ class TeamPost(BaseModel, SoftDeleteModel):  # type: ignore
     content = models.TextField()
 
     def __str__(self) -> str:
-        return self.title
+        return f"{self.title}"
 
 
 class TeamComment(BaseModel, SoftDeleteModel):  # type: ignore
@@ -35,7 +35,7 @@ class PlayerPost(BaseModel, SoftDeleteModel):  # type: ignore
     content = models.TextField()
 
     def __str__(self) -> str:
-        return self.title
+        return f"{self.title}"
 
 
 class PlayerComment(BaseModel, SoftDeleteModel):  # type: ignore

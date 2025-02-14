@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class CommunitysConfig(AppConfig):
+class CommunitiesConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "apps.communitys"
+    name = "apps.communities"

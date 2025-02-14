@@ -23,7 +23,7 @@ from .serializers import (
 
 class PlayerList(APIView):
 
-    def get_authenticators(self):
+    def get_authenticators(self) -> List[Any]:
         # self.request가 None이면 기본 인증 방식을 사용
         if not hasattr(self, "request") or self.request is None:
             return super().get_authenticators()
@@ -94,7 +94,7 @@ class PlayerList(APIView):
 
 class PlayerDetail(APIView):
 
-    def get_authenticators(self):
+    def get_authenticators(self) -> List[Any]:
         if not hasattr(self, "request") or self.request is None:
             return super().get_authenticators()
 
@@ -334,7 +334,7 @@ class PositionTop(APIView):
 
 
 class PlayerScheduleList(APIView):
-    def get_authenticators(self):
+    def get_authenticators(self) -> List[Any]:
         if not hasattr(self, "request") or self.request is None:
             return super().get_authenticators()
 
@@ -399,7 +399,7 @@ class PlayerScheduleList(APIView):
 
 
 class PlayerScheduleDetail(APIView):
-    def get_authenticators(self):
+    def get_authenticators(self) -> List[Any]:
         if not hasattr(self, "request") or self.request is None:
             return super().get_authenticators()
 
