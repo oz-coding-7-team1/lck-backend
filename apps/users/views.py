@@ -81,13 +81,12 @@ class LoginView(APIView):
             refresh = RefreshToken.for_user(user)  # JWT token 생성
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
-            
+
             user_data = User.objects.get(email=email)
             serializer = UserSerializer(user_data)
 
             # access token 은 JSON 응답으로 반환
-            response = Response({"access_token": access_token, "user": serializer.data},
-                                status=status.HTTP_200_OK)
+            response = Response({"access_token": access_token, "user": serializer.data}, status=status.HTTP_200_OK)
             # refresh token 은 httpOnly, secure cookie 에 저장
             response.set_cookie(
                 key="refresh_token",
@@ -96,7 +95,7 @@ class LoginView(APIView):
                 secure=settings.REFRESH_TOKEN_COOKIE_SECURE,  # True: HTTPS 환경에서만 쿠키가 전송되도록 함
                 samesite="Strict",  # 같은 사이트에서만 쿠키 전송
             )
-            
+
             return response
         else:
             return Response({"detail": "잘못된 인증 정보입니다."}, status=status.HTTP_401_UNAUTHORIZED)

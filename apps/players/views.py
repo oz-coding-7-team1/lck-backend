@@ -12,8 +12,8 @@ from rest_framework.views import APIView
 from .models import Player, PlayerSchedule, Position
 from .serializers import (
     PlayerCreateSerializer,
-    PlayerPositionSerializer,
     PlayerDetailSerializer,
+    PlayerPositionSerializer,
     PlayerScheduleSerializer,
     PlayerSerializer,
     PlayerTopSerializer,

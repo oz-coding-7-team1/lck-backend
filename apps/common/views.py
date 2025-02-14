@@ -15,6 +15,7 @@ from apps.teams.serializers import TeamDetailSerializer
 # Create your views here.
 class TagSearchView(APIView):
     """태그 기반으로 Player와 Team을 검색"""
+
     authentication_classes = ()
     permission_classes = (AllowAny,)
 
