@@ -7,16 +7,16 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.players.models import Player
-from apps.players.serializers import PlayerSerializer
+from apps.players.serializers import PlayerDetailSerializer
 from apps.teams.models import Team
-from apps.teams.serializers import TeamSerializer
+from apps.teams.serializers import TeamDetailSerializer
 
 
 # Create your views here.
 class TagSearchView(APIView):
     """태그 기반으로 Player와 Team을 검색"""
-
-    permission_classes = [AllowAny]
+    authentication_classes = ()
+    permission_classes = (AllowAny,)
 
     @extend_schema(
         summary="태그로 검색",
@@ -37,8 +37,8 @@ class TagSearchView(APIView):
         players = Player.objects.filter(tags__name__icontains=query).distinct()
         teams = Team.objects.filter(tags__name__icontains=query).distinct()
 
-        player_serializer = PlayerSerializer(players, many=True)
-        team_serializer = TeamSerializer(teams, many=True)
+        player_serializer = PlayerDetailSerializer(players, many=True)
+        team_serializer = TeamDetailSerializer(teams, many=True)
 
         return Response(
             {
