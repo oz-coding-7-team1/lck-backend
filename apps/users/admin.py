@@ -7,7 +7,7 @@ from django.http import HttpRequest
 
 from apps.common.admin import BaseModelAdmin
 
-from .models import User
+from .models import Terms, User
 
 
 # Register your models here.
@@ -34,3 +34,8 @@ class UserAdmin(BaseModelAdmin):
             obj.password = make_password(obj.password)
 
         super().save_model(request, obj, form, change)
+
+
+@admin.register(Terms)
+class TermsAdmin(BaseModelAdmin):
+    pass
