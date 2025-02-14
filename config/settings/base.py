@@ -66,6 +66,7 @@ PACKAGE = [
     "apps.teams.apps.TeamsConfig",
     "apps.subscriptions.apps.SubscriptionsConfig",
     "apps.cloud_images.apps.CloudImagesConfig",
+    "apps.communitys.apps.CommunitysConfig",
     "taggit",
     "taggit_templatetags2",
 ]
