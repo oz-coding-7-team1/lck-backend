@@ -57,6 +57,7 @@ DJANGO_APPS = [
 ]
 
 PACKAGE = [
+    "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
@@ -66,7 +67,7 @@ PACKAGE = [
     "apps.teams.apps.TeamsConfig",
     "apps.subscriptions.apps.SubscriptionsConfig",
     "apps.cloud_images.apps.CloudImagesConfig",
-    "apps.communitys.apps.CommunitysConfig",
+    "apps.communities.apps.CommunitiesConfig",
     "taggit",
     "taggit_templatetags2",
 ]
@@ -75,6 +76,7 @@ PACKAGE = [
 INSTALLED_APPS = DJANGO_APPS + PACKAGE
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -173,3 +175,9 @@ AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_S3_BUCKET_NAME = os.getenv("AWS_S3_BUCKET_NAME")
 AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME")
+
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_METHODS = ["GET", "POST", "DELETE", "PUT", "PATCH"]
+CORS_ALLOWED_HEADERS = ["Content-Type", "Authorization"]

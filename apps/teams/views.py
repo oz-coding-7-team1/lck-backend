@@ -7,6 +7,7 @@ from rest_framework.exceptions import NotFound
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .models import Team, TeamSchedule
 from .serializers import (
@@ -19,10 +20,18 @@ from .serializers import (
 
 
 class TeamList(APIView):
+    def get_authenticators(self) -> List[Any]:
+        if not hasattr(self, "request") or self.request is None:
+            return super().get_authenticators()
+
+        if self.request.method == "GET":
+            return []
+        return [JWTAuthentication()]
+
     def get_permissions(self) -> List[Any]:
-        if self.request.method == "POST":
+        if self.request.method in ["POST"]:
             return [IsAuthenticated(), IsAdminUser()]
-        return []
+        return [AllowAny()]
 
     @extend_schema(
         summary="전체 팀 조회",
@@ -64,10 +73,18 @@ class TeamList(APIView):
 
 
 class TeamDetail(APIView):
+    def get_authenticators(self) -> List[Any]:
+        if not hasattr(self, "request") or self.request is None:
+            return super().get_authenticators()
+
+        if self.request.method == "GET":
+            return []
+        return [JWTAuthentication()]
+
     def get_permissions(self) -> List[Any]:
         if self.request.method in ["PUT", "DELETE"]:
             return [IsAuthenticated(), IsAdminUser()]
-        return []
+        return [AllowAny()]
 
     @extend_schema(
         summary="팀 상세 정보 조회",
@@ -183,10 +200,19 @@ class TeamRank(APIView):
 
 
 class TeamScheduleList(APIView):
+
+    def get_authenticators(self) -> List[Any]:
+        if not hasattr(self, "request") or self.request is None:
+            return super().get_authenticators()
+
+        if self.request.method == "GET":
+            return []
+        return [JWTAuthentication()]
+
     def get_permissions(self) -> List[Any]:
         if self.request.method == "POST":
             return [IsAuthenticated(), IsAdminUser()]
-        return []
+        return [AllowAny()]
 
     @extend_schema(
         summary="특정 팀 스케줄 조회",
@@ -230,10 +256,18 @@ class TeamScheduleList(APIView):
 
 
 class TeamScheduleDetail(APIView):
+    def get_authenticators(self) -> List[Any]:
+        if not hasattr(self, "request") or self.request is None:
+            return super().get_authenticators()
+
+        if self.request.method == "GET":
+            return []
+        return [JWTAuthentication()]
+
     def get_permissions(self) -> List[Any]:
         if self.request.method in ["PATCH", "DELETE"]:
             return [IsAuthenticated(), IsAdminUser()]
-        return []
+        return [AllowAny()]
 
     @extend_schema(
         summary="특정 팀 스케줄 상세 조회",

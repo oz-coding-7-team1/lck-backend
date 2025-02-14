@@ -82,8 +82,11 @@ class LoginView(APIView):
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
 
+            user_data = User.objects.get(email=email)
+            serializer = UserSerializer(user_data)
+
             # access token 은 JSON 응답으로 반환
-            response = Response({"access_token": access_token}, status=status.HTTP_200_OK)
+            response = Response({"access_token": access_token, "user": serializer.data}, status=status.HTTP_200_OK)
             # refresh token 은 httpOnly, secure cookie 에 저장
             response.set_cookie(
                 key="refresh_token",
@@ -92,6 +95,7 @@ class LoginView(APIView):
                 secure=settings.REFRESH_TOKEN_COOKIE_SECURE,  # True: HTTPS 환경에서만 쿠키가 전송되도록 함
                 samesite="Strict",  # 같은 사이트에서만 쿠키 전송
             )
+
             return response
         else:
             return Response({"detail": "잘못된 인증 정보입니다."}, status=status.HTTP_401_UNAUTHORIZED)
@@ -183,7 +187,7 @@ class LogoutView(APIView):
 
 
 # 회원 탈퇴
-class WithdrawAPIView(APIView):
+class WithdrawView(APIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
@@ -297,7 +301,7 @@ class ChangePasswordView(APIView):
 
 
 # 약관 정보 생성 및 약관 전체 내역 조회
-class TermsListAPIView(APIView):
+class TermsListView(APIView):
 
     def get_permissions(self) -> List[BasePermission]:
         if self.request.method == "POST":
@@ -326,13 +330,13 @@ class TermsListAPIView(APIView):
     def post(self, request: Any) -> Response:
         serializer = TermsSerializer(data=request.data)
         if serializer.is_valid():
-            term = serializer.save()  # 새 약관 생성
+            serializer.save()  # 새 약관 생성
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # 사용자 약관 동의 내역 조회
-class TermsAgreementListAPIView(APIView):
+class TermsAgreementListView(APIView):
     permission_classes = (IsAuthenticated,)
 
     @extend_schema(
@@ -347,7 +351,7 @@ class TermsAgreementListAPIView(APIView):
 
 
 # 선택적 약관 동의 수정
-class TermsAgreementUpdateAPIView(APIView):
+class TermsAgreementUpdateView(APIView):
     permission_classes = (IsAuthenticated,)
 
     @extend_schema(
