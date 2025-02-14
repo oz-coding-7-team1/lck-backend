@@ -153,7 +153,8 @@ class TeamDetail(APIView):
 
 # 상위 5팀 조회
 class TeamRank(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
 
     @extend_schema(
         summary="상위 5팀 조회",

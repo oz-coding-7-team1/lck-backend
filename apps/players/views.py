@@ -231,7 +231,8 @@ class PlayerDetail(APIView):
 
 # 구독 수가 많은 상위 10명의 선수 조회
 class TopPlayers(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
 
     @extend_schema(
         summary="전체 선수 중 구독수 상위 10위",
@@ -272,7 +273,8 @@ class TopPlayers(APIView):
 
 # 특정 포지션의 구독 수가 많은 상위 5명의 선수 조회
 class PositionTop(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
 
     @extend_schema(
         summary="포지션 별 선수 중 구독수 상위 5위",
