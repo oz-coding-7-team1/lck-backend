@@ -77,6 +77,12 @@ class Command(BaseCommand):
                     is_active=True,
                     nationality="KOREA",
                 )
+                # 태그 추가: 1~3개의 태그를 무작위로 생성하여 추가
+                num_tags = random.randint(1, 3)
+                for _ in range(num_tags):
+                    random_tag = f"tag_{random.randint(1, 100)}"
+                    player_instance.tags.add(random_tag)  # type: ignore
+
                 player_index += 1
 
         self.stdout.write(self.style.SUCCESS("Assigned 5 players to each team (Total: 50 players)"))
@@ -98,6 +104,10 @@ class Command(BaseCommand):
                 is_active=True,
                 nationality="KOREA",
             )
+            num_tags = random.randint(1, 3)
+            for _ in range(num_tags):
+                random_tag = f"tag_{random.randint(1, 100)}"
+                player_instance.tags.add(random_tag)  # type: ignore
 
         self.stdout.write(self.style.SUCCESS("Created 30 unassigned players"))
         self.stdout.write(self.style.SUCCESS("Dummy data generation complete!"))
