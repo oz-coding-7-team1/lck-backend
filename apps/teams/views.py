@@ -4,7 +4,7 @@ from django.db.models import Count
 from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
 from rest_framework.exceptions import NotFound
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -153,6 +153,8 @@ class TeamDetail(APIView):
 
 # 상위 5팀 조회
 class TeamRank(APIView):
+    permission_classes = [AllowAny]
+
     @extend_schema(
         summary="상위 5팀 조회",
         description="구독자 수 기준 상위 5팀 정보를 조회합니다.",
