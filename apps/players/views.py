@@ -13,7 +13,7 @@ from .models import Player, PlayerSchedule, Position
 from .serializers import (
     PlayerCreateSerializer,
     PlayerPositionSerializer,
-    PlayerProfileSerializer,
+    PlayerDetailSerializer,
     PlayerScheduleSerializer,
     PlayerSerializer,
     PlayerTopSerializer,
@@ -92,7 +92,7 @@ class PlayerDetail(APIView):
         summary="선수 프로필 조회",
         description="선수의 상세 프로필 정보를 조회합니다.",
         responses={
-            200: PlayerProfileSerializer,
+            200: PlayerDetailSerializer,
             404: OpenApiExample(
                 "선수 조회 실패",
                 value={"detail": "해당 선수를 찾을 수 없습니다."},
@@ -112,14 +112,14 @@ class PlayerDetail(APIView):
             raise NotFound(detail="해당 플레이어를 찾을 수 없습니다.")
 
         # 조회된 Player 객체를 PlayerProfileSerializer를 사용하여 직렬화
-        serializer = PlayerProfileSerializer(player, context={"request": request})
+        serializer = PlayerDetailSerializer(player, context={"request": request})
         # 직렬화된 데이터를 Response 객체에 담아 클라이언트에게 반환
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @extend_schema(
         summary="선수 프로필 수정",
         description="선수의 프로필 정보를 수정합니다. 전체 데이터를 재전송해야 합니다.",
-        request=PlayerProfileSerializer,
+        request=PlayerDetailSerializer,
         responses={
             200: OpenApiExample(
                 "선수 수정 성공",
@@ -146,7 +146,7 @@ class PlayerDetail(APIView):
 
         # 클라이언트가 전송한 JSON 데이터를 이용해 PlayerProfileSerializer를 초기화
         # 기존의 Player 객체와 업데이트할 데이터를 함께 전달 (전체 필드 업데이트)
-        serializer = PlayerProfileSerializer(player, data=request.data)
+        serializer = PlayerDetailSerializer(player, data=request.data)
 
         # 전달받은 데이터의 유효성을 검사
         if serializer.is_valid():

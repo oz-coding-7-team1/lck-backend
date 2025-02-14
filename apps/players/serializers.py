@@ -41,7 +41,7 @@ class PlayerPositionSerializer(serializers.ModelSerializer[Player]):
 
 
 # 선수 프로필 정보를 반환하는 시리얼라이저
-class PlayerProfileSerializer(serializers.ModelSerializer[Player]):
+class PlayerDetailSerializer(serializers.ModelSerializer[Player]):
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:

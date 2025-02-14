@@ -104,3 +104,6 @@ class Terms(BaseModel):
 
     class Meta:
         db_table = "terms"
+
+    def __str__(self) -> str:
+        return f"{self.name}"
