@@ -5,7 +5,7 @@ services:
     environment:
       - DJANGO_ENV=dev
     env_file:
-      - .envs/dev.env
+      - .env
     # network는 컨테이너 간 통신할 때 쓰는 network 설정
     networks:
       - app_network

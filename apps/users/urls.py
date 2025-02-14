@@ -11,10 +11,10 @@ from apps.users.views import (
     MyPageView,
     RefreshTokenView,
     SignupView,
-    TermsAgreementListView,
-    TermsAgreementUpdateView,
-    TermsListView,
-    WithdrawView,
+    TermsAgreementListAPIView,
+    TermsAgreementUpdateAPIView,
+    TermsListAPIView,
+    WithdrawAPIView,
 )
 
 urlpatterns = [
@@ -24,10 +24,10 @@ urlpatterns = [
     path("signup/", SignupView.as_view(), name="signup"),
     path("login/", LoginView.as_view(), name="login"),
     path("logout/", LogoutView.as_view(), name="logout"),
-    path("withdraw/", WithdrawView.as_view(), name="withdraw"),
+    path("withdraw/", WithdrawAPIView.as_view(), name="withdraw"),
     path("mypage/", MyPageView.as_view(), name="mypage"),
     path("password/", ChangePasswordView.as_view(), name="change_password"),
-    path("terms/", TermsListView.as_view(), name="terms_list"),
-    path("terms/agree/", TermsAgreementListView.as_view(), name="terms_agreements_list"),
-    path("terms/agree/<int:pk>/", TermsAgreementUpdateView.as_view(), name="terms_agreement_update"),
+    path("terms/", TermsListAPIView.as_view(), name="terms_list"),
+    path("terms/agree/", TermsAgreementListAPIView.as_view(), name="terms_agreements_list"),
+    path("terms/agree/<int:pk>/", TermsAgreementUpdateAPIView.as_view(), name="terms_agreement_update"),
 ]

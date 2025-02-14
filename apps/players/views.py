@@ -8,13 +8,12 @@ from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .models import Player, PlayerSchedule, Position
 from .serializers import (
     PlayerCreateSerializer,
-    PlayerDetailSerializer,
     PlayerPositionSerializer,
+    PlayerProfileSerializer,
     PlayerScheduleSerializer,
     PlayerSerializer,
     PlayerTopSerializer,
@@ -22,16 +21,6 @@ from .serializers import (
 
 
 class PlayerList(APIView):
-
-    def get_authenticators(self) -> List[Any]:
-        # self.request가 None이면 기본 인증 방식을 사용
-        if not hasattr(self, "request") or self.request is None:
-            return super().get_authenticators()
-
-        if self.request.method == "GET":
-            return []  # GET 요청에서는 인증을 아예 하지 않음 (JWT 불필요)
-        return [JWTAuthentication()]  # 다른 요청에서는 JWT 필요
-
     def get_permissions(self) -> List[Any]:
         """
         GET 요청은 누구나 접근할 수 있지만,
@@ -42,7 +31,7 @@ class PlayerList(APIView):
         """
         if self.request.method == "POST":
             return [IsAuthenticated(), IsAdminUser()]
-        return [AllowAny()]
+        return []
 
     @extend_schema(
         summary="전체 선수 조회",
@@ -94,24 +83,16 @@ class PlayerList(APIView):
 
 class PlayerDetail(APIView):
 
-    def get_authenticators(self) -> List[Any]:
-        if not hasattr(self, "request") or self.request is None:
-            return super().get_authenticators()
-
-        if self.request.method == "GET":
-            return []
-        return [JWTAuthentication()]
-
     def get_permissions(self) -> List[Any]:
         if self.request.method in ["PUT", "PATCH", "DELETE"]:
             return [IsAuthenticated(), IsAdminUser()]
-        return [AllowAny()]
+        return []
 
     @extend_schema(
         summary="선수 프로필 조회",
         description="선수의 상세 프로필 정보를 조회합니다.",
         responses={
-            200: PlayerDetailSerializer,
+            200: PlayerProfileSerializer,
             404: OpenApiExample(
                 "선수 조회 실패",
                 value={"detail": "해당 선수를 찾을 수 없습니다."},
@@ -131,14 +112,14 @@ class PlayerDetail(APIView):
             raise NotFound(detail="해당 플레이어를 찾을 수 없습니다.")
 
         # 조회된 Player 객체를 PlayerProfileSerializer를 사용하여 직렬화
-        serializer = PlayerDetailSerializer(player, context={"request": request})
+        serializer = PlayerProfileSerializer(player, context={"request": request})
         # 직렬화된 데이터를 Response 객체에 담아 클라이언트에게 반환
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @extend_schema(
         summary="선수 프로필 수정",
         description="선수의 프로필 정보를 수정합니다. 전체 데이터를 재전송해야 합니다.",
-        request=PlayerDetailSerializer,
+        request=PlayerProfileSerializer,
         responses={
             200: OpenApiExample(
                 "선수 수정 성공",
@@ -165,7 +146,7 @@ class PlayerDetail(APIView):
 
         # 클라이언트가 전송한 JSON 데이터를 이용해 PlayerProfileSerializer를 초기화
         # 기존의 Player 객체와 업데이트할 데이터를 함께 전달 (전체 필드 업데이트)
-        serializer = PlayerDetailSerializer(player, data=request.data)
+        serializer = PlayerProfileSerializer(player, data=request.data)
 
         # 전달받은 데이터의 유효성을 검사
         if serializer.is_valid():
@@ -334,18 +315,10 @@ class PositionTop(APIView):
 
 
 class PlayerScheduleList(APIView):
-    def get_authenticators(self) -> List[Any]:
-        if not hasattr(self, "request") or self.request is None:
-            return super().get_authenticators()
-
-        if self.request.method == "GET":
-            return []
-        return [JWTAuthentication()]
-
     def get_permissions(self) -> List[Any]:
         if self.request.method == "POST":
             return [IsAuthenticated(), IsAdminUser()]
-        return [AllowAny()]
+        return []
 
     @extend_schema(
         summary="선수 스케줄 전체 조회",
@@ -399,18 +372,10 @@ class PlayerScheduleList(APIView):
 
 
 class PlayerScheduleDetail(APIView):
-    def get_authenticators(self) -> List[Any]:
-        if not hasattr(self, "request") or self.request is None:
-            return super().get_authenticators()
-
-        if self.request.method == "GET":
-            return []
-        return [JWTAuthentication()]
-
     def get_permissions(self) -> List[Any]:
         if self.request.method in ["PATCH", "DELETE"]:
             return [IsAuthenticated(), IsAdminUser()]
-        return [AllowAny()]
+        return []
 
     @extend_schema(
         summary="선수 스케줄 상세 조회",
