@@ -25,6 +25,7 @@ class TeamPostSerializer(serializers.ModelSerializer[TeamPost]):
     class Meta:
         model = TeamPost
         fields = ["id", "team", "user", "title", "content", "created_at", "updated_at", "comments"]
+        read_only_fields = ("team", "user", "created_at", "updated_at")
 
 
 # 선수 게시글에 달린 댓글을 직렬화
@@ -47,3 +48,4 @@ class PlayerPostSerializer(serializers.ModelSerializer[PlayerPost]):
     class Meta:
         model = PlayerPost
         fields = ["id", "player", "user", "title", "content", "created_at", "updated_at", "comments"]
+        read_only_fields = ("player", "user", "created_at", "updated_at")
