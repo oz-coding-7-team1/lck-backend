@@ -1,5 +1,8 @@
+from typing import List
+
 from drf_spectacular.utils import OpenApiExample, extend_schema
-from rest_framework import permissions, status
+from rest_framework import status
+from rest_framework.permissions import AllowAny, BasePermission, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,15 +19,21 @@ from .serializers import (
 )
 
 
-# 팀 게시글 관련 뷰
 class TeamPostListCreateAPIView(APIView):
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+
+    def get_permissions(self) -> List[BasePermission]:
+        if self.request.method == "POST":
+            return [IsAuthenticated()]
+        return super().get_permissions()  # type: ignore
 
     @extend_schema(
         summary="팀 커뮤니티 게시글 조회",
         description="특정 팀의 커뮤니티 게시글 목록을 조회합니다.",
         responses={200: TeamPostSerializer(many=True)},
     )
+    # 팀 커뮤니티 조회
     def get(self, request: Request, team_id: int) -> Response:
         posts = TeamPost.objects.filter(team_id=team_id)
         serializer = TeamPostSerializer(posts, many=True)
@@ -39,6 +48,7 @@ class TeamPostListCreateAPIView(APIView):
             400: OpenApiExample("실패 응답 예시", value={"detail": "팀을 찾을 수 없습니다."}),
         },
     )
+    # 팀 커뮤니티 생성
     def post(self, request: Request, team_id: int) -> Response:
         team = Team.objects.filter(id=team_id).first()
         if not team:
@@ -52,13 +62,20 @@ class TeamPostListCreateAPIView(APIView):
 
 
 class TeamPostDetailAPIView(APIView):
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+
+    def get_permissions(self) -> List[BasePermission]:
+        if self.request.method in ["PUT", "DELETE"]:
+            return [IsAuthenticated()]
+        return super().get_permissions()  # type: ignore
 
     @extend_schema(
         summary="팀 커뮤니티 게시글 상세 조회",
         description="특정 팀 커뮤니티 게시글의 상세 정보를 조회합니다.",
         responses={200: TeamPostSerializer},
     )
+    # 팀 커뮤니티 상세 조회
     def get(self, request: Request, team_id: int, post_id: int) -> Response:
         post = TeamPost.objects.filter(id=post_id, team_id=team_id).first()
         if not post:
@@ -75,6 +92,7 @@ class TeamPostDetailAPIView(APIView):
             400: OpenApiExample("실패 응답 예시", value={"detail": "게시글을 찾을 수 없습니다."}),
         },
     )
+    # 팀 커뮤니티 수정
     def put(self, request: Request, team_id: int, post_id: int) -> Response:
         post = TeamPost.objects.filter(id=post_id, team_id=team_id).first()
         if not post:
@@ -93,6 +111,7 @@ class TeamPostDetailAPIView(APIView):
         description="특정 팀 커뮤니티 게시글을 삭제합니다. (작성자만 삭제 가능)",
         responses={204: OpenApiExample("성공 응답 예시", value={"detail": "게시글 삭제 완료"})},
     )
+    # 팀 커뮤니티 삭제
     def delete(self, request: Request, team_id: int, post_id: int) -> Response:
         post = TeamPost.objects.filter(id=post_id, team_id=team_id).first()
         if not post:
@@ -104,15 +123,25 @@ class TeamPostDetailAPIView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# 선수 게시글 관련 뷰
+# -----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
+
+
 class PlayerPostListCreateAPIView(APIView):
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+
+    def get_permissions(self) -> List[BasePermission]:
+        if self.request.method == "POST":
+            return [IsAuthenticated()]
+        return super().get_permissions()  # type: ignore
 
     @extend_schema(
         summary="선수 커뮤니티 게시글 조회",
         description="특정 선수의 커뮤니티 게시글 목록을 조회합니다.",
         responses={200: PlayerPostSerializer(many=True)},
     )
+    # 선수 커뮤니티 조회
     def get(self, request: Request, player_id: int) -> Response:
         posts = PlayerPost.objects.filter(player_id=player_id)
         serializer = PlayerPostSerializer(posts, many=True)
@@ -127,6 +156,7 @@ class PlayerPostListCreateAPIView(APIView):
             400: OpenApiExample("실패 응답 예시", value={"detail": "선수를 찾을 수 없습니다."}),
         },
     )
+    # 선수 커뮤니티 생성
     def post(self, request: Request, player_id: int) -> Response:
         player = Player.objects.filter(id=player_id).first()
         if not player:
@@ -139,13 +169,20 @@ class PlayerPostListCreateAPIView(APIView):
 
 
 class PlayerPostDetailAPIView(APIView):
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+
+    def get_permissions(self) -> List[BasePermission]:
+        if self.request.method in ["PUT", "DELETE"]:
+            return [IsAuthenticated()]
+        return super().get_permissions()  # type: ignore
 
     @extend_schema(
         summary="선수 커뮤니티 게시글 상세 조회",
         description="특정 선수 커뮤니티 게시글의 상세 정보를 조회합니다.",
         responses={200: PlayerPostSerializer},
     )
+    # 선수 커뮤니티 상세 조회
     def get(self, request: Request, player_id: int, post_id: int) -> Response:
         post = PlayerPost.objects.filter(id=post_id, player_id=player_id).first()
         if not post:
@@ -162,6 +199,7 @@ class PlayerPostDetailAPIView(APIView):
             400: OpenApiExample("실패 응답 예시", value={"detail": "게시글을 찾을 수 없습니다."}),
         },
     )
+    # 선수 커뮤니티 수정
     def put(self, request: Request, player_id: int, post_id: int) -> Response:
         post = PlayerPost.objects.filter(id=post_id, player_id=player_id).first()
         if not post:
@@ -179,6 +217,7 @@ class PlayerPostDetailAPIView(APIView):
         description="특정 선수 커뮤니티 게시글을 삭제합니다. (작성자만 삭제 가능)",
         responses={204: OpenApiExample("성공 응답 예시", value={"detail": "게시글 삭제 완료"})},
     )
+    # 선수 커뮤니티 삭제
     def delete(self, request: Request, player_id: int, post_id: int) -> Response:
         post = PlayerPost.objects.filter(id=post_id, player_id=player_id).first()
         if not post:
@@ -189,9 +228,18 @@ class PlayerPostDetailAPIView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# 팀 댓글 관련 뷰
+# -----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
+
+
 class TeamCommentCreateAPIView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+
+    def get_permissions(self) -> List[BasePermission]:
+        if self.request.method == "POST":
+            return [IsAuthenticated()]
+        return super().get_permissions()  # type: ignore
 
     @extend_schema(
         summary="팀 커뮤니티 댓글 작성",
@@ -202,6 +250,7 @@ class TeamCommentCreateAPIView(APIView):
             400: OpenApiExample("실패 응답 예시", value={"detail": "게시글을 찾을 수 없습니다."}),
         },
     )
+    # 팀 커뮤니티 댓글 작성
     def post(self, request: Request, team_id: int, post_id: int) -> Response:
         post = TeamPost.objects.filter(id=post_id, team_id=team_id).first()
         if not post:
@@ -214,13 +263,20 @@ class TeamCommentCreateAPIView(APIView):
 
 
 class TeamCommentDetailAPIView(APIView):
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+
+    def get_permissions(self) -> List[BasePermission]:
+        if self.request.method in ["PUT", "DELETE"]:
+            return [IsAuthenticated()]
+        return super().get_permissions()  # type: ignore
 
     @extend_schema(
         summary="팀 커뮤니티 댓글 상세 조회",
         description="특정 팀 커뮤니티 댓글의 상세 정보를 조회합니다.",
         responses={200: TeamCommentSerializer},
     )
+    # 팀 커뮤니티 댓글 상세 조회
     def get(self, request: Request, comment_id: int) -> Response:
         comment = TeamComment.objects.filter(id=comment_id).first()
         if not comment:
@@ -237,6 +293,7 @@ class TeamCommentDetailAPIView(APIView):
             400: OpenApiExample("실패 응답 예시", value={"detail": "댓글을 찾을 수 없습니다."}),
         },
     )
+    # 팀 커뮤니티 댓글 수정
     def put(self, request: Request, comment_id: int) -> Response:
         comment = TeamComment.objects.filter(id=comment_id).first()
         if not comment:
@@ -254,6 +311,7 @@ class TeamCommentDetailAPIView(APIView):
         description="특정 팀 커뮤니티 댓글을 삭제합니다. (작성자만 삭제 가능)",
         responses={204: OpenApiExample("성공 응답 예시", value={"detail": "댓글 삭제 완료"})},
     )
+    # 팀 커뮤니티 댓글 삭제
     def delete(self, request: Request, comment_id: int) -> Response:
         comment = TeamComment.objects.filter(id=comment_id).first()
         if not comment:
@@ -264,9 +322,18 @@ class TeamCommentDetailAPIView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# 선수 댓글 관련 뷰
+# -----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
+
+
 class PlayerCommentCreateAPIView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+
+    def get_permissions(self) -> List[BasePermission]:
+        if self.request.method == "POST":
+            return [IsAuthenticated()]
+        return super().get_permissions()  # type: ignore
 
     @extend_schema(
         summary="선수 커뮤니티 댓글 작성",
@@ -277,6 +344,7 @@ class PlayerCommentCreateAPIView(APIView):
             400: OpenApiExample("실패 응답 예시", value={"detail": "게시글을 찾을 수 없습니다."}),
         },
     )
+    # 선수 커뮤니티 댓글 작성
     def post(self, request: Request, player_id: int, post_id: int) -> Response:
         post = PlayerPost.objects.filter(id=post_id, player_id=player_id).first()
         if not post:
@@ -289,13 +357,20 @@ class PlayerCommentCreateAPIView(APIView):
 
 
 class PlayerCommentDetailAPIView(APIView):
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+
+    def get_permissions(self) -> List[BasePermission]:
+        if self.request.method in ["PUT", "DELETE"]:
+            return [IsAuthenticated()]
+        return super().get_permissions()  # type: ignore
 
     @extend_schema(
         summary="선수 커뮤니티 댓글 상세 조회",
         description="특정 선수 커뮤니티 댓글의 상세 정보를 조회합니다.",
         responses={200: PlayerCommentSerializer},
     )
+    # 선수 커뮤니티 댓글 상세 조회
     def get(self, request: Request, comment_id: int) -> Response:
         comment = PlayerComment.objects.filter(id=comment_id).first()
         if not comment:
@@ -312,6 +387,7 @@ class PlayerCommentDetailAPIView(APIView):
             400: OpenApiExample("실패 응답 예시", value={"detail": "댓글을 찾을 수 없습니다."}),
         },
     )
+    # 선수 커뮤니티 댓글 수정
     def put(self, request: Request, comment_id: int) -> Response:
         comment = PlayerComment.objects.filter(id=comment_id).first()
         if not comment:
@@ -329,6 +405,7 @@ class PlayerCommentDetailAPIView(APIView):
         description="특정 선수 커뮤니티 댓글을 삭제합니다. (작성자만 삭제 가능)",
         responses={204: OpenApiExample("성공 응답 예시", value={"detail": "댓글 삭제 완료"})},
     )
+    # 선수 커뮤니티 댓글 삭제
     def delete(self, request: Request, comment_id: int) -> Response:
         comment = PlayerComment.objects.filter(id=comment_id).first()
         if not comment:
