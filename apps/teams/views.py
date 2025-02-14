@@ -23,11 +23,11 @@ class TeamList(APIView):
     def get_authenticators(self):
         if not hasattr(self, "request") or self.request is None:
             return super().get_authenticators()
-        
+
         if self.request.method == "GET":
             return []
         return [JWTAuthentication()]
-    
+
     def get_permissions(self) -> List[Any]:
         if self.request.method in ["POST"]:
             return [IsAuthenticated(), IsAdminUser()]
@@ -76,7 +76,7 @@ class TeamDetail(APIView):
     def get_authenticators(self):
         if not hasattr(self, "request") or self.request is None:
             return super().get_authenticators()
-        
+
         if self.request.method == "GET":
             return []
         return [JWTAuthentication()]
@@ -200,11 +200,11 @@ class TeamRank(APIView):
 
 
 class TeamScheduleList(APIView):
-    
+
     def get_authenticators(self):
         if not hasattr(self, "request") or self.request is None:
             return super().get_authenticators()
-        
+
         if self.request.method == "GET":
             return []
         return [JWTAuthentication()]
@@ -259,12 +259,11 @@ class TeamScheduleDetail(APIView):
     def get_authenticators(self):
         if not hasattr(self, "request") or self.request is None:
             return super().get_authenticators()
-        
+
         if self.request.method == "GET":
             return []
         return [JWTAuthentication()]
 
-    
     def get_permissions(self) -> List[Any]:
         if self.request.method in ["PATCH", "DELETE"]:
             return [IsAuthenticated(), IsAdminUser()]

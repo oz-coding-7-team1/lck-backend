@@ -22,16 +22,16 @@ from .serializers import (
 
 
 class PlayerList(APIView):
-    
+
     def get_authenticators(self):
         # self.request가 None이면 기본 인증 방식을 사용
         if not hasattr(self, "request") or self.request is None:
             return super().get_authenticators()
-        
+
         if self.request.method == "GET":
             return []  # GET 요청에서는 인증을 아예 하지 않음 (JWT 불필요)
         return [JWTAuthentication()]  # 다른 요청에서는 JWT 필요
-    
+
     def get_permissions(self) -> List[Any]:
         """
         GET 요청은 누구나 접근할 수 있지만,
@@ -93,11 +93,11 @@ class PlayerList(APIView):
 
 
 class PlayerDetail(APIView):
-    
+
     def get_authenticators(self):
         if not hasattr(self, "request") or self.request is None:
             return super().get_authenticators()
-        
+
         if self.request.method == "GET":
             return []
         return [JWTAuthentication()]
@@ -337,11 +337,11 @@ class PlayerScheduleList(APIView):
     def get_authenticators(self):
         if not hasattr(self, "request") or self.request is None:
             return super().get_authenticators()
-        
+
         if self.request.method == "GET":
             return []
         return [JWTAuthentication()]
-    
+
     def get_permissions(self) -> List[Any]:
         if self.request.method == "POST":
             return [IsAuthenticated(), IsAdminUser()]
@@ -402,11 +402,11 @@ class PlayerScheduleDetail(APIView):
     def get_authenticators(self):
         if not hasattr(self, "request") or self.request is None:
             return super().get_authenticators()
-        
+
         if self.request.method == "GET":
             return []
         return [JWTAuthentication()]
-    
+
     def get_permissions(self) -> List[Any]:
         if self.request.method in ["PATCH", "DELETE"]:
             return [IsAuthenticated(), IsAdminUser()]
