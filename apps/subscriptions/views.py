@@ -212,6 +212,7 @@ class TeamSubscriptionDetailView(APIView):
 class PlayerSubscriptionCountView(APIView):
     permission_classes = (AllowAny,)
     authentication_classes = ()
+
     @extend_schema(summary="선수 구독 수")
     def get(self, request: Any, player_id: int) -> Response:
         count = PlayerSubscription.objects.filter(player_id=player_id, deleted_at__isnull=True).count()
@@ -221,6 +222,7 @@ class PlayerSubscriptionCountView(APIView):
 class TeamSubscriptionCountView(APIView):
     permission_classes = (AllowAny,)
     authentication_classes = ()
+
     @extend_schema(summary="팀 구독 수")
     def get(self, request: Any, team_id: int) -> Response:
         count = TeamSubscription.objects.filter(team_id=team_id, deleted_at__isnull=True).count()

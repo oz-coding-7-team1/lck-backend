@@ -7,7 +7,12 @@ from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.exceptions import ParseError, PermissionDenied
-from rest_framework.permissions import AllowAny, BasePermission, IsAuthenticated, IsAdminUser
+from rest_framework.permissions import (
+    AllowAny,
+    BasePermission,
+    IsAdminUser,
+    IsAuthenticated,
+)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -76,16 +81,17 @@ class LoginView(APIView):
     )
     def post(self, request: Any) -> Response:
         email = request.data.get("email")
+        if not email:
+            return Response({"detail": "이메일을 입력하세요"}, status=status.HTTP_400_BAD_REQUEST)
         password = request.data.get("password")
+        if not password:
+            return Response({"detail": "비밀번호를 입력하세요"}, status=status.HTTP_400_BAD_REQUEST)
         user = authenticate(email=email, password=password)
-        
+
         if not User.objects.filter(email=email).exists():
-            return Response({"detail": "존재하지 않는 email 입니다."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if not User.objects.filter(password=password).exists():
-            return Response({"detail": "비밀번호가 틀렸습니다."},status=status.HTTP_400_BAD_REQUEST)
-        
-        if user is not None:  # 유저가 존재하면 True
+            return Response({"detail": "존재하지 않는 이메일입니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if user is not None:  # 유저인증에 성공하면 True
             refresh = RefreshToken.for_user(user)  # JWT token 생성
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
@@ -105,7 +111,7 @@ class LoginView(APIView):
             )
             return response
         else:
-            return Response({"detail": "잘못된 인증 정보입니다."}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"detail": "잘못된 비밀번호입니다."}, status=status.HTTP_401_UNAUTHORIZED)
 
     """
     - set_cookie 메서드 (응답 헤더에 쿠키를 설정하게 해주는 메서드)
@@ -119,10 +125,11 @@ class LoginView(APIView):
             예) 사용자의 인증 정보를 바탕으로 금전 이체, 개인정보 변경 등 원치 않는 작업 실행
     """
 
+
 # verify에 권한 추가
 class CustomTokenVerifyView(TokenVerifyView):
-    permission_classes = (IsAuthenticated,)
-    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)  # type: ignore
+    authentication_classes = (JWTAuthentication,)  # type: ignore
 
 
 # access token 재발급
@@ -343,7 +350,7 @@ class TermsListView(APIView):
 # 사용자 약관 동의 내역 조회
 class TermsAgreementListView(APIView):
     permission_classes = (AllowAny,)
-    
+
     @extend_schema(
         responses={200: TermsAgreementSerializer(many=True)},
         summary="사용자 약관 동의 내역 조회",
@@ -357,8 +364,11 @@ class TermsAgreementListView(APIView):
 
 # 선택적 약관 동의 수정
 class TermsAgreementUpdateView(APIView):
-    permission_classes = (IsAuthenticated, IsAdminUser,)
-    
+    permission_classes = (
+        IsAuthenticated,
+        IsAdminUser,
+    )
+
     @extend_schema(
         request=TermsAgreementSerializer,
         responses={

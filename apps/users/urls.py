@@ -1,10 +1,11 @@
 from django.urls import path
+
 from apps.users.views import (
     ChangePasswordView,
+    CustomTokenVerifyView,
     LoginView,
     LogoutView,
     MyPageView,
-    CustomTokenVerifyView,
     RefreshTokenView,
     SignupView,
     TermsAgreementListView,
