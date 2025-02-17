@@ -2,7 +2,7 @@ from typing import Any, List
 
 from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
-from rest_framework.permissions import AllowAny, BasePermission, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -21,8 +21,6 @@ from .serializers import (
 
 
 class TeamPostListCreateAPIView(APIView):
-    permission_classes = (AllowAny,)
-    authentication_classes = (JWTAuthentication,)
 
     def get_authenticators(self) -> List[Any]:
         if not hasattr(self, "request") or self.request is None:
@@ -32,10 +30,10 @@ class TeamPostListCreateAPIView(APIView):
             return []
         return [JWTAuthentication()]
 
-    def get_permissions(self) -> List[BasePermission]:
-        if self.request.method == "POST":
-            return [IsAuthenticated()]
-        return super().get_permissions()  # type: ignore
+    def get_permissions(self) -> List[Any]:
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
     @extend_schema(
         summary="팀 커뮤니티 게시글 조회",
@@ -71,8 +69,6 @@ class TeamPostListCreateAPIView(APIView):
 
 
 class TeamPostDetailAPIView(APIView):
-    permission_classes = (AllowAny,)
-    authentication_classes = (JWTAuthentication,)
 
     def get_authenticators(self) -> List[Any]:
         if not hasattr(self, "request") or self.request is None:
@@ -82,10 +78,10 @@ class TeamPostDetailAPIView(APIView):
             return []
         return [JWTAuthentication()]
 
-    def get_permissions(self) -> List[BasePermission]:
-        if self.request.method in ["PUT", "DELETE"]:
-            return [IsAuthenticated()]
-        return super().get_permissions()  # type: ignore
+    def get_permissions(self) -> List[Any]:
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
     @extend_schema(
         summary="팀 커뮤니티 게시글 상세 조회",
@@ -106,14 +102,14 @@ class TeamPostDetailAPIView(APIView):
         request=TeamPostSerializer,
         responses={
             200: OpenApiExample("성공 응답 예시", value={"detail": "게시글 수정 완료"}),
-            400: OpenApiExample("실패 응답 예시", value={"detail": "게시글을 찾을 수 없습니다."}),
+            404: OpenApiExample("실패 응답 예시", value={"detail": "게시글을 찾을 수 없습니다."}),
         },
     )
     # 팀 커뮤니티 수정
     def put(self, request: Request, team_id: int, post_id: int) -> Response:
         post = TeamPost.objects.filter(id=post_id, team_id=team_id).first()
         if not post:
-            return Response({"detail": "게시글을 찾을 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "게시글을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
         # 수정 권한 확인 (작성자만 수정 가능)
         if post.user != request.user:
             return Response({"detail": "수정 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
@@ -145,8 +141,6 @@ class TeamPostDetailAPIView(APIView):
 
 
 class PlayerPostListCreateAPIView(APIView):
-    permission_classes = (AllowAny,)
-    authentication_classes = (JWTAuthentication,)
 
     def get_authenticators(self) -> List[Any]:
         if not hasattr(self, "request") or self.request is None:
@@ -156,10 +150,10 @@ class PlayerPostListCreateAPIView(APIView):
             return []
         return [JWTAuthentication()]
 
-    def get_permissions(self) -> List[BasePermission]:
-        if self.request.method == "POST":
-            return [IsAuthenticated()]
-        return super().get_permissions()  # type: ignore
+    def get_permissions(self) -> List[Any]:
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
     @extend_schema(
         summary="선수 커뮤니티 게시글 조회",
@@ -178,14 +172,14 @@ class PlayerPostListCreateAPIView(APIView):
         request=PlayerPostSerializer,
         responses={
             201: OpenApiExample("성공 응답 예시", value={"detail": "게시글 생성 완료"}),
-            400: OpenApiExample("실패 응답 예시", value={"detail": "선수를 찾을 수 없습니다."}),
+            404: OpenApiExample("실패 응답 예시", value={"detail": "선수를 찾을 수 없습니다."}),
         },
     )
     # 선수 커뮤니티 생성
     def post(self, request: Request, player_id: int) -> Response:
         player = Player.objects.filter(id=player_id).first()
         if not player:
-            return Response({"detail": "선수를 찾을 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "선수를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
         serializer = PlayerPostSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(user=request.user, player=player)
@@ -194,8 +188,6 @@ class PlayerPostListCreateAPIView(APIView):
 
 
 class PlayerPostDetailAPIView(APIView):
-    permission_classes = (AllowAny,)
-    authentication_classes = (JWTAuthentication,)
 
     def get_authenticators(self) -> List[Any]:
         if not hasattr(self, "request") or self.request is None:
@@ -205,10 +197,10 @@ class PlayerPostDetailAPIView(APIView):
             return []
         return [JWTAuthentication()]
 
-    def get_permissions(self) -> List[BasePermission]:
-        if self.request.method in ["PUT", "DELETE"]:
-            return [IsAuthenticated()]
-        return super().get_permissions()  # type: ignore
+    def get_permissions(self) -> List[Any]:
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
     @extend_schema(
         summary="선수 커뮤니티 게시글 상세 조회",
@@ -219,7 +211,7 @@ class PlayerPostDetailAPIView(APIView):
     def get(self, request: Request, player_id: int, post_id: int) -> Response:
         post = PlayerPost.objects.filter(id=post_id, player_id=player_id).first()
         if not post:
-            return Response({"detail": "게시글을 찾을 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "게시글을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
         serializer = PlayerPostSerializer(post)
         return Response(serializer.data)
 
@@ -229,14 +221,14 @@ class PlayerPostDetailAPIView(APIView):
         request=PlayerPostSerializer,
         responses={
             200: OpenApiExample("성공 응답 예시", value={"detail": "게시글 수정 완료"}),
-            400: OpenApiExample("실패 응답 예시", value={"detail": "게시글을 찾을 수 없습니다."}),
+            404: OpenApiExample("실패 응답 예시", value={"detail": "게시글을 찾을 수 없습니다."}),
         },
     )
     # 선수 커뮤니티 수정
     def put(self, request: Request, player_id: int, post_id: int) -> Response:
         post = PlayerPost.objects.filter(id=post_id, player_id=player_id).first()
         if not post:
-            return Response({"detail": "게시글을 찾을 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "게시글을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
         if post.user != request.user:
             return Response({"detail": "수정 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
         serializer = PlayerPostSerializer(post, data=request.data)
@@ -254,7 +246,7 @@ class PlayerPostDetailAPIView(APIView):
     def delete(self, request: Request, player_id: int, post_id: int) -> Response:
         post = PlayerPost.objects.filter(id=post_id, player_id=player_id).first()
         if not post:
-            return Response({"detail": "게시글을 찾을 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "게시글을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
         if post.user != request.user:
             return Response({"detail": "삭제 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
         post.delete()
@@ -266,13 +258,6 @@ class PlayerPostDetailAPIView(APIView):
 
 
 class TeamCommentCreateAPIView(APIView):
-    permission_classes = (AllowAny,)
-    authentication_classes = (JWTAuthentication,)
-
-    def get_permissions(self) -> List[BasePermission]:
-        if self.request.method == "POST":
-            return [IsAuthenticated()]
-        return super().get_permissions()  # type: ignore
 
     @extend_schema(
         summary="팀 커뮤니티 댓글 작성",
@@ -296,8 +281,6 @@ class TeamCommentCreateAPIView(APIView):
 
 
 class TeamCommentDetailAPIView(APIView):
-    permission_classes = (AllowAny,)
-    authentication_classes = (JWTAuthentication,)
 
     def get_authenticators(self) -> List[Any]:
         if not hasattr(self, "request") or self.request is None:
@@ -307,10 +290,10 @@ class TeamCommentDetailAPIView(APIView):
             return []
         return [JWTAuthentication()]
 
-    def get_permissions(self) -> List[BasePermission]:
-        if self.request.method in ["PUT", "DELETE"]:
-            return [IsAuthenticated()]
-        return super().get_permissions()  # type: ignore
+    def get_permissions(self) -> List[Any]:
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
     @extend_schema(
         summary="팀 커뮤니티 댓글 상세 조회",
@@ -356,7 +339,7 @@ class TeamCommentDetailAPIView(APIView):
     def delete(self, request: Request, comment_id: int) -> Response:
         comment = TeamComment.objects.filter(id=comment_id).first()
         if not comment:
-            return Response({"detail": "댓글을 찾을 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "댓글을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
         if comment.user != request.user:
             return Response({"detail": "삭제 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
         comment.delete()
@@ -368,13 +351,11 @@ class TeamCommentDetailAPIView(APIView):
 
 
 class PlayerCommentCreateAPIView(APIView):
-    permission_classes = (AllowAny,)
-    authentication_classes = (JWTAuthentication,)
 
-    def get_permissions(self) -> List[BasePermission]:
-        if self.request.method == "POST":
-            return [IsAuthenticated()]
-        return super().get_permissions()  # type: ignore
+    def get_permissions(self) -> List[Any]:
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
     @extend_schema(
         summary="선수 커뮤니티 댓글 작성",
@@ -398,8 +379,6 @@ class PlayerCommentCreateAPIView(APIView):
 
 
 class PlayerCommentDetailAPIView(APIView):
-    permission_classes = (AllowAny,)
-    authentication_classes = (JWTAuthentication,)
 
     def get_authenticators(self) -> List[Any]:
         if not hasattr(self, "request") or self.request is None:
@@ -409,10 +388,10 @@ class PlayerCommentDetailAPIView(APIView):
             return []
         return [JWTAuthentication()]
 
-    def get_permissions(self) -> List[BasePermission]:
-        if self.request.method in ["PUT", "DELETE"]:
-            return [IsAuthenticated()]
-        return super().get_permissions()  # type: ignore
+    def get_permissions(self) -> List[Any]:
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
     @extend_schema(
         summary="선수 커뮤니티 댓글 상세 조회",
@@ -458,7 +437,7 @@ class PlayerCommentDetailAPIView(APIView):
     def delete(self, request: Request, comment_id: int) -> Response:
         comment = PlayerComment.objects.filter(id=comment_id).first()
         if not comment:
-            return Response({"detail": "댓글을 찾을 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "댓글을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
         if comment.user != request.user:
             return Response({"detail": "삭제 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
         comment.delete()
