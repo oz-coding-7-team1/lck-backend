@@ -1,15 +1,14 @@
 from datetime import timedelta
-from typing import Any, List, Optional, Sequence
+from typing import Any, Optional
 
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from drf_spectacular.utils import OpenApiExample, OpenApiParameter, extend_schema
+from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
-from rest_framework.permissions import BasePermission, IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from apps.players.models import Player
 from apps.players.serializers import PlayerSerializer
@@ -22,17 +21,6 @@ from .serializers import PlayerSubscriptionSerializer, TeamSubscriptionSerialize
 
 class PlayerSubscriptionView(APIView):
     # Sequence: 순서를 가진 데이터의 집합을 나타내는 타입(list, tuple, str)
-    # 이렇게 관리해보고 싶어서 만들어봄
-    def get_permissions(self) -> List[BasePermission]:
-        if self.request.method in ["POST", "DELETE", "GET"]:
-            # authentication은 어떤 사용자로부터 왔는지를 판별, JWT로 검증하겠다는 의미
-            self.authentication_classes = (JWTAuthentication,)  # 반환 필요 없음
-            # permission은 인증된 사용자가 해당 리소스에 접근할 권한이 있는지를 판단
-            # 인등된 사용자만 접근 가능하게 하겠다는 의미
-            self.permission_classes = (IsAuthenticated,)  # 반환 필요함
-        # permission_classes의 각 클래스의 인스턴스를 생성하여 반환해야 함
-        return [permission() for permission in self.permission_classes]  # type: ignore
-
     @extend_schema(
         summary="선수 구독 생성",
         responses={
@@ -125,9 +113,6 @@ class PlayerSubscriptionView(APIView):
 
 
 class PlayerSubscriptionDetailView(APIView):
-    authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
-
     @extend_schema(summary="최애 선수 조회")
     def get(self, request: Any) -> Response:
         # 현재 로그인한 사용자의 활성화된 구독 선수 정보 조회
@@ -142,9 +127,6 @@ class PlayerSubscriptionDetailView(APIView):
 
 
 class TeamSubscriptionView(APIView):
-    authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
-
     @extend_schema(
         summary="팀 구독 생성",
         responses={
@@ -214,9 +196,6 @@ class TeamSubscriptionView(APIView):
 
 
 class TeamSubscriptionDetailView(APIView):
-    authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
-
     @extend_schema(summary="최애 팀 조회")
     def get(self, request: Any) -> Response:
         # 현재 로그인한 사용자의 활성화된 구독 선수 정보 조회
@@ -231,6 +210,8 @@ class TeamSubscriptionDetailView(APIView):
 
 
 class PlayerSubscriptionCountView(APIView):
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
     @extend_schema(summary="선수 구독 수")
     def get(self, request: Any, player_id: int) -> Response:
         count = PlayerSubscription.objects.filter(player_id=player_id, deleted_at__isnull=True).count()
@@ -238,6 +219,8 @@ class PlayerSubscriptionCountView(APIView):
 
 
 class TeamSubscriptionCountView(APIView):
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
     @extend_schema(summary="팀 구독 수")
     def get(self, request: Any, team_id: int) -> Response:
         count = TeamSubscription.objects.filter(team_id=team_id, deleted_at__isnull=True).count()
