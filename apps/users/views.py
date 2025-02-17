@@ -7,12 +7,13 @@ from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.exceptions import ParseError, PermissionDenied
-from rest_framework.permissions import AllowAny, BasePermission, IsAuthenticated
+from rest_framework.permissions import AllowAny, BasePermission, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenVerifyView
 
 from .models import Terms, TermsAgreement, User
 from .serializers import (
@@ -28,7 +29,7 @@ from .serializers import (
 
 # 회원가입 (약관 동의 포함)
 class SignupView(APIView):
-    authentication_classes = []
+    authentication_classes = ()
     permission_classes = (AllowAny,)
 
     @extend_schema(
@@ -61,7 +62,7 @@ class SignupView(APIView):
 
 # 로그인
 class LoginView(APIView):
-    authentication_classes = []
+    authentication_classes = ()
     permission_classes = (AllowAny,)
 
     @extend_schema(
@@ -77,6 +78,13 @@ class LoginView(APIView):
         email = request.data.get("email")
         password = request.data.get("password")
         user = authenticate(email=email, password=password)
+        
+        if not User.objects.filter(email=email).exists():
+            return Response({"detail": "존재하지 않는 email 입니다."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not User.objects.filter(password=password).exists():
+            return Response({"detail": "비밀번호가 틀렸습니다."},status=status.HTTP_400_BAD_REQUEST)
+        
         if user is not None:  # 유저가 존재하면 True
             refresh = RefreshToken.for_user(user)  # JWT token 생성
             access_token = str(refresh.access_token)
@@ -95,7 +103,6 @@ class LoginView(APIView):
                 secure=settings.REFRESH_TOKEN_COOKIE_SECURE,  # True: HTTPS 환경에서만 쿠키가 전송되도록 함
                 samesite="Strict",  # 같은 사이트에서만 쿠키 전송
             )
-
             return response
         else:
             return Response({"detail": "잘못된 인증 정보입니다."}, status=status.HTTP_401_UNAUTHORIZED)
@@ -111,6 +118,11 @@ class LoginView(APIView):
     - CSRF (크로스 사이트 요청 위조): 사용자가 이미 인증된 상태에서, 악의적인 사이트나 스크립트가 사용자의 의지와 상관없이 해당 사용자의 권한으로 요청을 보내도록 유도하는 공격
             예) 사용자의 인증 정보를 바탕으로 금전 이체, 개인정보 변경 등 원치 않는 작업 실행
     """
+
+# verify에 권한 추가
+class CustomTokenVerifyView(TokenVerifyView):
+    permission_classes = (IsAuthenticated,)
+    authentication_classes = (JWTAuthentication,)
 
 
 # access token 재발급
@@ -188,9 +200,6 @@ class LogoutView(APIView):
 
 # 회원 탈퇴
 class WithdrawView(APIView):
-    authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
-
     @extend_schema(
         responses={
             200: dict,
@@ -221,8 +230,6 @@ class WithdrawView(APIView):
 
 # 회원정보 조회, 수정 (MyPage)
 class MyPageView(APIView):
-    authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
 
     @extend_schema(
         responses={200: MypageSerializer},
@@ -259,8 +266,6 @@ class MyPageView(APIView):
 
 # 비밀번호 변경
 class ChangePasswordView(APIView):
-    authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
 
     @extend_schema(
         request=ChangePasswordSerializer,
@@ -305,7 +310,7 @@ class TermsListView(APIView):
 
     def get_permissions(self) -> List[BasePermission]:
         if self.request.method == "POST":
-            return [IsAuthenticated()]  # POST 요청은 관리자만 허용
+            return [IsAuthenticated(), IsAdminUser()]  # POST 요청은 관리자만 허용
         return [AllowAny()]  # GET 요청은 아무나 허용
 
     @extend_schema(
@@ -337,8 +342,8 @@ class TermsListView(APIView):
 
 # 사용자 약관 동의 내역 조회
 class TermsAgreementListView(APIView):
-    permission_classes = (IsAuthenticated,)
-
+    permission_classes = (AllowAny,)
+    
     @extend_schema(
         responses={200: TermsAgreementSerializer(many=True)},
         summary="사용자 약관 동의 내역 조회",
@@ -352,8 +357,8 @@ class TermsAgreementListView(APIView):
 
 # 선택적 약관 동의 수정
 class TermsAgreementUpdateView(APIView):
-    permission_classes = (IsAuthenticated,)
-
+    permission_classes = (IsAuthenticated, IsAdminUser,)
+    
     @extend_schema(
         request=TermsAgreementSerializer,
         responses={
