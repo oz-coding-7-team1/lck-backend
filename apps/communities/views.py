@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, List
 
 from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
@@ -23,6 +23,14 @@ from .serializers import (
 class TeamPostListCreateAPIView(APIView):
     permission_classes = (AllowAny,)
     authentication_classes = (JWTAuthentication,)
+
+    def get_authenticators(self) -> List[Any]:
+        if not hasattr(self, "request") or self.request is None:
+            return super().get_authenticators()
+
+        if self.request.method == "GET":
+            return []
+        return [JWTAuthentication()]
 
     def get_permissions(self) -> List[BasePermission]:
         if self.request.method == "POST":
@@ -65,6 +73,14 @@ class TeamPostListCreateAPIView(APIView):
 class TeamPostDetailAPIView(APIView):
     permission_classes = (AllowAny,)
     authentication_classes = (JWTAuthentication,)
+
+    def get_authenticators(self) -> List[Any]:
+        if not hasattr(self, "request") or self.request is None:
+            return super().get_authenticators()
+
+        if self.request.method == "GET":
+            return []
+        return [JWTAuthentication()]
 
     def get_permissions(self) -> List[BasePermission]:
         if self.request.method in ["PUT", "DELETE"]:
@@ -132,6 +148,14 @@ class PlayerPostListCreateAPIView(APIView):
     permission_classes = (AllowAny,)
     authentication_classes = (JWTAuthentication,)
 
+    def get_authenticators(self) -> List[Any]:
+        if not hasattr(self, "request") or self.request is None:
+            return super().get_authenticators()
+
+        if self.request.method == "GET":
+            return []
+        return [JWTAuthentication()]
+
     def get_permissions(self) -> List[BasePermission]:
         if self.request.method == "POST":
             return [IsAuthenticated()]
@@ -172,6 +196,14 @@ class PlayerPostListCreateAPIView(APIView):
 class PlayerPostDetailAPIView(APIView):
     permission_classes = (AllowAny,)
     authentication_classes = (JWTAuthentication,)
+
+    def get_authenticators(self) -> List[Any]:
+        if not hasattr(self, "request") or self.request is None:
+            return super().get_authenticators()
+
+        if self.request.method == "GET":
+            return []
+        return [JWTAuthentication()]
 
     def get_permissions(self) -> List[BasePermission]:
         if self.request.method in ["PUT", "DELETE"]:
@@ -267,6 +299,14 @@ class TeamCommentDetailAPIView(APIView):
     permission_classes = (AllowAny,)
     authentication_classes = (JWTAuthentication,)
 
+    def get_authenticators(self) -> List[Any]:
+        if not hasattr(self, "request") or self.request is None:
+            return super().get_authenticators()
+
+        if self.request.method == "GET":
+            return []
+        return [JWTAuthentication()]
+
     def get_permissions(self) -> List[BasePermission]:
         if self.request.method in ["PUT", "DELETE"]:
             return [IsAuthenticated()]
@@ -360,6 +400,14 @@ class PlayerCommentCreateAPIView(APIView):
 class PlayerCommentDetailAPIView(APIView):
     permission_classes = (AllowAny,)
     authentication_classes = (JWTAuthentication,)
+
+    def get_authenticators(self) -> List[Any]:
+        if not hasattr(self, "request") or self.request is None:
+            return super().get_authenticators()
+
+        if self.request.method == "GET":
+            return []
+        return [JWTAuthentication()]
 
     def get_permissions(self) -> List[BasePermission]:
         if self.request.method in ["PUT", "DELETE"]:
