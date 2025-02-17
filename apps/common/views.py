@@ -1,7 +1,6 @@
 from typing import Any
 
 from django.contrib.postgres.search import TrigramSimilarity
-
 from django.db.models import Subquery
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
