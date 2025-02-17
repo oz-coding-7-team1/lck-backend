@@ -6,6 +6,7 @@ from rest_framework.permissions import AllowAny, BasePermission, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from apps.players.models import Player
 from apps.teams.models import Team
@@ -21,7 +22,7 @@ from .serializers import (
 
 class TeamPostListCreateAPIView(APIView):
     permission_classes = (AllowAny,)
-    authentication_classes = ()
+    authentication_classes = (JWTAuthentication,)
 
     def get_permissions(self) -> List[BasePermission]:
         if self.request.method == "POST":
@@ -63,7 +64,7 @@ class TeamPostListCreateAPIView(APIView):
 
 class TeamPostDetailAPIView(APIView):
     permission_classes = (AllowAny,)
-    authentication_classes = ()
+    authentication_classes = (JWTAuthentication,)
 
     def get_permissions(self) -> List[BasePermission]:
         if self.request.method in ["PUT", "DELETE"]:
@@ -129,7 +130,7 @@ class TeamPostDetailAPIView(APIView):
 
 class PlayerPostListCreateAPIView(APIView):
     permission_classes = (AllowAny,)
-    authentication_classes = ()
+    authentication_classes = (JWTAuthentication,)
 
     def get_permissions(self) -> List[BasePermission]:
         if self.request.method == "POST":
@@ -170,7 +171,7 @@ class PlayerPostListCreateAPIView(APIView):
 
 class PlayerPostDetailAPIView(APIView):
     permission_classes = (AllowAny,)
-    authentication_classes = ()
+    authentication_classes = (JWTAuthentication,)
 
     def get_permissions(self) -> List[BasePermission]:
         if self.request.method in ["PUT", "DELETE"]:
@@ -234,7 +235,7 @@ class PlayerPostDetailAPIView(APIView):
 
 class TeamCommentCreateAPIView(APIView):
     permission_classes = (AllowAny,)
-    authentication_classes = ()
+    authentication_classes = (JWTAuthentication,)
 
     def get_permissions(self) -> List[BasePermission]:
         if self.request.method == "POST":
@@ -264,7 +265,7 @@ class TeamCommentCreateAPIView(APIView):
 
 class TeamCommentDetailAPIView(APIView):
     permission_classes = (AllowAny,)
-    authentication_classes = ()
+    authentication_classes = (JWTAuthentication,)
 
     def get_permissions(self) -> List[BasePermission]:
         if self.request.method in ["PUT", "DELETE"]:
@@ -328,7 +329,7 @@ class TeamCommentDetailAPIView(APIView):
 
 class PlayerCommentCreateAPIView(APIView):
     permission_classes = (AllowAny,)
-    authentication_classes = ()
+    authentication_classes = (JWTAuthentication,)
 
     def get_permissions(self) -> List[BasePermission]:
         if self.request.method == "POST":
@@ -358,7 +359,7 @@ class PlayerCommentCreateAPIView(APIView):
 
 class PlayerCommentDetailAPIView(APIView):
     permission_classes = (AllowAny,)
-    authentication_classes = ()
+    authentication_classes = (JWTAuthentication,)
 
     def get_permissions(self) -> List[BasePermission]:
         if self.request.method in ["PUT", "DELETE"]:
