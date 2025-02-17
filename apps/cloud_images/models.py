@@ -1,38 +1,33 @@
+import uuid
+
 from django.db import models
-from django_softdelete.models import SoftDeleteModel
 
-from apps.common.models import BaseModel
-from apps.players.models import Player
-from apps.teams.models import Team
+from apps.users.models import User
 
 
-# 선수 이미지 관리 모델
-class PlayerImage(BaseModel, SoftDeleteModel):
-    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name="player_images")
-    type = models.CharField(
-        max_length=15,
-        choices=[("profile", "프로필 이미지"), ("background", "배경 이미지"), ("gallery", "갤러리 이미지")],
-    )  # 이미지 분류 항목
-    url = models.CharField(max_length=255)  # 이미지 URL
+class CloudImage(models.Model):
+    CATEGORY_CHOICES = [
+        ("users", "Users"),
+        ("players", "Players"),
+        ("teams", "Teams"),
+    ]
 
-    def __str__(self) -> str:
-        return f"{self.player.name} - {self.type}"
+    IMAGE_TYPE_CHOICES = [
+        ("profile", "Profile Image"),
+        ("background", "Background Image"),
+        ("gallery", "Gallery Image"),
+        ("community", "Community Image"),  # users/community
+    ]
 
-    class Meta:
-        db_table = "player_image"
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    category = models.CharField(max_length=10, choices=CATEGORY_CHOICES)  # users, players, teams
+    image_type = models.CharField(max_length=15, choices=IMAGE_TYPE_CHOICES)  # profile, background, gallery, community
+    image_url = models.URLField()  # S3 URL 저장
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
 
-
-# 팀 이미지 정보를 저장하는 모멜
-class TeamImage(BaseModel, SoftDeleteModel):
-    # 팀에 해당하는 이미지
-    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="team_images")
-    # 이미지 카테고리(프로필, 배경, 갤러리)
-    type = models.CharField(max_length=15, help_text="이미지 카테고리(프로필, 배경, 갤러리)")
-    # 이미지 파일 경로
-    url = models.CharField(max_length=255, help_text="이미지 URL (uuid 기반 경로)")
-
-    def __str__(self) -> str:
-        return f"{self.team.name} - {self.type}"
+    def __str__(self):
+        return f"{self.category}/{self.image_type} - {self.image_url}"
 
     class Meta:
-        db_table = "team_image"
+        db_table = "cloud_images"
