@@ -2,7 +2,7 @@ from typing import Any
 
 from rest_framework import serializers
 
-from .models import Terms, TermsAgreement, User, UserImage
+from .models import Terms, TermsAgreement, User
 
 
 class UserSerializer(serializers.ModelSerializer[User]):
@@ -69,12 +69,6 @@ class SignupSerializer(serializers.ModelSerializer[User]):
         for term in terms_data:
             TermsAgreement.objects.create(user=user, **term)
         return user
-
-
-class UserImageSerializer(serializers.ModelSerializer[UserImage]):
-    class Meta:
-        model = UserImage
-        fields = ("id", "user", "url")
 
 
 class LoginSerializer(serializers.Serializer[None]):
