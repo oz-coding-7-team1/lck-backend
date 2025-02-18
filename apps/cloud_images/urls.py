@@ -3,12 +3,15 @@ from django.urls import path
 from .views import (
     PlayerGalleryListView,
     PlayerImageDeleteView,
+    PlayerImageDetailView,
     PlayerImageUploadView,
     TeamGalleryListView,
     TeamImageDeleteView,
+    TeamImageDetailView,
     TeamImageUploadView,
     UserImageDeleteView,
-    UserImageUploadView, UserProfileView, PlayerImageDetailView, TeamImageDetailView,
+    UserImageUploadView,
+    UserProfileView,
 )
 
 urlpatterns = [

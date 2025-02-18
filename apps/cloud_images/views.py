@@ -2,7 +2,7 @@ from typing import Any
 
 from django.shortcuts import get_object_or_404
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiRequest
+from drf_spectacular.utils import OpenApiParameter, OpenApiRequest, extend_schema
 from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny
@@ -269,9 +269,9 @@ class PlayerImageDetailView(APIView):
 
     @extend_schema(
         summary="선수 프로필 / 배경 이미지 조회 (가장 최근 이미지 1장)",
-        responses={200: PlayerImageSerializer, 404: {"description": "이미지 없음"}}
+        responses={200: PlayerImageSerializer, 404: {"description": "이미지 없음"}},
     )
-    def get(self, request, player_id, category):
+    def get(self, request: Any, player_id: int, category: str) -> Response:
         if category not in ["profile", "background"]:
             return Response({"error": "Invalid category"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -289,9 +289,9 @@ class TeamImageDetailView(APIView):
 
     @extend_schema(
         summary="팀 프로필 / 배경 이미지 조회 (가장 최근 이미지 1장)",
-        responses={200: TeamImageSerializer, 404: {"description": "이미지 없음"}}
+        responses={200: TeamImageSerializer, 404: {"description": "이미지 없음"}},
     )
-    def get(self, request, team_id, category):
+    def get(self, request: Any, team_id: int, category: str) -> Response:
         if category not in ["profile", "background"]:
             return Response({"error": "Invalid category"}, status=status.HTTP_400_BAD_REQUEST)
 
