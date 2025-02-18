@@ -8,7 +8,6 @@ IMAGE_CATEGORIES = [
     ("profile", "Profile Image"),
     ("background", "Background Image"),
     ("gallery", "Gallery Image"),
-    ("community", "Community Image"),
 ]
 
 
@@ -22,7 +21,7 @@ class UserImage(models.Model):
         return f"User {self.user.id} - {self.image_url}"
 
     class Meta:
-        db_table = "user_images"
+        db_table = "user_image"
 
 
 class PlayerImage(models.Model):
