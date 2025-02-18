@@ -68,4 +68,4 @@ class Like(BaseModel, SoftDeleteModel):  # type: ignore
     content_object = GenericForeignKey("content_type", "object_id")
 
     class Meta:
-        db_table = "iike"
+        db_table = "like"
