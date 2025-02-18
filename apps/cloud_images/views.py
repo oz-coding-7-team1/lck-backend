@@ -1,7 +1,8 @@
 from typing import Any
 
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiRequest
 from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny
@@ -19,7 +20,14 @@ class UserImageUploadView(APIView):
     @extend_schema(
         summary="유저 프로필 이미지 업로드",
         description="유저가 자신의 프로필 이미지를 업로드합니다. 기존 이미지가 있으면 삭제 후 새로 저장됩니다.",
-        request={"multipart/form-data": {"image": "binary"}},
+        request=OpenApiRequest(
+            {
+                "multipart/form-data": {
+                    "image": {"type": "string", "format": "binary"},
+                    "category": {"type": "string", "enum": ["profile", "background", "gallery", "community"]},
+                }
+            }
+        ),
         responses={201: UserImageSerializer, 400: {"description": "업로드 실패"}},
     )
     # 유저 프로필 이미지 업로드 및 수정
@@ -69,7 +77,14 @@ class PlayerImageUploadView(APIView):
     @extend_schema(
         summary="선수 이미지 업로드",
         description="관리자는 프로필/배경 이미지를 업로드할 수 있으며, 일반 유저는 갤러리/커뮤니티 이미지를 업로드할 수 있습니다.",
-        request={"multipart/form-data": {"image": "binary", "category": "string"}},
+        request=OpenApiRequest(
+            {
+                "multipart/form-data": {
+                    "image": {"type": "string", "format": "binary"},
+                    "category": {"type": "string", "enum": ["profile", "background", "gallery", "community"]},
+                }
+            }
+        ),
         responses={201: PlayerImageSerializer, 400: {"description": "업로드 실패"}, 403: {"description": "권한 없음"}},
     )
     # 선수 이미지 업로드 (관리자는 프로필 / 배경, 일반 유저는 갤러리 / 커뮤니티 가능)
@@ -137,7 +152,14 @@ class TeamImageUploadView(APIView):
     @extend_schema(
         summary="팀 이미지 업로드",
         description="관리자는 프로필/배경 이미지를 업로드할 수 있으며, 일반 유저는 갤러리/커뮤니티 이미지를 업로드할 수 있습니다.",
-        request={"multipart/form-data": {"image": "binary", "category": "string"}},
+        request=OpenApiRequest(
+            {
+                "multipart/form-data": {
+                    "image": {"type": "string", "format": "binary"},
+                    "category": {"type": "string", "enum": ["profile", "background", "gallery", "community"]},
+                }
+            }
+        ),
         responses={201: TeamImageSerializer, 400: {"description": "업로드 실패"}, 403: {"description": "권한 없음"}},
     )
     # 팀 이미지 업로드 (관리자는 프로필 / 배경, 일반 유저는 갤러리 / 커뮤니티 가능)
@@ -200,11 +222,11 @@ class TeamImageDeleteView(APIView):
 
 
 class PlayerGalleryListView(APIView):
+    authentication_classes = []
     permission_classes = (AllowAny,)
 
     @extend_schema(
         summary="특정 선수의 갤러리 이미지 목록 조회",
-        description="선수의 갤러리 이미지 전체를 반환합니다.",
         responses={200: PlayerImageSerializer(many=True)},
     )
     def get(self, request: Any, player_id: int) -> Response:
@@ -214,14 +236,68 @@ class PlayerGalleryListView(APIView):
 
 
 class TeamGalleryListView(APIView):
+    authentication_classes = []
     permission_classes = (AllowAny,)
 
     @extend_schema(
         summary="특정 팀의 갤러리 이미지 목록 조회",
-        description="팀의 갤러리 이미지 전체를 반환합니다.",
         responses={200: TeamImageSerializer(many=True)},
     )
     def get(self, request: Any, team_id: int) -> Response:
         images = TeamImage.objects.filter(team_id=team_id, category="gallery")
         serializer = TeamImageSerializer(images, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UserProfileView(APIView):
+    authentication_classes = []
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        summary="유저의 프로필 이미지 조회",
+        responses={200: UserImageSerializer(many=True)},
+    )
+    def get(self, request: Any, user_id: int) -> Response:
+        images = UserImage.objects.filter(user_id=user_id)
+        serializer = UserImageSerializer(images, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class PlayerImageDetailView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        summary="선수 프로필 / 배경 이미지 조회 (가장 최근 이미지 1장)",
+        responses={200: PlayerImageSerializer, 404: {"description": "이미지 없음"}}
+    )
+    def get(self, request, player_id, category):
+        if category not in ["profile", "background"]:
+            return Response({"error": "Invalid category"}, status=status.HTTP_400_BAD_REQUEST)
+
+        image = PlayerImage.objects.filter(player_id=player_id, category=category).order_by("-uploaded_at").first()
+        if not image:
+            return Response({"error": "Image not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = PlayerImageSerializer(image)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class TeamImageDetailView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        summary="팀 프로필 / 배경 이미지 조회 (가장 최근 이미지 1장)",
+        responses={200: TeamImageSerializer, 404: {"description": "이미지 없음"}}
+    )
+    def get(self, request, team_id, category):
+        if category not in ["profile", "background"]:
+            return Response({"error": "Invalid category"}, status=status.HTTP_400_BAD_REQUEST)
+
+        image = TeamImage.objects.filter(team_id=team_id, category=category).order_by("-uploaded_at").first()
+        if not image:
+            return Response({"error": "Image not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = TeamImageSerializer(image)
         return Response(serializer.data, status=status.HTTP_200_OK)
