@@ -1,7 +1,7 @@
 import uuid
 from typing import Any, Optional, Tuple
 
-from django.conf import settings  # -> DJANGO_SETTINGS_MODULE 설정에 따라 가져옴
+from config.settings import base
 
 # 허용된 확장자 목록
 ALLOWED_EXTENSIONS = {"jpeg", "png", "jpg", "gif"}
@@ -21,7 +21,7 @@ def validate_file_extension(filename: str) -> Optional[Tuple[str, str]]:
     return file_name, file_extension
 
 
-def upload_image_to_s3(file: Any, category: str, instance_type: str, object_id: int) -> Optional[str]:
+def upload_image_to_s3(file: Any, category: str, instance_type: str, object_identifier: int | str) -> Optional[str]:
     """
     S3 에 이미지 업로드 후 URL 반환
 
@@ -29,7 +29,7 @@ def upload_image_to_s3(file: Any, category: str, instance_type: str, object_id: 
         file (Any); 업로드할 파일 객체
         category (str): 이미지 카테고리
         instance_type (str): "users", "players", "teams" 중 하나
-        object_id (int): 해당 객체의 ID (user_id, player_id, team_id)
+        object_identifier (int | str): 해당 객체의 식별자 (user_id, player_nickname, team_name)
 
     Returns:
         Optional[str]: 업로드된 파일의 S3 URL 또는 None (오류 발생 시)
@@ -45,18 +45,18 @@ def upload_image_to_s3(file: Any, category: str, instance_type: str, object_id: 
 
     # S3 저장 경로 설정
     if instance_type == "users":
-        s3_path = f"media/users/{object_id}/{new_filename}"
+        s3_path = f"users_images/{object_identifier}/{new_filename}"
     elif instance_type == "players":
-        s3_path = f"media/players/{object_id}/{category}/{new_filename}"
+        s3_path = f"players_images/{object_identifier}/{category}/{new_filename}"
     elif instance_type == "teams":
-        s3_path = f"media/teams/{object_id}/{category}/{new_filename}"
+        s3_path = f"teams_images/{object_identifier}/{category}/{new_filename}"
     else:
         print(f"Invalid instance type: {instance_type}")
         return None
 
     try:
-        settings.s3_client.upload_fileobj(file, settings.AWS_S3_BUCKET_NAME, s3_path, ExtraArgs={"ACL": "public-read"})
-        return f"{settings.AWS_S3_CUSTOM_DOMAIN}/{s3_path}"
+        base.s3_client.upload_fileobj(file, base.AWS_S3_BUCKET_NAME, s3_path)
+        return f"{base.AWS_S3_CUSTOM_DOMAIN}/{s3_path}"
     except Exception as e:
         print(f"S3 Upload Error: {e}")
         return None
@@ -74,8 +74,8 @@ def delete_file_from_s3(image_url: str) -> bool:
     """
 
     try:
-        s3_path = image_url.replace(settings.AWS_S3_CUSTOM_DOMAIN + "/", "")
-        settings.s3_client.delete_object(Bucket=settings.AWS_S3_BUCKET_NAME, Key=s3_path)
+        s3_path = image_url.replace(base.AWS_S3_CUSTOM_DOMAIN + "/", "")
+        base.s3_client.delete_object(Bucket=base.AWS_S3_BUCKET_NAME, Key=s3_path)
         return True
     except Exception as e:
         print(f"S3 Delete Error: {e}")
