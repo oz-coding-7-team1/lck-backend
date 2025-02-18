@@ -1,29 +1,32 @@
 from django.urls import path
 
 from .views import (
+    PlayerGalleryImageView,
     PlayerGalleryListView,
-    PlayerImageDeleteView,
-    PlayerImageDetailView,
-    PlayerImageUploadView,
+    PlayerProfileImageDetailView,
+    PlayerProfileImageView,
+    TeamGalleryImageView,
     TeamGalleryListView,
-    TeamImageDeleteView,
-    TeamImageDetailView,
-    TeamImageUploadView,
-    UserImageDeleteView,
-    UserImageUploadView,
-    UserProfileView,
+    TeamProfileImageDetailView,
+    TeamProfileImageView,
+    UserImageDetailView,
+    UserImageView,
 )
 
 urlpatterns = [
-    path("user/upload/", UserImageUploadView.as_view(), name="user_upload"),
-    path("user/delete/", UserImageDeleteView.as_view(), name="user_delete"),
-    path("user/profile/", UserProfileView.as_view(), name="user_profile"),
-    path("player/upload/", PlayerImageUploadView.as_view(), name="player_upload"),
-    path("player/delete/", PlayerImageDeleteView.as_view(), name="player_delete"),
-    path("player/<int:player_id>/gallery/", PlayerGalleryListView.as_view(), name="player_detail"),
-    path("player/<int:player_id>/<str:category>/", PlayerImageDetailView.as_view(), name="player_category"),
-    path("team/upload/", TeamImageUploadView.as_view(), name="team_upload"),
-    path("team/delete/", TeamImageDeleteView.as_view(), name="team_delete"),
-    path("team/<int:team_id>/gallery/", TeamGalleryListView.as_view(), name="team_gallery"),
-    path("team/<int:team_id>/<str:category>/", TeamImageDetailView.as_view(), name="team_detail"),
+    # 유저 프로필 이미지
+    path("users/<int:user_id>/profile/", UserImageView.as_view(), name="get_user_profile"),
+    path("users/profile/", UserImageDetailView.as_view(), name="user_profile"),
+    # 선수 프로필 / 배경 이미지
+    path("players/<int:player_id>/", PlayerProfileImageView.as_view(), name="get_player_profile"),
+    path("players/<int:player_id>/profile/", PlayerProfileImageDetailView.as_view(), name="player_profile"),
+    # 선수 갤러리
+    path("players/<int:player_id>/gallery/", PlayerGalleryListView.as_view(), name="get_total_player_gallery"),
+    path("players/<int:player_id>/gallery/", PlayerGalleryImageView.as_view(), name="player_gallery"),
+    # 팀 프로필 / 배경 이미지
+    path("teams/<int:team_id>/", TeamProfileImageView.as_view(), name="get_team_profile"),
+    path("teams/<int:team_id>/profile/", TeamProfileImageDetailView.as_view(), name="team_profile"),
+    # 팀 갤러리
+    path("teams/<int:team_id>/gallery/", TeamGalleryListView.as_view(), name="get_total_team_gallery"),
+    path("teams/<int:team_id>/gallery/", TeamGalleryImageView.as_view(), name="team_gallery"),
 ]
