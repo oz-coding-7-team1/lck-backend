@@ -509,8 +509,10 @@ class LikeAPIView(APIView):
             object_id=object_id,
         )
         serializer = LikeSerializer(like)
+        # 좋아요 후 전체 좋아요 갯수 조회
+        likes_count = Like.objects.filter(content_type=content_type, object_id=object_id).count()
         return Response(
-            {"detail": "좋아요 추가", "like": serializer.data},
+            {"detail": "좋아요 추가", "like": serializer.data, "likes_count": likes_count},
             status=status.HTTP_201_CREATED,
         )
 
@@ -556,9 +558,10 @@ class LikeAPIView(APIView):
                 {"detail": "좋아요가 존재하지 않습니다."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        serializer = LikeSerializer(like)
         like.delete()
+        # 좋아요 취소 후 전체 좋아요 갯수 조회
+        likes_count = Like.objects.filter(content_type=content_type, object_id=object_id).count()
         return Response(
-            {"detail": "좋아요 취소", "like": serializer.data},
+            {"detail": "좋아요 취소", "likes_count": likes_count},
             status=status.HTTP_200_OK,
         )
