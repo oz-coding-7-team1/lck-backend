@@ -14,6 +14,9 @@ class TeamPost(BaseModel, SoftDeleteModel):  # type: ignore
     title = models.CharField(max_length=255)
     content = models.TextField()
 
+    class Meta:
+        db_table = "team_post"
+
     def __str__(self) -> str:
         return f"{self.title}"
 
@@ -23,6 +26,9 @@ class TeamComment(BaseModel, SoftDeleteModel):  # type: ignore
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = models.TextField()
     parent = models.ForeignKey("self", null=True, blank=True, on_delete=models.CASCADE, related_name="replies")
+
+    class Meta:
+        db_table = "team_comment"
 
     def __str__(self) -> str:
         return f"Comment by {self.user} on {self.post}"
@@ -34,6 +40,9 @@ class PlayerPost(BaseModel, SoftDeleteModel):  # type: ignore
     title = models.CharField(max_length=255)
     content = models.TextField()
 
+    class Meta:
+        db_table = "player_post"
+
     def __str__(self) -> str:
         return f"{self.title}"
 
@@ -43,6 +52,9 @@ class PlayerComment(BaseModel, SoftDeleteModel):  # type: ignore
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = models.TextField()
     parent = models.ForeignKey("self", null=True, blank=True, on_delete=models.CASCADE, related_name="replies")
+
+    class Meta:
+        db_table = "player_comment"
 
     def __str__(self) -> str:
         return f"Comment by {self.user} on {self.post}"
@@ -54,3 +66,6 @@ class Like(BaseModel, SoftDeleteModel):  # type: ignore
     content_type = models.ForeignKey("contenttypes.ContentType", on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
+
+    class Meta:
+        db_table = "like"
