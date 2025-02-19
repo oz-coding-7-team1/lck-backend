@@ -15,7 +15,7 @@ class PlayerForTeamSerializer(serializers.ModelSerializer[Player]):
     class Meta:
         model = Player
         # 선수의 주요 정보만 제공
-        fields = ["id", "nickname", "position", "gamename", "social", "profile_image_url"]
+        fields = ["id", "nickname", "position", "realname", "social", "profile_image_url"]
 
     def get_profile_image_url(self, obj: Player) -> str | None:
         image = obj.player_images.filter(category="profile").first()
