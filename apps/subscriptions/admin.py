@@ -1,7 +1,6 @@
 from typing import Any, Tuple
 
 from django.contrib import admin
-from django_softdelete.admin import SoftDeletedModelAdmin
 
 from apps.common.admin import BaseModelAdmin
 
@@ -27,8 +26,8 @@ class SoftDeleteListFilter(admin.SimpleListFilter):
 
 
 @admin.register(PlayerSubscription)
-class PlayerSubscriptionAdmin(SoftDeletedModelAdmin, BaseModelAdmin):  # type: ignore
-    list_display = ("user", "player", "deleted_at", "restored_at")
+class PlayerSubscriptionAdmin(BaseModelAdmin):  # type: ignore
+    list_display = ("id", "user", "player", "deleted_at", "restored_at")
     list_filter = (SoftDeleteListFilter,)
 
     def is_deleted(self, obj):  # type: ignore
@@ -38,8 +37,8 @@ class PlayerSubscriptionAdmin(SoftDeletedModelAdmin, BaseModelAdmin):  # type: i
 
 
 @admin.register(TeamSubscription)
-class TeamSubscriptionAdmin(SoftDeletedModelAdmin, BaseModelAdmin):  # type: ignore
-    list_display = ("user", "team", "deleted_at", "restored_at")
+class TeamSubscriptionAdmin(BaseModelAdmin):  # type: ignore
+    list_display = ("id", "user", "team", "deleted_at", "restored_at")
     list_filter = (SoftDeleteListFilter,)
 
     def is_deleted(self, obj):  # type: ignore
