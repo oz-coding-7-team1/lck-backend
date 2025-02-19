@@ -1,7 +1,8 @@
 from typing import Any
 
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import OpenApiRequest, extend_schema
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, OpenApiRequest, extend_schema
 from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny
@@ -22,7 +23,7 @@ class UserImageView(APIView):
     permission_classes = (AllowAny,)
 
     @extend_schema(
-        summary="유저의 프로필 이미지 조회",
+        summary="유저 프로필 이미지 조회",
         responses={200: UserImageSerializer(many=True)},
     )
     def get(self, request: Any, user_id: int) -> Response:
@@ -78,7 +79,12 @@ class UserImageDetailView(APIView):
     @extend_schema(
         summary="유저 프로필 이미지 삭제",
         description="유저가 자신의 프로필 이미지를 삭제합니다.",
-        responses={200: {"message": "Image deleted successfully"}, 400: {"description": "삭제 실패"}},
+        responses={
+            200: OpenApiTypes.OBJECT,
+            400: {"description": "삭제 실패"},
+            403: {"description": "권한 없음"},
+            404: {"description": "이미지 없음"},
+        },
     )
     def delete(self, request: Any, *args: Any, **kwargs: Any) -> Response:
         image = get_object_or_404(UserImage, user=request.user)
@@ -177,13 +183,19 @@ class PlayerProfileImageDetailView(APIView):
         summary="선수 이미지 삭제",
         description="관리자만 프로필 / 배경 이미지를 삭제할 수 있습니다.",
         responses={
-            200: {"message": "Image deleted successfully"},
-            403: {"description": "권한 없음"},
+            200: OpenApiTypes.OBJECT,
             400: {"description": "삭제 실패"},
+            403: {"description": "권한 없음"},
+            404: {"description": "이미지 없음"},
         },
     )
-    def delete(self, request: Any, image_id: int) -> Response:
-        image = get_object_or_404(PlayerImage, id=image_id)
+    def delete(self, request: Any, player_id: int) -> Response:
+        category = request.data.get("category")
+
+        if category not in ["profile", "background"]:
+            return Response({"error": "Invalid or missing category"}, status=status.HTTP_400_BAD_REQUEST)
+
+        image = get_object_or_404(PlayerImage, player_id=player_id, category=category)
 
         # 프로필 / 배경 이미지는 관리자만 삭제 가능
         if image.category in ["profile", "background"] and not request.user.is_staff:
@@ -191,7 +203,9 @@ class PlayerProfileImageDetailView(APIView):
 
         if delete_file_from_s3(image.image_url):
             image.delete()
-            return Response({"message": "Image deleted successfully"}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "{category.capitalize()} image deleted successfully"}, status=status.HTTP_200_OK
+            )
 
         return Response({"error": "Delete failed"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -282,13 +296,19 @@ class TeamProfileImageDetailView(APIView):
         summary="팀 이미지 삭제",
         description="관리자만 프로필 / 배경 이미지를 삭제할 수 있습니다.",
         responses={
-            200: {"message": "Image deleted successfully"},
-            403: {"description": "권한 없음"},
+            200: OpenApiTypes.OBJECT,
             400: {"description": "삭제 실패"},
+            403: {"description": "권한 없음"},
+            404: {"description": "이미지 없음"},
         },
     )
-    def delete(self, request: Any, image_id: int) -> Response:
-        image = get_object_or_404(TeamImage, id=image_id)
+    def delete(self, request: Any, team_id: int) -> Response:
+        category = request.data.get("category")
+
+        if category not in ["profile", "background"]:
+            return Response({"error": "Invalid or missing category"}, status=status.HTTP_400_BAD_REQUEST)
+
+        image = get_object_or_404(TeamImage, team_id=team_id, category=category)
 
         # 프로필 / 배경 이미지는 관리자만 삭제 가능
         if image.category in ["profile", "background"] and not request.user.is_staff:
@@ -307,6 +327,19 @@ class TeamProfileImageDetailView(APIView):
 class PlayerGalleryImageView(APIView):
     parser_classes = (FormParser, MultiPartParser)
 
+    @extend_schema(
+        summary="선수 갤러리 이미지 업로드",
+        description="로그인된 유저가 갤러리에 사진을 업로드할 수 있습니다.",
+        request=OpenApiRequest(
+            {
+                "multipart/form-data": {
+                    "image": {"type": "string", "format": "binary"},
+                    "category": {"type": "string", "enum": ["profile", "background", "gallery", "community"]},
+                }
+            }
+        ),
+        responses={201: PlayerImageSerializer, 400: {"description": "업로드 실패"}, 403: {"description": "권한 없음"}},
+    )
     def post(self, request: Any, player_id: int, *args: Any, **kwargs: Any) -> Response:
         player = get_object_or_404(Player, id=player_id)
 
@@ -337,6 +370,25 @@ class PlayerGalleryImageView(APIView):
 
     """ 선수 갤러리 이미지 삭제 """
 
+    @extend_schema(
+        summary="선수 갤러리 이미지 삭제",
+        description="업로더한 본인만 삭제할 수 있습니다.",
+        parameters=[
+            OpenApiParameter(
+                name="image_id",
+                description="삭제할 이미지의 ID",
+                required=True,
+                type=int,
+                location=OpenApiParameter.PATH,
+            ),
+        ],
+        responses={
+            200: OpenApiTypes.OBJECT,
+            400: {"description": "삭제 실패"},
+            403: {"description": "권한 없음"},
+            404: {"description": "이미지 없음"},
+        },
+    )
     def delete(self, request: Any, image_id: int) -> Response:
         image = get_object_or_404(PlayerImage, id=image_id)
 
@@ -359,6 +411,19 @@ class PlayerGalleryImageView(APIView):
 class TeamGalleryImageView(APIView):
     parser_classes = (FormParser, MultiPartParser)
 
+    @extend_schema(
+        summary="팀 갤러리 이미지 업로드",
+        description="로그인된 유저가 갤러리에 사진을 업로드할 수 있습니다.",
+        request=OpenApiRequest(
+            {
+                "multipart/form-data": {
+                    "image": {"type": "string", "format": "binary"},
+                    "category": {"type": "string", "enum": ["profile", "background", "gallery", "community"]},
+                }
+            }
+        ),
+        responses={201: TeamImageSerializer, 400: {"description": "업로드 실패"}, 403: {"description": "권한 없음"}},
+    )
     def post(self, request: Any, team_id: int, *args: Any, **kwargs: Any) -> Response:
         team = get_object_or_404(Team, id=team_id)
 
@@ -389,6 +454,25 @@ class TeamGalleryImageView(APIView):
 
     """ 팀 갤러리 이미지 삭제 """
 
+    @extend_schema(
+        summary="팀 갤러리 이미지 삭제",
+        description="업로더한 본인만 삭제할 수 있습니다.",
+        parameters=[
+            OpenApiParameter(
+                name="image_id",
+                description="삭제할 이미지의 ID",
+                required=True,
+                type=int,
+                location=OpenApiParameter.PATH,
+            ),
+        ],
+        responses={
+            200: OpenApiTypes.OBJECT,
+            400: {"description": "삭제 실패"},
+            403: {"description": "권한 없음"},
+            404: {"description": "이미지 없음"},
+        },
+    )
     def delete(self, request: Any, image_id: int) -> Response:
         image = get_object_or_404(TeamImage, id=image_id)
 
