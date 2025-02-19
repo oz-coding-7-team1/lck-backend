@@ -20,29 +20,54 @@ class PlayerSocialSerializer(serializers.Serializer[None]):
 # 전체 선수 정보를 직렬화하는 시리얼라이저
 class PlayerSerializer(serializers.ModelSerializer[Player]):
     social = PlayerSocialSerializer()  # 소셜 미디어 정보를 포함
+    profile_image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Player
-        fields = ["id", "nickname", "realname", "position", "social"]
+        fields = ["id", "nickname", "realname", "position", "social", "profile_image_url"]
+
+    def get_profile_image_url(self, obj: Player) -> str | None:
+        image = obj.player_images.filter(category="profile").first()
+        if image:
+            return image.image_url
+        return None
 
 
 # 상위 10명의 선수 정보를 직렬화하는 시리얼라이저
 class PlayerTopSerializer(serializers.ModelSerializer[Player]):
+    profile_image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Player
-        fields = ["id", "nickname", "realname"]
+        fields = ["id", "nickname", "realname", "profile_image_url"]
+
+    def get_profile_image_url(self, obj: Player) -> str | None:
+        image = obj.player_images.filter(category="profile").first()
+        if image:
+            return image.image_url
+        return None
 
 
 # 특정 포지션의 상위 5명의 선수 정보를 직렬화하는 시리얼라이저
 class PlayerPositionSerializer(serializers.ModelSerializer[Player]):
+    profile_image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Player
-        fields = ["id", "nickname", "position"]
+        fields = ["id", "nickname", "position", "profile_image_url"]
+
+    def get_profile_image_url(self, obj: Player) -> str | None:
+        image = obj.player_images.filter(category="profile").first()
+        if image:
+            return image.image_url
+        return None
 
 
 # 선수 프로필 정보를 반환하는 시리얼라이저
 class PlayerDetailSerializer(serializers.ModelSerializer[Player]):
     is_subscribed = serializers.SerializerMethodField()
+    profile_image_url = serializers.SerializerMethodField()
+    background_image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Player
@@ -59,6 +84,8 @@ class PlayerDetailSerializer(serializers.ModelSerializer[Player]):
             "agency",  # 소속 에이전시
             "nationality",  # 국적
             "is_subscribed",
+            "profile_image_url",
+            "background_image_url",
         ]
 
     def get_is_subscribed(self, obj: Player) -> bool:
@@ -66,6 +93,18 @@ class PlayerDetailSerializer(serializers.ModelSerializer[Player]):
         if request and request.user.is_authenticated:
             return PlayerSubscription.objects.filter(player=obj, user=request.user, deleted_at__isnull=True).exists()
         return False
+
+    def get_profile_image_url(self, obj: Player) -> str | None:
+        image = obj.player_images.filter(category="profile").first()
+        if image:
+            return image.image_url
+        return None
+
+    def get_background_image_url(self, obj: Player) -> str | None:
+        image = obj.player_images.filter(category="background").first()
+        if image:
+            return image.image_url
+        return None
 
 
 # PlayerSchedule 모델의 데이터를 직렬화하는 시리얼라이저
