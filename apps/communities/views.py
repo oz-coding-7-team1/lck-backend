@@ -453,7 +453,13 @@ class PlayerCommentDetailAPIView(APIView):
 
 class LikeAPIView(APIView):
 
-    # 게시판이나 댓글 좋아요 및 좋아요 취소
+    def get_authenticators(self) -> List[Any]:
+        return [JWTAuthentication()]
+
+    def get_permissions(self) -> List[Any]:
+        return [IsAuthenticated()]
+
+    # 커뮤니티 게시판이나 댓글 좋아요
     def post(self, request: Request, model_type: str, object_id: int) -> Response:
         allowed_models: Dict[str, Type[Model]] = {
             "teampost": TeamPost,
@@ -461,39 +467,79 @@ class LikeAPIView(APIView):
             "teamcomment": TeamComment,
             "playercomment": PlayerComment,
         }
-
         model_type = model_type.lower()
         if model_type not in allowed_models:
             return Response(
                 {"detail": "유효하지 않은 모델 타입입니다."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
         model: Type[Model] = allowed_models[model_type]
-        # mypy는 Model 타입에 objects 속성이 있다고 알지 못하므로 cast를 사용
+        # 모델의 objects 매니저에 접근 (mypy 우회를 위해 cast 사용)
         obj = cast(Any, model).objects.filter(id=object_id).first()
         if not obj:
             return Response(
                 {"detail": "대상 객체를 찾을 수 없습니다."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-
         content_type = ContentType.objects.get_for_model(model)
-        like, created = Like.objects.get_or_create(
-            user=request.user,
+        # 이미 좋아요가 존재하는지 확인
+        if Like.objects.filter(
+            user=cast(Any, request.user),
+            content_type=content_type,
+            object_id=object_id,
+        ).exists():
+            return Response(
+                {"detail": "이미 좋아요가 있습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        # 좋아요 생성
+        like = Like.objects.create(
+            user=cast(Any, request.user),
             content_type=content_type,
             object_id=object_id,
         )
-        if not created:
-            serializer = LikeSerializer(like)
-            like.delete()
+        serializer = LikeSerializer(like)
+        return Response(
+            {"detail": "좋아요 추가", "like": serializer.data},
+            status=status.HTTP_201_CREATED,
+        )
+
+    # 커뮤니티 게시판이나 댓글 좋아요 취소
+    def delete(self, request: Request, model_type: str, object_id: int) -> Response:
+        allowed_models: Dict[str, Type[Model]] = {
+            "teampost": TeamPost,
+            "playerpost": PlayerPost,
+            "teamcomment": TeamComment,
+            "playercomment": PlayerComment,
+        }
+        model_type = model_type.lower()
+        if model_type not in allowed_models:
             return Response(
-                {"detail": "좋아요 취소", "like": serializer.data},
-                status=status.HTTP_200_OK,
+                {"detail": "유효하지 않은 모델 타입입니다."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        else:
-            serializer = LikeSerializer(like)
+        model: Type[Model] = allowed_models[model_type]
+        obj = cast(Any, model).objects.filter(id=object_id).first()
+        if not obj:
             return Response(
-                {"detail": "좋아요 추가", "like": serializer.data},
-                status=status.HTTP_201_CREATED,
+                {"detail": "대상 객체를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
             )
+        content_type = ContentType.objects.get_for_model(model)
+        try:
+            like = Like.objects.get(
+                user=cast(Any, request.user),
+                content_type=content_type,
+                object_id=object_id,
+            )
+        except Like.DoesNotExist:
+            return Response(
+                {"detail": "좋아요가 존재하지 않습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        serializer = LikeSerializer(like)
+        like.delete()
+        return Response(
+            {"detail": "좋아요 취소", "like": serializer.data},
+            status=status.HTTP_200_OK,
+        )
