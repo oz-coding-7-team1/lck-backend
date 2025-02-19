@@ -3,7 +3,7 @@ from django.utils.html import format_html
 
 from apps.common.admin import BaseModelAdmin
 
-from .models import Player
+from .models import Player, PlayerSchedule
 
 
 @admin.register(Player)
@@ -23,5 +23,17 @@ class PlayerAdmin(BaseModelAdmin):
 
     def get_tags(self, obj):
         return ", ".join(tag.name for tag in obj.tags.all())
-
+    
+    get_nickname_with_realname.short_description = "Player"
+    get_team.short_description = "Team"
     get_tags.short_description = "Tags"
+
+
+@admin.register(PlayerSchedule)
+class PlayerScheduleAdmin(BaseModelAdmin):
+    list_display = ("id", "get_player_nickname", "category", "title")
+    list_display_links = ("id", "get_player_nickname")
+    def get_player_nickname(self, obj):
+        return obj.player.nickname
+    
+    get_player_nickname.short_description = "Player"
