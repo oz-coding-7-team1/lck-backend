@@ -24,7 +24,7 @@ class Player(BaseModel, SoftDeleteModel):
     nickname = models.CharField(max_length=30, unique=True)  # 선수명 (중복불가)
     gamename = models.CharField(max_length=50)  # 게임 닉네임
     position = models.CharField(
-        max_length=10,
+        max_length=9,
         choices=[(position.value, position.name) for position in Position],
         null=False,  # DB에서 NULL을 허용하지 않음
         blank=False,  # 폼에서 빈 값 입력을 허용하지 않음
