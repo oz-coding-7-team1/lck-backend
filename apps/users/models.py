@@ -95,6 +95,8 @@ class Terms(BaseModel):
 
     class Meta:
         db_table = "terms"
+        verbose_name = "Terms"
+        verbose_name_plural = "Terms"
 
     def __str__(self) -> str:
         return f"{self.name}"

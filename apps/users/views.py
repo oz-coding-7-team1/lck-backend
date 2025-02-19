@@ -260,7 +260,7 @@ class MyPageView(APIView):
     )
     # 수정
     def put(self, request: Any) -> Response:
-        user = get_object_or_404(User, id=request.data["id"])
+        user = get_object_or_404(User, id=request.user.id)
         serializer = MypageSerializer(user, data=request.data, partial=True)
 
         if serializer.is_valid():

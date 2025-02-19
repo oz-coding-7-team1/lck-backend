@@ -4,7 +4,7 @@ DEBUG = True
 
 REFRESH_TOKEN_COOKIE_SECURE = True
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",")  # 허용할 host
+# ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",")  # 허용할 host
 
 SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
