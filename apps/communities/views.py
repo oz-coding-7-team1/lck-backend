@@ -1,5 +1,7 @@
-from typing import Any, List
+from typing import Any, Dict, List, Type, cast
 
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import Model
 from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -11,8 +13,9 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from apps.players.models import Player
 from apps.teams.models import Team
 
-from .models import PlayerComment, PlayerPost, TeamComment, TeamPost
+from .models import Like, PlayerComment, PlayerPost, TeamComment, TeamPost
 from .serializers import (
+    LikeSerializer,
     PlayerCommentSerializer,
     PlayerPostSerializer,
     TeamCommentSerializer,
@@ -442,3 +445,120 @@ class PlayerCommentDetailAPIView(APIView):
             return Response({"detail": "삭제 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
         comment.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# -----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
+
+
+class LikeAPIView(APIView):
+
+    def get_authenticators(self) -> List[Any]:
+        return [JWTAuthentication()]
+
+    def get_permissions(self) -> List[Any]:
+        return [IsAuthenticated()]
+
+    @extend_schema(
+        summary="커뮤니티 게시판 및 댓글 좋아요 추가",
+        description="특정 커뮤니티 게시판이나 댓글에 대해 좋아요를 추가합니다. "
+        "(한 사용자는 동일한 대상에 대해 한 번만 좋아요를 남길 수 있습니다.)",
+        responses={
+            201: OpenApiExample("성공 응답 예시", value={"detail": "좋아요 추가"}),
+            400: OpenApiExample("실패 응답 예시", value={"detail": "유효하지 않은 모델 타입입니다."}),
+            404: OpenApiExample("실패 응답 예시", value={"detail": "대상 객체를 찾을 수 없습니다."}),
+        },
+    )
+    # 커뮤니티 게시판이나 댓글 좋아요
+    def post(self, request: Request, model_type: str, object_id: int) -> Response:
+        allowed_models: Dict[str, Type[Model]] = {
+            "teampost": TeamPost,
+            "playerpost": PlayerPost,
+            "teamcomment": TeamComment,
+            "playercomment": PlayerComment,
+        }
+        model_type = model_type.lower()
+        if model_type not in allowed_models:
+            return Response(
+                {"detail": "유효하지 않은 모델 타입입니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        model: Type[Model] = allowed_models[model_type]
+        # 모델의 objects 매니저에 접근 (mypy 우회를 위해 cast 사용)
+        obj = cast(Any, model).objects.filter(id=object_id).first()
+        if not obj:
+            return Response(
+                {"detail": "대상 객체를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        content_type = ContentType.objects.get_for_model(model)
+        # 이미 좋아요가 존재하는지 확인
+        if Like.objects.filter(
+            user=cast(Any, request.user),
+            content_type=content_type,
+            object_id=object_id,
+        ).exists():
+            return Response(
+                {"detail": "이미 좋아요가 있습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        # 좋아요 생성
+        like = Like.objects.create(
+            user=cast(Any, request.user),
+            content_type=content_type,
+            object_id=object_id,
+        )
+        serializer = LikeSerializer(like)
+        return Response(
+            {"detail": "좋아요 추가", "like": serializer.data},
+            status=status.HTTP_201_CREATED,
+        )
+
+    @extend_schema(
+        summary="커뮤니티 게시판 및 댓글 좋아요 취소",
+        description="특정 커뮤니티 게시판이나 댓글에 대해 좋아요를 취소합니다. (좋아요를 남긴 사용자만 삭제 가능)",
+        responses={
+            200: OpenApiExample("성공 응답 예시", value={"detail": "좋아요 취소"}),
+            400: OpenApiExample("실패 응답 예시", value={"detail": "유효하지 않은 모델 타입입니다."}),
+            404: OpenApiExample("실패 응답 예시", value={"detail": "대상 객체를 찾을 수 없습니다."}),
+        },
+    )
+    # 커뮤니티 게시판이나 댓글 좋아요 취소
+    def delete(self, request: Request, model_type: str, object_id: int) -> Response:
+        allowed_models: Dict[str, Type[Model]] = {
+            "teampost": TeamPost,
+            "playerpost": PlayerPost,
+            "teamcomment": TeamComment,
+            "playercomment": PlayerComment,
+        }
+        model_type = model_type.lower()
+        if model_type not in allowed_models:
+            return Response(
+                {"detail": "유효하지 않은 모델 타입입니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        model: Type[Model] = allowed_models[model_type]
+        obj = cast(Any, model).objects.filter(id=object_id).first()
+        if not obj:
+            return Response(
+                {"detail": "대상 객체를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        content_type = ContentType.objects.get_for_model(model)
+        try:
+            like = Like.objects.get(
+                user=cast(Any, request.user),
+                content_type=content_type,
+                object_id=object_id,
+            )
+        except Like.DoesNotExist:
+            return Response(
+                {"detail": "좋아요가 존재하지 않습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        serializer = LikeSerializer(like)
+        like.delete()
+        return Response(
+            {"detail": "좋아요 취소", "like": serializer.data},
+            status=status.HTTP_200_OK,
+        )
