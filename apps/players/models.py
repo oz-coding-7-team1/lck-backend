@@ -40,7 +40,7 @@ class Player(BaseModel, SoftDeleteModel):
 
     class Meta:
         db_table = "player"
-        
+
     def __str__(self):
         return f"{self.nickname}({self.realname})"
 
@@ -59,6 +59,6 @@ class PlayerSchedule(BaseModel):
 
     class Meta:
         db_table = "player_schedule"
-        
+
     def __str__(self):
         return f"{self.player.nickname} - {self.title}"

@@ -1,15 +1,14 @@
 from typing import Any, Tuple
 
 from django.contrib import admin, messages
+from django_softdelete.models import SoftDeleteModel
 
 from apps.common.admin import BaseModelAdmin
 
 from .models import PlayerSubscription, TeamSubscription
 
-from django_softdelete.models import SoftDeleteModel
-
-
 admin.site.disable_action("delete_selected")
+
 
 class SoftDeleteListFilter(admin.SimpleListFilter):
     title = "삭제 여부"
@@ -38,7 +37,7 @@ def soft_delete_selected(modeladmin, request, queryset):
             obj.delete()
             count += 1
     modeladmin.message_user(request, f"{count}개 항목이 소프트 삭제되었습니다.", messages.SUCCESS)
-    
+
 
 @admin.action(description="선택한 항목 완전히 삭제(복구 불가)")
 def hard_delete_selected(modeladmin, request, queryset):
@@ -62,7 +61,7 @@ class PlayerSubscriptionAdmin(BaseModelAdmin):  # type: ignore
     list_display = ("id", "user", "player", "deleted_at", "restored_at", "is_alived")
     list_filter = (SoftDeleteListFilter,)
     actions = [hard_delete_selected, soft_delete_selected, restore_selected]
-    
+
     # 삭제된 데이터도 포함해서 보임
     def get_queryset(self, request):
         return self.model.global_objects.all()
@@ -78,7 +77,7 @@ class TeamSubscriptionAdmin(BaseModelAdmin):  # type: ignore
     list_display = ("id", "user", "team", "deleted_at", "restored_at", "is_alived")
     list_filter = (SoftDeleteListFilter,)
     actions = [hard_delete_selected, soft_delete_selected, restore_selected]
-    
+
     def get_queryset(self, request):
         return self.model.global_objects.all()
 
