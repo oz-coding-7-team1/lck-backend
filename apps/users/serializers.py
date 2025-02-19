@@ -12,9 +12,17 @@ class UserSerializer(serializers.ModelSerializer[User]):
 
 
 class MypageSerializer(serializers.ModelSerializer[User]):
+    profile_image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ("email", "nickname")
+        fields = ("email", "nickname", "profile_image_url")
+
+    def get_profile_image_url(self, obj: User) -> str | None:
+        image = obj.user_images.first()
+        if image:
+            return image.image_url
+        return None
 
 
 class TermsSerializer(serializers.ModelSerializer[Terms]):
