@@ -50,7 +50,7 @@ class TagSearchView(APIView):
                 Tag.objects.annotate(
                     similarity=TrigramSimilarity("name", query),
                 )
-                .filter(similarity__gt=0.01)
+                .filter(similarity__gt=0.2)
                 .order_by("similarity")
                 .values("id")
             )
