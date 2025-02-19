@@ -10,13 +10,13 @@ ALLOWED_EXTENSIONS = {"jpeg", "png", "jpg", "gif"}
 def validate_file_extension(filename: str) -> Optional[Tuple[str, str]]:
     file_parts = filename.rsplit(".", 1)
     if len(file_parts) != 2:
-        return None  # 확장자가 없는 경우
+        raise ValueError("File must have an extension")  # 확장자가 없는 경우
 
     file_name, file_extension = file_parts
     file_extension = file_extension.lower()
 
     if file_extension not in ALLOWED_EXTENSIONS:
-        return None  # 허용되지 않은 확장자
+        raise ValueError(f"Invalid file extension: {file_extension}")  # 허용되지 않은 확장자
 
     return file_name, file_extension
 
@@ -36,12 +36,12 @@ def upload_image_to_s3(file: Any, category: str, instance_type: str, object_iden
     """
 
     # 확장자 검증
-    ext = file.name.split(".")[-1].lower()
-    if ext not in ALLOWED_EXTENSIONS:
-        print(f"Invalid file extension: {ext}")
-        return None
+    validation_result = validate_file_extension(file.name)
+    if validation_result is None:
+        raise ValueError(f"Invalid file extension: {file.name.split('.')[-1].lower()}")
 
-    new_filename = f"{uuid.uuid4()}.{ext}"
+    file_name, file_extension = validation_result
+    new_filename = f"{uuid.uuid4()}.{file_extension}"
 
     # S3 저장 경로 설정
     if instance_type == "users":
@@ -51,15 +51,13 @@ def upload_image_to_s3(file: Any, category: str, instance_type: str, object_iden
     elif instance_type == "teams":
         s3_path = f"teams_images/{object_identifier}/{category}/{new_filename}"
     else:
-        print(f"Invalid instance type: {instance_type}")
-        return None
+        raise ValueError(f"Invalid instance type: {instance_type}")
 
     try:
         base.s3_client.upload_fileobj(file, base.AWS_S3_BUCKET_NAME, s3_path)
         return f"{base.AWS_S3_CUSTOM_DOMAIN}/{s3_path}"
     except Exception as e:
-        print(f"S3 Upload Error: {e}")
-        return None
+        raise RuntimeError(f"S3 Upload Error: {e}")
 
 
 def delete_file_from_s3(image_url: str) -> bool:
@@ -78,5 +76,4 @@ def delete_file_from_s3(image_url: str) -> bool:
         base.s3_client.delete_object(Bucket=base.AWS_S3_BUCKET_NAME, Key=s3_path)
         return True
     except Exception as e:
-        print(f"S3 Delete Error: {e}")
-        return False
+        raise RuntimeError(f"S3 Delete Error: {e}")
