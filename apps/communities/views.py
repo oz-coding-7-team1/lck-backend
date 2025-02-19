@@ -459,6 +459,16 @@ class LikeAPIView(APIView):
     def get_permissions(self) -> List[Any]:
         return [IsAuthenticated()]
 
+    @extend_schema(
+        summary="커뮤니티 게시판 및 댓글 좋아요 추가",
+        description="특정 커뮤니티 게시판이나 댓글에 대해 좋아요를 추가합니다. "
+        "(한 사용자는 동일한 대상에 대해 한 번만 좋아요를 남길 수 있습니다.)",
+        responses={
+            201: OpenApiExample("성공 응답 예시", value={"detail": "좋아요 추가"}),
+            400: OpenApiExample("실패 응답 예시", value={"detail": "유효하지 않은 모델 타입입니다."}),
+            404: OpenApiExample("실패 응답 예시", value={"detail": "대상 객체를 찾을 수 없습니다."}),
+        },
+    )
     # 커뮤니티 게시판이나 댓글 좋아요
     def post(self, request: Request, model_type: str, object_id: int) -> Response:
         allowed_models: Dict[str, Type[Model]] = {
@@ -504,6 +514,15 @@ class LikeAPIView(APIView):
             status=status.HTTP_201_CREATED,
         )
 
+    @extend_schema(
+        summary="커뮤니티 게시판 및 댓글 좋아요 취소",
+        description="특정 커뮤니티 게시판이나 댓글에 대해 좋아요를 취소합니다. (좋아요를 남긴 사용자만 삭제 가능)",
+        responses={
+            200: OpenApiExample("성공 응답 예시", value={"detail": "좋아요 취소"}),
+            400: OpenApiExample("실패 응답 예시", value={"detail": "유효하지 않은 모델 타입입니다."}),
+            404: OpenApiExample("실패 응답 예시", value={"detail": "대상 객체를 찾을 수 없습니다."}),
+        },
+    )
     # 커뮤니티 게시판이나 댓글 좋아요 취소
     def delete(self, request: Request, model_type: str, object_id: int) -> Response:
         allowed_models: Dict[str, Type[Model]] = {
