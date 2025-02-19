@@ -76,15 +76,6 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin, SoftDeleteModel):  # t
         db_table = "user"
 
 
-# 유저 이미지 정보를 저장하는 모멜
-class UserImage(BaseModel):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="images")
-    url = models.CharField(max_length=255)
-
-    class Meta:
-        db_table = "user_image"
-
-
 # 사용자의 약관 동의 정보를 저장하는 모델
 class TermsAgreement(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

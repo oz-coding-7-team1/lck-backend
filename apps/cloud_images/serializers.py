@@ -1,16 +1,24 @@
 from rest_framework import serializers
 
-from .models import PlayerImage, TeamImage
+from .models import PlayerImage, TeamImage, UserImage
 
 
-# PlayerImage 모델의 데이터를 직렬화하는 시리얼라이저
+class UserImageSerializer(serializers.ModelSerializer[UserImage]):
+    class Meta:
+        model = UserImage
+        fields = ("id", "user", "image_url", "uploaded_at")
+        read_only_fields = ("id", "uploaded_at")
+
+
 class PlayerImageSerializer(serializers.ModelSerializer[PlayerImage]):
     class Meta:
         model = PlayerImage
-        fields = "__all__"  # 모델의 모든 필드를 포함
+        fields = ("id", "player", "category", "image_url", "uploaded_by", "uploaded_at")
+        read_only_fields = ("id", "uploaded_by", "uploaded_at")
 
 
 class TeamImageSerializer(serializers.ModelSerializer[TeamImage]):
     class Meta:
         model = TeamImage
-        fields = "__all__"
+        fields = ("id", "team", "category", "image_url", "uploaded_by", "uploaded_at")
+        read_only_fields = ("id", "uploaded_by", "uploaded_at")
