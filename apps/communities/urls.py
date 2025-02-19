@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    LikeAPIView,
     PlayerCommentCreateAPIView,
     PlayerCommentDetailAPIView,
     PlayerPostDetailAPIView,
@@ -36,4 +37,6 @@ urlpatterns = [
     ),
     # 선수 커뮤니티 댓글 상세 조회, 수정, 삭제
     path("player/comments/<int:comment_id>/", PlayerCommentDetailAPIView.as_view(), name="player-comment-detail"),
+    # 커뮤니티 게시판 및 댓글 좋아요, 좋아요 취소
+    path("like/<str:model_type>/<int:object_id>/", LikeAPIView.as_view(), name="like-toggle"),
 ]
