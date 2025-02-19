@@ -2,7 +2,7 @@ from typing import Any, Dict, List
 
 from rest_framework import serializers
 
-from .models import PlayerComment, PlayerPost, TeamComment, TeamPost
+from .models import Like, PlayerComment, PlayerPost, TeamComment, TeamPost
 
 
 # 팀 게시글에 달린 댓글을 직렬화
@@ -49,3 +49,10 @@ class PlayerPostSerializer(serializers.ModelSerializer[PlayerPost]):
         model = PlayerPost
         fields = ["id", "player", "user", "title", "content", "created_at", "updated_at", "comments"]
         read_only_fields = ("player", "user", "created_at", "updated_at")
+
+
+# 댓글과 게시판 좋아요
+class LikeSerializer(serializers.ModelSerializer[Like]):
+    class Meta:
+        model = Like
+        fields = ["id", "user", "content_type", "object_id"]
