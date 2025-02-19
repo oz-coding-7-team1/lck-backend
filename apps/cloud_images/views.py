@@ -1,11 +1,11 @@
-from typing import Any
+from typing import Any, List
 
 from django.shortcuts import get_object_or_404
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, OpenApiRequest, extend_schema
 from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -126,6 +126,7 @@ class PlayerProfileImageView(APIView):
 class PlayerProfileImageDetailView(APIView):
     parser_classes = (FormParser, MultiPartParser)
 
+    # 선수 프로필 / 배경 이미지 업로드 및 수정
     @extend_schema(
         summary="선수 이미지 업로드",
         description="관리자만 프로필 / 배경 이미지를 업로드할 수 있습니다.",
@@ -177,8 +178,7 @@ class PlayerProfileImageDetailView(APIView):
         serializer = PlayerImageSerializer(image)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    """ 선수 이미지 삭제 """
-
+    # 선수 프로필 / 배경 이미지 삭제
     @extend_schema(
         summary="선수 이미지 삭제",
         description="관리자만 프로필 / 배경 이미지를 삭제할 수 있습니다.",
@@ -240,6 +240,7 @@ class TeamProfileImageView(APIView):
 class TeamProfileImageDetailView(APIView):
     parser_classes = (FormParser, MultiPartParser)
 
+    # 팀 프로필 / 배경 이미지 업로드 및 수정
     @extend_schema(
         summary="팀 이미지 업로드",
         description="관리자만 프로필 / 배경 이미지를 업로드할 수 있습니다.",
@@ -290,8 +291,7 @@ class TeamProfileImageDetailView(APIView):
         serializer = TeamImageSerializer(image)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    """ 팀 이미지 삭제 """
-
+    # 팀 프로필 / 배경 이미지 삭제
     @extend_schema(
         summary="팀 이미지 삭제",
         description="관리자만 프로필 / 배경 이미지를 삭제할 수 있습니다.",
@@ -321,12 +321,28 @@ class TeamProfileImageDetailView(APIView):
         return Response({"error": "Delete failed"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-""" 선수 갤러리 이미지 업로드 및 수정, 삭제 """
+""" 선수 갤러리 이미지 전체 조회, 업로드, 수정 """
 
 
 class PlayerGalleryImageView(APIView):
     parser_classes = (FormParser, MultiPartParser)
 
+    def get_permissions(self) -> List[Any]:
+        if self.request.method in ["POST", "DELETE"]:  # 로그인된 유저만 가능
+            return [IsAuthenticated()]
+        return [AllowAny()]  # GET 요청은 모든 사용자 가능
+
+    # 선수 갤러리 전체 목록 조회
+    @extend_schema(
+        summary="특정 선수의 갤러리 이미지 목록 조회",
+        responses={200: PlayerImageSerializer(many=True)},
+    )
+    def get(self, request: Any, player_id: int) -> Response:
+        images = PlayerImage.objects.filter(player_id=player_id, category="gallery")
+        serializer = PlayerImageSerializer(images, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # 선수 갤러리 이미지 업로드
     @extend_schema(
         summary="선수 갤러리 이미지 업로드",
         description="로그인된 유저가 갤러리에 사진을 업로드할 수 있습니다.",
@@ -368,8 +384,29 @@ class PlayerGalleryImageView(APIView):
         serializer = PlayerImageSerializer(image)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    """ 선수 갤러리 이미지 삭제 """
 
+""" 선수 갤러리 이미지 상세 조회, 삭제 """
+
+
+class PlayerGalleryDetailView(APIView):
+    parser_classes = (FormParser, MultiPartParser)
+
+    def get_permissions(self) -> List[Any]:
+        if self.request.method == "DELETE":
+            return [IsAuthenticated()]
+        return [AllowAny()]
+
+    # 선수 갤러리 이미지 상세 조회
+    @extend_schema(
+        summary="특정 선수의 갤러리 이미지 상세 조회",
+        responses={200: PlayerImageSerializer(many=True)},
+    )
+    def get(self, request: Any, player_id: int, image_id: int) -> Response:
+        images = PlayerImage.objects.filter(player_id=player_id, id=image_id, category="gallery")
+        serializer = PlayerImageSerializer(images, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # 선수 갤러리 이미지 삭제
     @extend_schema(
         summary="선수 갤러리 이미지 삭제",
         description="업로더한 본인만 삭제할 수 있습니다.",
@@ -389,8 +426,8 @@ class PlayerGalleryImageView(APIView):
             404: {"description": "이미지 없음"},
         },
     )
-    def delete(self, request: Any, image_id: int) -> Response:
-        image = get_object_or_404(PlayerImage, id=image_id)
+    def delete(self, request: Any, player_id: int, image_id: int) -> Response:
+        image = get_object_or_404(PlayerImage, id=image_id, player_id=player_id)
 
         # 갤러리는 업로더 본인만 삭제 가능
         if image.category == "gallery" and image.uploaded_by != request.user:
@@ -405,12 +442,28 @@ class PlayerGalleryImageView(APIView):
         return Response({"error": "Delete failed"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-""" 팀 갤러리 이미지 업로드 및 수정, 삭제 """
+""" 팀 갤러리 이미지 조회, 업로드, 수정 """
 
 
 class TeamGalleryImageView(APIView):
     parser_classes = (FormParser, MultiPartParser)
 
+    def get_permissions(self) -> List[Any]:
+        if self.request.method == "POST":
+            return [IsAuthenticated()]
+        return [AllowAny()]
+
+    # 팀 갤러리 전체 목록 조회
+    @extend_schema(
+        summary="특정 팀의 갤러리 이미지 목록 조회",
+        responses={200: TeamImageSerializer(many=True)},
+    )
+    def get(self, request: Any, team_id: int) -> Response:
+        images = TeamImage.objects.filter(team_id=team_id, category="gallery")
+        serializer = TeamImageSerializer(images, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # 팀 갤러리 이미지 업로드
     @extend_schema(
         summary="팀 갤러리 이미지 업로드",
         description="로그인된 유저가 갤러리에 사진을 업로드할 수 있습니다.",
@@ -452,8 +505,29 @@ class TeamGalleryImageView(APIView):
         serializer = TeamImageSerializer(image)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    """ 팀 갤러리 이미지 삭제 """
 
+""" 팀 갤러리 이미지 상세 조회, 삭제 """
+
+
+class TeamGalleryDetailView(APIView):
+    parser_classes = (FormParser, MultiPartParser)
+
+    def get_permissions(self) -> List[Any]:
+        if self.request.method == "DELETE":
+            return [IsAuthenticated()]
+        return [AllowAny()]
+
+    # 팀 갤러리 이미지 상세 조회
+    @extend_schema(
+        summary="특정 팀의 갤러리 이미지 상세 조회",
+        responses={200: TeamImageSerializer(many=True)},
+    )
+    def get(self, request: Any, team_id: int, image_id: int) -> Response:
+        images = TeamImage.objects.filter(team_id=team_id, id=image_id, category="gallery")
+        serializer = TeamImageSerializer(images, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # 팀 갤러리 이미지 삭제
     @extend_schema(
         summary="팀 갤러리 이미지 삭제",
         description="업로더한 본인만 삭제할 수 있습니다.",
@@ -473,8 +547,8 @@ class TeamGalleryImageView(APIView):
             404: {"description": "이미지 없음"},
         },
     )
-    def delete(self, request: Any, image_id: int) -> Response:
-        image = get_object_or_404(TeamImage, id=image_id)
+    def delete(self, request: Any, team_id: int, image_id: int) -> Response:
+        image = get_object_or_404(TeamImage, id=image_id, team_id=team_id)
 
         # 갤러리는 업로더 본인만 삭제 가능
         if image.category == "gallery" and image.uploaded_by != request.user:
@@ -487,37 +561,3 @@ class TeamGalleryImageView(APIView):
             return Response({"message": "Image deleted successfully"}, status=status.HTTP_200_OK)
 
         return Response({"error": "Delete failed"}, status=status.HTTP_400_BAD_REQUEST)
-
-
-""" 선수 갤러리 이미지 전체 조회 """
-
-
-class PlayerGalleryListView(APIView):
-    authentication_classes = []
-    permission_classes = (AllowAny,)
-
-    @extend_schema(
-        summary="특정 선수의 갤러리 이미지 목록 조회",
-        responses={200: PlayerImageSerializer(many=True)},
-    )
-    def get(self, request: Any, player_id: int) -> Response:
-        images = PlayerImage.objects.filter(player_id=player_id, category="gallery")
-        serializer = PlayerImageSerializer(images, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-""" 팀 갤러리 이미지 전체 조회 """
-
-
-class TeamGalleryListView(APIView):
-    authentication_classes = []
-    permission_classes = (AllowAny,)
-
-    @extend_schema(
-        summary="특정 팀의 갤러리 이미지 목록 조회",
-        responses={200: TeamImageSerializer(many=True)},
-    )
-    def get(self, request: Any, team_id: int) -> Response:
-        images = TeamImage.objects.filter(team_id=team_id, category="gallery")
-        serializer = TeamImageSerializer(images, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
