@@ -1,5 +1,7 @@
-from typing import Any, List
+from typing import Any, Dict, List, Type, cast
 
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import Model
 from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -11,8 +13,9 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from apps.players.models import Player
 from apps.teams.models import Team
 
-from .models import PlayerComment, PlayerPost, TeamComment, TeamPost
+from .models import Like, PlayerComment, PlayerPost, TeamComment, TeamPost
 from .serializers import (
+    LikeSerializer,
     PlayerCommentSerializer,
     PlayerPostSerializer,
     TeamCommentSerializer,
@@ -442,3 +445,55 @@ class PlayerCommentDetailAPIView(APIView):
             return Response({"detail": "삭제 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
         comment.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# -----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
+
+
+class LikeAPIView(APIView):
+
+    # 게시판이나 댓글 좋아요 및 좋아요 취소
+    def post(self, request: Request, model_type: str, object_id: int) -> Response:
+        allowed_models: Dict[str, Type[Model]] = {
+            "teampost": TeamPost,
+            "playerpost": PlayerPost,
+            "teamcomment": TeamComment,
+            "playercomment": PlayerComment,
+        }
+
+        model_type = model_type.lower()
+        if model_type not in allowed_models:
+            return Response(
+                {"detail": "유효하지 않은 모델 타입입니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        model: Type[Model] = allowed_models[model_type]
+        # mypy는 Model 타입에 objects 속성이 있다고 알지 못하므로 cast를 사용
+        obj = cast(Any, model).objects.filter(id=object_id).first()
+        if not obj:
+            return Response(
+                {"detail": "대상 객체를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        content_type = ContentType.objects.get_for_model(model)
+        like, created = Like.objects.get_or_create(
+            user=request.user,
+            content_type=content_type,
+            object_id=object_id,
+        )
+        if not created:
+            serializer = LikeSerializer(like)
+            like.delete()
+            return Response(
+                {"detail": "좋아요 취소", "like": serializer.data},
+                status=status.HTTP_200_OK,
+            )
+        else:
+            serializer = LikeSerializer(like)
+            return Response(
+                {"detail": "좋아요 추가", "like": serializer.data},
+                status=status.HTTP_201_CREATED,
+            )
