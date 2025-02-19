@@ -17,6 +17,8 @@ class PlayerAdmin(BaseModelAdmin):
         return f"{obj.nickname} ({obj.realname})"
     
     def get_team(self, obj):
+        if obj.team is None:
+            return "-"
         return format_html(
             '<a href="{}">{}</a>',
             f'/admin/teams/team/{obj.team.id}/change/',
