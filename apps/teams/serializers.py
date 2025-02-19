@@ -44,7 +44,15 @@ class TeamDetailSerializer(serializers.ModelSerializer[Team]):
 
     class Meta:
         model = Team
-        fields = ["id", "name", "social", "players", "is_subscribed", "profile_image_url", "background_image_url",]
+        fields = [
+            "id",
+            "name",
+            "social",
+            "players",
+            "is_subscribed",
+            "profile_image_url",
+            "background_image_url",
+        ]
 
     def get_is_subscribed(self, obj: Team) -> bool:
         request = self.context.get("request")
