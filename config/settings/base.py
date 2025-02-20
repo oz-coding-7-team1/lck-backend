@@ -187,7 +187,11 @@ s3_client = boto3.client(
 )
 
 CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "https://choeaelol.umdoong.shop",
+    "https://api.umdoong.shop"
+                        ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_METHODS = ["GET", "POST", "DELETE", "PUT", "PATCH"]
 CORS_ALLOWED_HEADERS = ["Content-Type", "Authorization"]
