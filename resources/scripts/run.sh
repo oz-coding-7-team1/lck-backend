@@ -1,10 +1,8 @@
 #!/bin/bash
 
-# 가상 환경 활성화
 source ~/.bashrc
 
-
-export DJANGO_SETTINGS_MODULE=config.settings.dev
+export DJANGO_SETTINGS_MODULE=config.settings.prod
 
 # 데이터베이스 마이그레이션
 echo "Applying database migrations..."
