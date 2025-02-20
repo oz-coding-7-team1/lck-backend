@@ -49,16 +49,10 @@ class TeamDetailSerializer(serializers.ModelSerializer[Team]):
             "name",
             "social",
             "players",
-            "is_subscribed",
             "profile_image_url",
             "background_image_url",
         ]
 
-    def get_is_subscribed(self, obj: Team) -> bool:
-        request = self.context.get("request")
-        if request and request.user.is_authenticated:
-            return TeamSubscription.objects.filter(team=obj, user=request.user, deleted_at__isnull=True).exists()
-        return False
 
     def get_profile_image_url(self, obj: Team) -> str | None:
         image = obj.team_images.filter(category="profile").first()
