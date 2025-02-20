@@ -211,6 +211,25 @@
   > - [ ] CONF: 빌드, 환경 설정
   > - [ ] CHORE: 기타 작업
 
+### Code Convention
+**BE**
+- 패키지명: 모두 소문자
+  - ex) apps.players, apps.teams, apps.users
+- 클래스/인터페이스: CamelCase, 명사 사용
+  - ex) Player, Team, User, PlayerController, TeamService
+- 상수: SNAKE_CASE
+  - ex) MAX_LENGTH, DEFAULT_NATIONALITY
+- 계층별 접미사: 
+  - Controller: PlayerController 
+  - Service: PlayerService (메서드명: createPlayer, findPlayer, updatePlayer, deletePlayer)
+  - DTO: PlayerDto
+  - Repository: PlayerRepository
+  - Mapper: PlayerMapper
+- 테스트 클래스: Test 접미사 사용
+  - ex) PlayerControllerTest
+
+
+
 ### Communication Rules
 > - Discord 활용 
 > - 정기 회의
