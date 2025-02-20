@@ -65,7 +65,6 @@ class PlayerPositionSerializer(serializers.ModelSerializer[Player]):
 
 # 선수 프로필 정보를 반환하는 시리얼라이저
 class PlayerDetailSerializer(serializers.ModelSerializer[Player]):
-    is_subscribed = serializers.SerializerMethodField()
     profile_image_url = serializers.SerializerMethodField()
     background_image_url = serializers.SerializerMethodField()
 
@@ -86,7 +85,6 @@ class PlayerDetailSerializer(serializers.ModelSerializer[Player]):
             "profile_image_url",
             "background_image_url",
         ]
-
 
     def get_profile_image_url(self, obj: Player) -> str | None:
         image = obj.player_images.filter(category="profile").first()

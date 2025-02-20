@@ -38,7 +38,6 @@ class TeamSocialSerializer(serializers.Serializer[None]):
 class TeamDetailSerializer(serializers.ModelSerializer[Team]):
     social = TeamSocialSerializer()
     players = PlayerForTeamSerializer(many=True, source="player_set")  # 팀에 소속된 선수 목록 추가
-    is_subscribed = serializers.SerializerMethodField()
     profile_image_url = serializers.SerializerMethodField()
     background_image_url = serializers.SerializerMethodField()
 
@@ -52,7 +51,6 @@ class TeamDetailSerializer(serializers.ModelSerializer[Team]):
             "profile_image_url",
             "background_image_url",
         ]
-
 
     def get_profile_image_url(self, obj: Team) -> str | None:
         image = obj.team_images.filter(category="profile").first()
