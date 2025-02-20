@@ -9,7 +9,8 @@
 
 > ### [⛪ 배포 링크](https://choeaelol.umdoong.shop/)
 
-
+---
+## 🧰 사용 스택
 <hr>
 <h2 align="center"> Backend </h2>
 
@@ -31,13 +32,13 @@
         <img src="https://upload.wikimedia.org/wikipedia/commons/6/68/Django_REST_framework_logo.svg" alt="DRF" width="65" height="65" />
         <br>DRF
       </td>
-    </tr>
-    <tr>
       <!-- PostgreSQL -->
       <td align="center" width="96">
         <img src="https://skillicons.dev/icons?i=postgres" alt="PostgreSQL" width="48" height="48" />
         <br>PostgreSQL
       </td>
+    </tr>
+    <tr>
       <!-- AWS -->
       <td align="center" width="96">
         <img src="https://skillicons.dev/icons?i=aws" alt="AWS" width="48" height="48" />
@@ -53,18 +54,22 @@
         <img src="https://skillicons.dev/icons?i=nginx" alt="Nginx" width="48" height="48" />
         <br>Nginx
       </td>
-    </tr>
-    <tr>
       <!-- Certbot -->
       <td align="center" width="96">
         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Certbot_logo.svg/1200px-Certbot_logo.svg.png" alt="Certbot" width="65" height="65" />
         <br>Certbot
       </td>
+    </tr>
+    <tr>
       <!-- Gunicorn -->
       <td align="center" width="96">
         <img src="https://raw.githubusercontent.com/benoitc/gunicorn/master/docs/logo.png" alt="Gunicorn" width="65" height="65" />
         <br>Gunicorn
       </td>
+      <!-- 빈 셀 -->
+      <td align="center" width="96">&nbsp;</td>
+      <td align="center" width="96">&nbsp;</td>
+      <td align="center" width="96">&nbsp;</td>
     </tr>
   </table>
 </div>
@@ -120,6 +125,7 @@
     </tr>
   </table>
 </div>
+
 
 --- 
 <div align="center">
