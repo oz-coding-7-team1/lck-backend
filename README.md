@@ -16,35 +16,54 @@
 <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 20px;">
   <table align="center">
     <tr>
+      <!-- Python -->
       <td align="center" width="96">
         <img src="https://techstack-generator.vercel.app/python-icon.svg" alt="Python" width="65" height="65" />
         <br>Python
       </td>
+      <!-- Django -->
       <td align="center" width="96">
         <img src="https://techstack-generator.vercel.app/django-icon.svg" alt="Django" width="65" height="65" />
         <br>Django
       </td>
+      <!-- DRF -->
       <td align="center" width="96">
         <img src="https://upload.wikimedia.org/wikipedia/commons/6/68/Django_REST_framework_logo.svg" alt="DRF" width="65" height="65" />
         <br>DRF
       </td>
     </tr>
     <tr>
+      <!-- PostgreSQL -->
       <td align="center" width="96">
         <img src="https://skillicons.dev/icons?i=postgres" alt="PostgreSQL" width="48" height="48" />
         <br>PostgreSQL
       </td>
+      <!-- AWS -->
       <td align="center" width="96">
         <img src="https://skillicons.dev/icons?i=aws" alt="AWS" width="48" height="48" />
         <br>AWS
       </td>
+      <!-- Docker -->
       <td align="center" width="96">
         <img src="https://skillicons.dev/icons?i=docker" alt="Docker" width="48" height="48" />
         <br>Docker
       </td>
+      <!-- Nginx -->
       <td align="center" width="96">
         <img src="https://skillicons.dev/icons?i=nginx" alt="Nginx" width="48" height="48" />
         <br>Nginx
+      </td>
+    </tr>
+    <tr>
+      <!-- Certbot -->
+      <td align="center" width="96">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Certbot_logo.svg/1200px-Certbot_logo.svg.png" alt="Certbot" width="65" height="65" />
+        <br>Certbot
+      </td>
+      <!-- Gunicorn -->
+      <td align="center" width="96">
+        <img src="https://raw.githubusercontent.com/benoitc/gunicorn/master/docs/logo.png" alt="Gunicorn" width="65" height="65" />
+        <br>Gunicorn
       </td>
     </tr>
   </table>
@@ -56,36 +75,44 @@
 <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 20px;">
   <table align="center">
     <tr>
+      <!-- HTML -->
       <td align="center" width="96">
         <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" alt="HTML" width="65" height="65" />
         <br>HTML
       </td>
+      <!-- CSS -->
       <td align="center" width="96">
         <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg" alt="CSS" width="65" height="65" />
         <br>CSS
       </td>
+      <!-- JavaScript -->
       <td align="center" width="96">
         <img src="https://techstack-generator.vercel.app/js-icon.svg" alt="JavaScript" width="65" height="65" />
         <br>JS
       </td>
+      <!-- Next.js -->
       <td align="center" width="96">
         <img src="https://skillicons.dev/icons?i=nextjs" alt="Next.js" width="48" height="48" />
         <br>Next.js
       </td>
     </tr>
     <tr>
+      <!-- Tailwind CSS -->
       <td align="center" width="96">
         <img src="https://skillicons.dev/icons?i=tailwind" alt="Tailwind CSS" width="48" height="48" />
         <br>Tailwind CSS
       </td>
+      <!-- Axios -->
       <td align="center" width="96">
         <img src="https://avatars.githubusercontent.com/u/32372333?s=280&v=4" alt="Axios" width="48" height="48" />
         <br>Axios
       </td>
+      <!-- npm -->
       <td align="center" width="96">
         <img src="https://skillicons.dev/icons?i=npm" alt="npm" width="48" height="48" />
         <br>npm
       </td>
+      <!-- Figma -->
       <td align="center" width="96">
         <img src="https://skillicons.dev/icons?i=figma" alt="Figma" width="48" height="48" />
         <br>Figma
