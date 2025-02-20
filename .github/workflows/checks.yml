@@ -1,0 +1,104 @@
+name: Django CI
+
+on:
+  push:
+
+jobs:
+  ci:
+    runs-on: ubuntu-22.04
+    services:
+      postgres:
+        image: postgres:17.2
+        env:
+          POSTGRES_USER: ${{ secrets.DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.DB_NAME }}
+        ports:
+          - 5432:5432
+
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+
+    steps:
+        # 체크아웃 해야 최신 코드를 가져옴
+      - name: Check out the codes
+        uses: actions/checkout@v2
+
+        # 파이썬 설치
+      - name: Setup python environment
+        id: setup-python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.12.6'
+
+        # 타임존 KST로 설정
+      - name: Set timezone to KST
+        run: |
+          sudo rm /etc/localtime
+          sudo ln -s /usr/share/zoneinfo/Asia/Seoul /etc/localtime
+
+      - name: Install Poetry
+        run: |
+          curl -sSL curl -sSL https://install.python-poetry.org | python3 -
+          echo "${HOME}/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: | # poetry 자기 자신을 설치하지 않음
+          poetry install --no-root
+
+      # PostgreSQL 서버와 pg_dump의 버전을 맞추기 위해 같은 버전으로 설치
+      - name: Set up PostgreSQL client
+        run: |
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
+
+      # db연결까지 대기
+      - name: Wait for PostgreSQL to start
+        run: |
+          until pg_isready -h $DB_HOST -p $DB_PORT -U $DB_USER; do
+            echo "Waiting for PostgreSQL to start..."
+            sleep 5
+          done
+
+      # db연결 잘 되는 지 환경변수 테스트
+      - name: Test DB Connection
+        run: |
+          PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_NAME -c "SELECT 1"
+
+
+      - name: Run makemigrations
+        run: | # noinput: 사용자 입력 요구 무시
+          poetry run python manage.py makemigrations --noinput
+
+      - name: Run migrate
+        run: |
+          poetry run python manage.py migrate --noinput
+
+      - name: Run black
+        run: |
+          poetry run black . --check
+        # --check: 코드를 수정하지 않고 체크만 함
+
+      - name: Run isort
+        run: |
+          poetry run isort . --check --diff
+        # -diff: 달라진 점을 보여줌
+
+      - name: Run Mypy
+        run: |
+          poetry run mypy .
+
+#      - name: Setup tmate session 깃헙 액션 ssh로 디버깅
+#        uses: mxschmitt/action-tmate@v3
+
+      - name: Test python project
+        run: |
+          poetry run python manage.py test
