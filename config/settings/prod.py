@@ -1,10 +1,10 @@
 from .base import *
 
-DEBUG = True
+DEBUG = False
 
 REFRESH_TOKEN_COOKIE_SECURE = True
 
-# ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",")  # 허용할 host
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",")  # 허용할 host
 
 SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
@@ -15,3 +15,14 @@ SIMPLE_JWT = {
     "ALGORITHM": "HS256",
     "SIGNING_KEY": SECRET_KEY,
 }
+
+# # 테스트용
+# INSTALLED_APPS += [
+#     "drf_spectacular",
+# ]
+
+# REST_FRAMEWORK.update(
+#     {
+#         "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+#     }
+# )

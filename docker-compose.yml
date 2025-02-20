@@ -1,11 +1,11 @@
 services:
   django:
-    image: umdoong/oz_main_dev:latest
+    image: umdoong/oz_main_prod:latest
     container_name: django_prod_container
     environment:
-      - DJANGO_ENV=dev
+      - DJANGO_ENV=prod
     env_file:
-      - .envs/dev.env
+      - .envs/prod.env
     # network는 컨테이너 간 통신할 때 쓰는 network 설정
     networks:
       - app_network
@@ -19,8 +19,24 @@ services:
       - django
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
     networks:
       - app_network
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    env_file:
+      - .envs/prod.env
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
 
 networks:
   app_network:
