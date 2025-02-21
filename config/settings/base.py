@@ -191,3 +191,7 @@ CORS_ALLOWED_ORIGINS = ["http://localhost:3000", "https://choeaelol.umdoong.shop
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_METHODS = ["GET", "POST", "DELETE", "PUT", "PATCH"]
 CORS_ALLOWED_HEADERS = ["Content-Type", "Authorization"]
+
+CSRF_TRUSTED_ORIGINS = ["https://choeaelol.umdoong.shop", "https://api.umdoong.shop"]
+CSRF_COOKIE_DOMAIN = ".umdoong.shop"
+SESSION_COOKIE_DOMAIN = ".umdoong.shop"
